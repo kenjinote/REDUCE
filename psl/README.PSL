@@ -1,0 +1,90 @@
+Status report January 2011
+==========================
+
+PSL
+---
+
+We have the PSL sources in the trunk cleaned up for the most 
+wanted versions, i.e. Windows, Linux(Intel), and Mac/OS (Intel)
+both 32 and 64 bit.
+
+The maintenance for the PSL trees is done by the script
+
+make-psl.sh     in this directory.
+
+This script chooses the traditional PSL-name from the generic name used
+at configure time, e.g.
+
+x86_64-unknown-ubuntu10.04   ==>  AMD64
+
+which keeps the name stable across changes of the OS version or
+change of the Linux distribution.
+
+Simply starting the script by ./make-psl.sh produces a PSL tree *here*,
+most important are ./bin and ./dist .
+
+There are variants (as usual :-) ) which allow one to produce a different
+version on a compatible system, e.g. an extended AMD64 system (using
+all registers, inline cons, etc) which can be made by
+
+./make-psl.sh AMD64_ext
+
+on an 64 bit Linux system. As of today, you can produce versions called
+linux (32 bit Intel Linux) or brock (don't ask) by setting the parameter.
+
+Similar thing can be done on MAC/OS. The canonical name is mactintel64,
+but macintel can be generated on a 64 bit system as well.
+
+
+REDUCE from PSL
+---------------
+
+Based on the PSL versions described above, one is able to produce REDUCE
+versions for PSL which not rely on binaries from ZIB Berlin. After 
+
+svn update               (or checkout)    and
+./configure --with-psl         one can use
+cd psl 
+./make-psl.sh            not stricly necessary, but we cannot discuss this here
+./make-reduce.sh         takes the local binaries and the Makefile form configure
+                         to produce a REDUCE version. The names are the same as above,
+                         Parameterisation as above too, a little trick is used to
+                         find the Makefile.             
+                         REDUCE can be started from ../pslbuild/<MACHINE>/redpsl
+                         which can be copied to a more convenient place.
+
+
+PSL/ REDUCE maintenance 
+-----------------------
+
+If one wants to refresh REDUCE without installing all PSL stuff which is unchanged,
+simply use
+
+svn update
+./make.sh                again same parametrisation. This script basically finds 
+                         the way to ../pslbuild/<MACHINE> and starts make
+
+
+
+Status report March 2009
+========================
+
+This file contains a collection of little directories with names such as
+psl-win32 etc. Each basically contains a file "xport,pat". The directory
+"support-packages" contains a utility "xport" that can process this and that
+fetches a set of PSL binaries from a web-site as specified in xport.pat.
+
+The PSL build scripts arrange to compile xport and use it in such a way that
+the PSL binaries relevant to you computer get fetched and placed within
+the pslbuild subdirectory at the top level here.
+
+All this arrangement is because we do not yet have the PSL sources in a tidy
+state for release - and that includes getting them in a state where the
+associated build-scripts are all easy to use and everything has been at
+least reasonably checked. It is hoped that in a while there will be a PSL
+source release, but at present this is not generally available. But the
+current arrangements should allow the PSL version of Reduce to be built
+and used.
+
+
+

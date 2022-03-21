@@ -1,0 +1,47 @@
+Comment Do not allow to use the same identifier for an algebraic procedure and an operator,
+        and vice versa;
+
+
+algebraic procedure fn1(x);
+    "1";
+
+
+fn1
+
+algebraic operator fn1;
+
+
+*** fn1 already defined as algebraic procedure 
+
+
+fn1 a;
+
+
+1
+
+
+get('fn1,'simpfn);
+
+
+flagp('fn1,'opfn);
+
+
+t
+
+
+clear fn1;
+
+
+
+algebraic operator fn1;
+
+
+
+fn1 a;
+
+
+fn1(a)
+
+
+end;
+

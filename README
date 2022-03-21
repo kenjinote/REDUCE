@@ -1,0 +1,185 @@
+                       REDUCE - Open Source release
+
+
+                      July 2013, then February 2014
+
+Tiny updates to this file just to try to keep the credits to other
+projects that are used up to date. As of Feb 2014 the revision number
+at Sourceforge is 2337, and this seems to correspond to an average
+activity rate of a bit over 3 checkins per day.
+
+                             December 2010
+
+This project just reached revision 1000 in the Sourceforge subversion
+repository. This feels like something of a landmark.
+
+
+                              March 2009
+
+
+This is the REDUCE algebra system, which was originally developed by
+Tony Hearn. A bibliography somewhere in this tree reports some of the
+large numbers of papers that have been written about or relying on
+REDUCE.
+
+
+                                     Arthur Norman.  March 2009
+
+
+The BULK of the files in this tree are subject to the (modified) BSD license,
+as shown below. There are some components that are subject to more restrictive
+terms (notably the FOX GUI Toolkit, used in one version of the code here, is
+under LGPL).
+
+===========================================================================
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the relevant copyright
+      notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright
+      notice, this list of conditions and the following disclaimer in the
+      documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNERS OR CONTRIBUTORS
+BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+
+===========================================================================
+
+The CSL version of Reduce has started to migrate to use the wxWidgets
+library rather than FOX (see below). wxWidgets is under its own license
+which is LGPL 2 (or later) plus some permissive exceptions for the
+distribution of applications linked against the library. A full
+archive is wxWidgets source is included and that contains full details.
+
+
+
+Note that the directory csl/fox contains a modified version of the
+FOX toolkit (www.fox-toolkit.com) version 1.6 which is subject to
+LGPL 2.1. Note explicitly that while an unmodified version of FOX can be
+linked into an application and the resulting version may be distributed
+without hindrance even the smallest change that has not been accepted by
+the FOX central site can only be used under the terms of the LGPL.
+
+Within the FOX directory the "utils" subdirectory contains a program
+reswrap.cpp that is used while building FOX. I do not see any cause for
+anybody to even want to distribute a binary of that, but to satisfy the
+GPL better I have put a copy of the GPL in the directory with it. No part of
+reswrap itself ends up in the main programs built here, and its status is
+thus rather like that of gcc and other tools.
+
+The FOX test programs were originally held within the FOX directory, but
+they are subject to the GPL not the LGPL or any more benign license. I have
+moved them to a separate directory to make it unambiguous that there are at
+most here as mere aggregation, and the standard build sequences here make
+even the presence of that directory optional. I do not intend to provide or
+distribute binary copies of any of them ever, and so there should not be any
+complications at all on that front.
+
+
+The "gnuplot" package is used with REDUCE and its license indicates that
+it may be redistributed freely, but that modified versions may only be
+circulated in the form of patch files against the official release. The
+version included here is an original un-modified copy. Well actually right now
+there is no version included with Reduce. This is because Sourceforge policy
+is that if we include any binary then we must also put the corresponding
+source into the Sourceforge Release system. Putting a copy of a snapshot
+of the gnuplot source there seems both clumsy and asks for confusion as and
+when gnuplot gets updated, so this area is under review!
+
+The CSL source directory contains material derived from Adobe font metrics,
+and these metrics it works can be found on many sites - they can be
+downloaded directly from Adobe's ftp site but also they are included
+with many existing software packages in forms that clearly state that
+they are available for redistribution and that the authors of those
+packages have checked license conditions carefully. The set of files
+I use here came with "teTeX 2" where these terms are carefully set
+out and where the package is very well established and widely used so
+there would have been plenty of opportunity for concerns about rights
+to be aired. I have not altered the metric files at all.
+
+There is a copy of the "distorm" x86 disassembler, which originated from
+Gil Dabah and licensed under the modified BSD license. See
+http://ragestorm.net/distorm.
+
+I use adjusted versions of Computer Modern Fonts derived from the Blue Sky
+Research and Y&Y inc versions but which are now freely available for general
+use. Their copyright is held by the American Mathematical Society, and the
+versions here should yield exactly the same font metrics as the original
+versions.
+
+The Truetype-format fonts are from the BaKoMa Computer Modern Font collection
+as distributed via "ctan", and the associated permissive license is included
+in the directory where they are held. This set of files and its associated
+.tfm metrics are gradually replacing my use of other font data.
+
+An implementation of the MD5 message digest is due to Eric Young and
+comes from an implementation of SSL, and is subject to what is in essence the
+modified BSD license. The original and full version of the license terms
+is included where that code is incorporated.
+
+Various other parts within CSL were contributed by NAG Ltd and by various
+students and others, including J O'Connell, M O Seymour, but were made
+available to me and to Codemist for inclusion within CSL.
+
+The files in the "psl" directory come from ZIB and are some of the ones
+that they used with the Reduce Development System. As shown there these are
+also under a BSD license - see the HP_disclaimer.txt that confirms a release
+from one of the earlier major copyright holders.
+
+crlibm is a "correctly rounded maths library" subject to LGPL 2.1. It was
+fetched from http://lipforge.ens-lyon.fr/www/crlibm/ but needed (minor)
+aljustment to let it build here.
+
+The Latin Modern Fonts and Latin Moder Math Fonts are from
+http://www.gust.org.pl/projects/e-foundry and copies of the original
+archives containing them are in csl/support-packages along with unpacked
+a copy of the GUST-FONT-LICENSE.txt file and relevant README files.
+There are two uses of derived works, and the GUST License (which is
+an instance of the Latex Project Public License) requires that an
+explanation of what is covered and what changes are made is placed in
+a prominent place (eg here!).
+In csl/cslbase/wxfonts there are re-packed font files. Merely placing the
+files in a tree that is distinct from the .zip file that formed the
+original distribution makes this a derived (and changed) work. But I
+have also needed to (use fontforge to) convert each .oft file so I also
+have a .ttf version since my Windows code appeared not to render glyphs
+from the .otf versions. This should not alter character shapes or metrics
+but may degrade rendering. I have also extracted from these fonts a
+series of bitmaps that record which characters are present in the fonts.
+This is done because I was not instantly able to do this at the point of
+rendering, and because it then helps me use font substitution for any
+missing characters. In use these fonts will be set up as application-
+specific private fonts rather than as globally and permenantly installed
+ones, so the chances of causing confusion for other software ought to
+be low. The font directories that are to be distributed as part of
+a binary release of the software contain READE files etc alongside the
+actual fonts, and executable software will respond to a "--help" option
+by displaying a message that contains a brief citation of the fonts and
+how to recover original official versions.
+I believe that since I have not changed font shapes, metrics or coverage
+and since the distribution is not set up to make the fonts available
+generally - just to have them used as application-private resources - that
+renamking the fonts (to avoid confusion) is not necessary here.
+But it is important to record that the fonts and derived information are
+NOT subject to the full permissions of the BSD License and that any
+use that envisages moving them away from the code here or altering the
+messages about them that "--help" displays needs to be done only after
+careful review of the actual licenses.
+
+
+
+
+                                           A C Norman (acn1@cam.ac.uk)
+

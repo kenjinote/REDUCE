@@ -1,0 +1,28 @@
+% Was bug44
+% Variables don't migrate properly into domain elements that are not
+% numbers.
+
+load_package tps;
+
+ps(1/(1+x),x,0);
+
+ws + x;
+
+end;
+
+% This was never intended  -- algebraic operations on two power series domain
+% elements or a numerical domain elemnent and a power series objects results
+% in automatic expansion into a single power series object as does
+% differentiation, exponentiation etc. (but not integration).
+
+% The remedy is simple:
+
+load_package tps;
+
+ps(1/(1+x),x,0);
+
+ps(ws + x,x,0);
+
+ps(int(ws,x),x,0);
+
+end;

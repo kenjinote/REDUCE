@@ -1,0 +1,1626 @@
+
+\index{Schr\"ufer, Eberhard}
+\index{People!Schr\"ufer, Eberhard}
+
+\setcounter{examplectr}{0}
+
+\subsection*{Acknowledgments}
+
+This program was developed over several years. I would like to express
+my deep gratitude to Dr.\ Anthony Hearn for his continuous interest in
+this work, and especially for his hospitality and support during a
+visit in 1984/85 at the RAND Corporation, where substantial progress
+on this package could be achieved. The Heinrich Hertz-Stiftung
+supported this visit. Many thanks are also due to Drs. F.W. Hehl,
+University of Cologne, and J.D. McCrea, University College Dublin, for
+their suggestions and work on testing this program.
+
+\subsection{Introduction}
+
+\index{Differential geometry}
+\textbf{EXCALC} is designed for easy use by all who are familiar with the
+calculus of Modern Differential Geometry.  Its syntax is kept as close
+as possible to standard textbook notations.  Therefore, no great
+experience in writing computer algebra programs is required.  It is
+almost possible to input to the computer the same as what would have
+been written down for a hand-calculation.  For example, the statement
+\begin{verbatim}
+                       f*x^y + u _| (y^z^x)
+\end{verbatim}
+\index{Exterior calculus}
+would be recognized by the program as a formula involving exterior
+products and an inner product.  The program is currently able to
+handle scalar-valued exterior forms, vectors and operations between
+them, as well as non-scalar valued forms (indexed forms).  With this,
+it should be an ideal tool for studying differential equations,
+doing calculations in general relativity and field theories, or doing
+such simple things as calculating the Laplacian of a tensor field for
+an arbitrary given frame.  With the increasing popularity of this
+calculus, this program should have an application in almost any field
+of physics and mathematics.
+
+Since the program is completely embedded in {\REDUCE}, all features and
+facilities of {\REDUCE} are available in a calculation.  Even for those
+who are not quite comfortable in this calculus, there is a good chance
+of learning it by just playing with the program.
+
+This is the last release of version 2. A much extended differential
+geometry package (which includes complete symbolic index simplification,
+tensors, mappings, bundles and others) is under development.
+
+Complaints and comments are appreciated and should be send to the author.
+If the use of this program leads to a publication, this document should
+be cited, and a copy of the article to the above address would be
+welcome.
+
+\subsection{Declarations}
+
+Geometrical objects like exterior forms or vectors are introduced to the
+system by declaration commands.  The declarations can appear anywhere in
+a program, but must, of course, be made prior to the use of the object.
+Everything that has no declaration is treated as a constant; therefore
+zero-forms must also be declared.
+
+An exterior form is introduced by\label{PFORM} \ttindextype[EXCALC]{pform}{statement}
+\index{Exterior form!declaration}
+\hypertarget{command:PFORM}{}
+
+\hspace*{2em} \k{pform} \s{declaration$_1$}, \s{declaration$_2$}, \ldots;
+
+where
+\begin{flushleft}
+\s{declaration} ::= \s{name} $\mid$ \s{list of names}=\s{number} $\mid$  \s{identifier} $\mid$ \\
+\s{expression} \\
+\s{name} ::= \s{identifier} $\mid$ \s{identifier}(\s{arguments})
+\end{flushleft}
+
+For example
+\begin{verbatim}
+     pform u=k,v=4,f=0,w=dim-1;
+\end{verbatim}
+declares \texttt{u} to be an exterior form of degree \texttt{k}, \texttt{v} to be a
+form of degree 4, \texttt{f} to be a form of degree 0 (a function), and \texttt{w}
+to be a form of degree \texttt{dim}-1.
+
+If the exterior form should have indices, the declaration would be
+\index{Exterior form!with indices}
+\begin{verbatim}
+     pform curv(a,b)=2,chris(a,b)=1;
+\end{verbatim}
+The names of the indices are arbitrary.
+
+Exterior forms of the same degree can be grouped into lists to save typing.
+\begin{verbatim}
+     pform {x,y,z}=0,{rho(k,l),u,v(k)}=1;
+\end{verbatim}
+The declaration of vectors is similar. The command \f{tvector}\label{TVECTOR}
+takes a list of names. \ttindextype[EXCALC]{tvector}{command} \index{Exterior form!vector}
+\hypertarget{command:TVECTOR}{}
+
+\hspace*{2em} \k{tvector} \s{name$_1$}, \s{name$_2$}, \ldots;
+
+For example, to declare \texttt{x} as a vector and \texttt{comm} as a vector with
+two indices, one would say
+\begin{verbatim}
+     tvector x,comm(a,b);
+\end{verbatim}
+If a declaration of an already existing name is made, the old
+declaration is removed, and the new one is taken.
+
+The exterior degree of a symbol or a general expression can be obtained
+with the function \label{EXDEGREE} \ttindextype[EXCALC]{exdegree}{operator}
+\hypertarget{operator:EXDEGREE}{}
+
+\hspace*{2em} \k{exdegree} \s{expression};
+
+Example:
+\begin{verbatim}
+     exdegree(u + 3*chris(k,-k));
+
+     1
+\end{verbatim}
+
+
+\subsection{Exterior Multiplication}
+
+\ttindextype{"\textasciicircum{} (wedge)}{operator!exterior multiplication}
+\index{Exterior product}
+Exterior multiplication between exterior forms is carried out with the
+nary infix operator \textasciicircum{} (wedge)\label{wedge}.  Factors are ordered
+according to the usual ordering in {\REDUCE} using the commutation
+rule for exterior products.
+
+\example\index{EXCALC package!example}
+
+\begin{verbatim}
+     pform u=1,v=1,w=k;
+
+     u^v;
+
+     u^v
+
+     v^u;
+
+     - u^v
+
+     u^u;
+
+     0
+
+     w^u^v;
+
+           k
+     ( - 1) *u^v^w
+
+     (3*u-a*w)^(w+5*v)^u;
+
+     a*(5*u^v^w - u^w^w)
+\end{verbatim}
+
+It is possible to declare the dimension of the underlying space
+by\label{SPACEDIM} \ttindextype[EXCALC]{spacedim}{command} \index{Dimension}
+\hypertarget{command:SPACEDIM}{}
+
+\hspace*{2em} \k{spacedim} \s{number} $\mid$ \s{identifier};
+
+If an exterior product has a degree higher than the dimension of the
+space, it is replaced by 0:
+
+\begin{verbatim}
+     spacedim 4;
+
+     pform u=2,v=3;
+
+     u^v;
+
+     0
+\end{verbatim}
+
+
+\subsection{Partial Differentiation}
+
+Partial differentiation is denoted by the operator \f{@}\label{at}.  Its
+capability is the same as the {\REDUCE} \f{df} operator.
+\ttindextype[EXCALC]{"@}{operator} \index{Partial differentiation}
+\index{Differentiation!partial}
+\hypertarget{operator:@}{}
+
+\example\index{EXCALC package!example}
+
+\begin{verbatim}
+     @(sin x,x);
+
+     cos(x)
+
+     @(f,x);
+
+     0
+\end{verbatim}
+
+An identifier can be declared to be a function of certain variables.
+\ttindextype[EXCALC]{fdomain}{command}\hypertarget{command:FDOMAIN}{}
+This is done with the command \f{fdomain}\label{FDOMAIN}.  The
+following would tell the partial differentiation operator that \var{f}
+is a function of the variables \var{x} and \var{y} and that \var{h} is
+a function of \var{x}.
+\begin{verbatim}
+     fdomain f=f(x,y),h=h(x);
+\end{verbatim}
+Applying \f{@} to \var{f} and \var{h} would result in
+\begin{verbatim}
+     @(x*f,x);
+
+     f + x*@  f
+            x
+
+     @(h,y);
+
+     0
+\end{verbatim}
+
+\index{Tangent vector}
+The partial derivative symbol can also be an operator with a single
+argument.  It then represents a natural base element of a tangent
+vector\label{at1}.
+
+\example\index{EXCALC package!example}
+
+\begin{verbatim}
+     a*@ x + b*@ y;
+
+     a*@  + b*@
+        x      y
+\end{verbatim}
+
+\subsection{Exterior Differentiation}
+\index{Exterior differentiation}
+Exterior differentiation of exterior forms is carried out by the
+operator \f{d}\label{d}.  Products are normally differentiated out,
+\emph{i.e.}
+\begin{verbatim}
+     pform x=0,y=k,z=m;
+
+     d(x * y);
+
+     x*d y + d x^y
+
+     d(r*y);
+
+     r*d y
+
+     d(x*y^z);
+
+           k
+     ( - 1) *x*y^d z  + x*d y^z + d x^y^z
+\end{verbatim}
+
+This expansion can be suppressed by the command \f{noxpnd d}\label{NOXPNDD}.
+\ttindextype[EXCALC]{noxpnd}{! d}\hypertarget{command:NOXPND}{}
+
+\begin{verbatim}
+     noxpnd d;
+
+     d(y^z);
+
+     d(y^z)
+\end{verbatim}
+
+To obtain a canonical form for an exterior product when the expansion
+is switched off, the operator \texttt{d} is shifted to the right if it
+appears in the leftmost place.
+
+\begin{verbatim}
+     d y ^ z;
+
+             k
+     - ( - 1) *y^d z + d(y^z)
+\end{verbatim}
+
+Expansion is performed again when the command \f{xpnd d}\label{XPNDD}
+is executed. \ttindextype[EXCALC]{xpnd}{! \texttt{d}}\hypertarget{command:XPND}{}
+
+Functions which are implicitly defined by the \f{fdomain} command are
+expanded into partial derivatives:
+
+\begin{verbatim}
+     pform x=0,y=0,z=0,f=0;
+
+     fdomain f=f(x,y);
+
+     d f;
+
+     @  f*d x + @  f*d y
+      x          y
+\end{verbatim}
+
+If an argument of an implicitly defined function has further
+dependencies the chain rule will be applied \emph{e.g.} \index{Chain rule}
+
+
+\begin{verbatim}
+     fdomain y=y(z);
+
+     d f;
+
+     @  f*d x + @  f*@  y*d z
+      x          y    z
+\end{verbatim}
+
+Expansion into partial derivatives can be inhibited by
+\f{noxpnd @}\label{NOXPNDA}
+and enabled again by \texttt{xpnd @}\label{XPNDA}.
+\ttindextype[EXCALC]{noxpnd}{! "@} \ttindextype[EXCALC]{xpnd}{! "@}
+
+The operator is of course aware of the rules that a repeated
+application always leads to zero and that there is no exterior form of
+higher degree than the dimension of the space.
+
+\begin{verbatim}
+     d d x;
+
+     0
+
+     pform u=k;
+     spacedim k;
+
+     d u;
+
+     0
+\end{verbatim}
+\subsection{Inner Product}
+\index{Inner product!exterior form}
+The inner product between a vector and an exterior form is represented
+by the diphthong \f{\_\textbar} \label{innerp} (underscore or-bar), which is the
+notation of many textbooks.  If the exterior form is an exterior
+product, the inner product is carried through any factor.
+\ttindextype[EXCALC]{\_\textbar}{ (inner product) operator}
+\hypertarget{reserved:innerprodop}{}
+
+\example\index{EXCALC package!example}
+
+\begin{verbatim}
+     pform x=0,y=k,z=m;
+
+     tvector u,v;
+
+     u _| (x*y^z);
+
+              k
+     x*(( - 1) *y^u _| z + u _| y^z)
+\end{verbatim}
+
+In repeated applications of the inner product to the same exterior
+form the vector arguments are ordered \emph{e.g.}
+
+\begin{verbatim}
+     (u+x*v) _| (u _| (3*z));
+
+     - 3*u _| v _| z
+\end{verbatim}
+
+The duality of natural base elements is also known by the system, \emph{i.e.}
+
+\begin{verbatim}
+     pform {x,y}=0;
+
+     (a*@ x+b*@(y)) _| (3*d x-d y);
+
+     3*a - b
+\end{verbatim}
+
+\subsection{Lie Derivative}
+
+\index{Lie Derivative}
+The Lie derivative can be taken between a vector and an exterior form
+or between two vectors.  It is represented by the infix operator \f{\textbar\_}
+\label{lie}.  In the case of Lie differentiating, an exterior form by
+a vector, the Lie derivative is expressed through inner products and
+exterior differentiations, \emph{i.e.}
+\ttindextype[EXCALC]{\textbar\_}{ (Lie derivative) operator}
+\hypertarget{reserved:liederivativeop}{}
+\begin{verbatim}
+     pform z=k;
+
+     tvector u;
+
+     u |_ z;
+
+     u _| d z + d(u _| z)
+\end{verbatim}
+
+If the arguments of the Lie derivative are vectors, the vectors are
+ordered using the anticommutivity property, and functions (zero forms)
+are differentiated out.
+
+\example\index{EXCALC package!example}
+
+\begin{verbatim}
+     tvector u,v;
+
+     v |_ u;
+
+     - u |_ v
+
+     pform x=0,y=0;
+
+     (x*u) |_ (y*v);
+
+     - u*y*v _| d x + v*x*u _| d y + x*y*u |_ v
+\end{verbatim}
+
+\subsection{Hodge-* Duality Operator}
+
+\index{Hodge-* duality operator} \ttindextype[EXCALC]{"\#}{ (Hodge-*) operator}
+\hypertarget{reserved:hodegestareop}{}
+The Hodge-*\label{hodge} duality operator maps an exterior form of degree
+\texttt{k} to an exterior form of degree \texttt{n-k}, where \texttt{n} is the
+dimension of the space.  The double application of the operator must
+lead back to the original exterior form up to a factor. The following
+example shows how the factor is chosen here
+
+\begin{verbatim}
+     spacedim n;
+     pform x=k;
+
+     # # x;
+
+             2
+           (k  + k*n)
+     ( - 1)          *x*sgn
+\end{verbatim}
+%\pagebreak
+\ttindextype[EXCALC]{sgn}{! indeterminate sign} \index{Coframe}
+The indeterminate sgn in the above example denotes the sign of the
+determinant of the metric. It can be assigned a value or will be
+automatically set if more of the metric structure is specified (via
+\k{coframe}), \emph{i.e.} it is then set to $g/|g|$, where $g$ is the
+determinant of the metric.  If the Hodge-* operator appears in an
+exterior product of maximal degree as the leftmost factor, the Hodge-*
+is shifted to the right according to
+
+\begin{verbatim}
+     pform {x,y}=k;
+
+     # x ^ y;
+
+             2
+           (k  + k*n)
+     ( - 1)          *x^# y
+\end{verbatim}
+
+More simplifications are performed if a coframe is defined.
+
+
+
+\subsection{Variational Derivative}
+
+\index{Derivative!variational} \index{Variational derivative}
+\hypertarget{operator:VARDF}{}
+\ttindextype[EXCALC]{vardf}{(variational derivative) operator)}
+The function \texttt{vardf}\label{VARDF} returns as its value the
+variation of a given Lagrangian n-form with respect to a specified
+exterior form (a field of the Lagrangian).  In the shared variable
+\ttindextype[EXCALC]{bndeq"!*}{shared variable}
+\texttt{bndeq!*}, the expression is stored that has to yield zero if
+integrated over the boundary.
+
+Syntax:
+
+\hspace*{2em} \k{vardf}(\s{Lagrangian n-form},\s{exterior form})
+
+\example\index{EXCALC package!example}
+\begin{verbatim}
+  spacedim 4;
+
+  pform l=4,a=1,j=3;
+
+  l:=-1/2*d a ^ # d a - a^# j$  %Lagrangian of the e.m. field
+
+  vardf(l,a);
+
+  - (# j + d # d a)             %Maxwell's equations
+
+  bndeq!*;
+
+  - 'a^# d a                    %Equation at the boundary
+\end{verbatim}
+Restrictions:
+
+In the current implementation, the Lagrangian must be built up by the
+fields and the operations \texttt{d}, \texttt{\#}, and \texttt{@}. Variation
+with respect to indexed quantities is currently not allowed.
+
+For the calculation of the conserved currents induced by symmetry
+operators (vector fields), the function \texttt{noether}\label{NOETHER}
+\ttindextype[EXCALC]{noether}{function}\hypertarget{operator:NOETHER}{}
+is provided.  It has the syntax:
+
+\hspace*{2em}
+\k{noether}(\s{Lagrangian n-form},\s{field},\s{symmetry generator})
+
+\example\index{EXCALC package!example}
+\begin{verbatim}
+  pform l=4,a=1,f=2;
+
+  spacedim 4;
+
+  l := -1/2*d a^#d a;   %Free Maxwell field;
+
+  tvector x;        %An unspecified generator;
+
+  noether(l,a,x);
+
+    - 2*d(x _| a)^# d a + d a^x _| # d a - x _| d a^# d a
+   --------------------------------------------------------
+                           2
+
+
+\end{verbatim}
+
+The above expression would be the canonical energy
+momentum 3-forms of the Maxwell field, if X is interpreted
+as a translation;
+
+
+
+\subsection{Handling of Indices}
+\index{Exterior form!with indices}
+Exterior forms and vectors may have indices.  On input, the indices
+are given as arguments of the object.  A positive argument denotes a
+superscript and a negative argument a subscript.  On output, the
+indexed quantity is displayed two dimensionally if \sw{nat} is on.
+\ttindexswitch{nat}
+Indices may be identifiers or numbers.
+
+\example\index{EXCALC package!example}
+
+\begin{verbatim}
+     pform om(k,l)=m,e(k)=1;
+
+     e(k)^e(-l);
+
+      k
+     e ^e
+         l
+
+     om(4,-2);
+
+       4
+     om
+        2
+\end{verbatim}
+
+In the current release, full simplification is performed only if an
+index range is specified.  It is hoped that this restriction can be
+removed soon.  If the index range (the values that the indices can
+obtain) is specified, the given expression is evaluated for all
+possible index values, and the summation convention is understood.
+
+\example\label{INDEXRANGE}\index{EXCALC package!example}
+\ttindextype[EXCALC]{indexrange}{declaration}
+\hypertarget{command:INDEXRANGE}{}
+
+\begin{verbatim}
+     indexrange t,r,ph,z;
+
+     pform e(k)=1,s(k,l)=2;
+
+     w := e(k)*e(-k);
+
+              t       r        ph       z
+     w := e *e  + e *e  + e  *e   + e *e
+           t       r       ph        z
+
+
+     s(k,l):=e(k)^e(l);
+
+      t t
+     s    := 0
+
+      r t       t  r
+     s    := - e ^e
+
+      ph t       t  ph
+     s     := - e ^e
+
+       .
+       .
+       .
+
+\end{verbatim}
+
+If the expression to be evaluated is not an assignment, the values of
+the expression are displayed as an assignment to an indexed variable
+with name \texttt{ns}.  This is done only on output, \emph{i.e.} no actual
+binding to the variable ns occurs.
+\ttindextype[EXCALC]{ns}{dummy variable}
+
+\begin{verbatim}
+     e(k)^e(l);
+
+       t t
+     ns    := 0
+
+       r t       t  r
+     ns    := - e ^e
+       .
+       .
+       .
+\end{verbatim}
+
+It should be noted, however, that the index positions on the variable
+ns can sometimes not be uniquely determined by the system (because of
+possible reorderings in the expression). Generally it is advisable to
+use assignments to display complicated expressions.
+
+A range can also be assigned to individual index-names. For example,
+the declaration
+
+\begin{verbatim}
+    indexrange {k,l}={x,y,z},{u,v,w}={1,2};
+\end{verbatim}
+
+would assign to the index identifiers k,l the range values x,y,z and
+to the index identifiers u,v,w the range values 1,2. The use of an
+index identifier not listed in previous indexrange statements has the
+range of the union of all given index ranges.
+
+With the above example of an indexrange statement, the following
+index evaluations would take place
+
+\begin{verbatim}
+     pform w n=0;
+
+     w(k)*w(-k);
+
+         x       y       z
+     w *w  + w *w  + w *w
+      x       y       z
+
+     w(u)*w(-u);
+
+         1       2
+     w *w  + w *w
+      1       2
+
+     w(r)*w(-r);
+
+         1       2       x       y       z
+     w *w  + w *w  + w *w  + w *w  + w *w
+      1       2       x       y       z
+\end{verbatim}
+
+In certain cases, one would like to inhibit the summation over
+specified index names, or at all.  For this the command
+
+\ttindextype[EXCALC]{nosum}{command}\hypertarget{command:NOSUM}{}
+\hspace*{2em} \k{nosum} \s{indexname$_1$}, \ldots;\label{NOSUM}
+
+and the switch \sw{nosum} are\ttindexswitch[EXCALC]{nosum}
+\hypertarget{command:RENOSUM}{}
+\hypertarget{switch:NOSUM}{}
+available.  The command \f{nosum} has the effect that summation is
+not performed over those indices which had been listed.  The command
+\f{renosum}\label{RENOSUM} enables summation again.  The switch \sw{nosum},
+if on, inhibits any summation. \ttindextype[EXCALC]{renosum}{command}
+
+\label{INDEXSYMMETRIES} \ttindextype[EXCALC]{index\_symmetries}{command}
+\hypertarget{command:INDEX_SYMMETRIES}{}
+It is possible to declare symmetry properties for an indexed quantity by
+the command \f{index\_symmetries}. A prototypical example is as
+follows
+
+\begin{verbatim}
+
+    index_symmetries u(k,l,m,n): symmetric     in {k,l},{m,n}
+                                 antisymmetric in {{k,l},{m,n}},
+                     g(k,l),h(k,l): symmetric;
+
+\end{verbatim}
+
+It declares the object \texttt{u} symmetric in the first two and last
+two indices and antisymmetric with respect to commutation of the given
+index pairs. If an object is completely symmetric or antisymmetric,
+the indices need not to be given after the corresponding keyword as
+shown above for \texttt{g} and \texttt{h}.
+
+If applicable, this command should
+be issued, since great savings in memory and execution time result.
+Only strict components are printed.
+
+The commands symmetric and antisymmetric of earlier releases have no
+effect.
+
+
+\subsection{Metric Structures}
+
+\index{Metric structure} \index{Coframe}
+\hypertarget{command:COFRAME}{}
+A metric structure is defined in \package{EXCALC} by specifying a set of
+basis one-forms (the coframe) together with the metric\ttindextype[EXCALC]{coframe}{command}.
+
+
+Syntax:\label{COFRAME}
+
+\begin{flushleft}
+  \begin{tabular}{@{}l@{~}l}
+    \hspace*{2em} \k{coframe}
+    & \s{identifier}\s{(index$_1$)}=\s{expression$_1$}, \\
+    & \s{identifier}\s{(index$_2$)}=\s{expression$_2$}, \\
+    & . \\
+    & . \\
+    & . \\
+    & \s{identifier}\s{(index$_n$)}=\s{expression$_n$} \\
+    & \hspace{1em} \k{with} \k{metric} \s{name}=\s{expression}; \\
+  \end{tabular}
+\end{flushleft}
+
+\index{Euclidean metric} \ttindex{coframe!with metric}
+This statement automatically sets the dimension of the space and the
+index range. The clause \texttt{with metric} can be omitted if the metric
+\ttindex{coframe!with signature}
+is Euclidean and the shorthand \texttt{with signature \s{diagonal elements}}
+\label{SIGNATURE} can be used in the case of a pseudo-Euclidean metric. The
+splitting of a metric structure in its metric tensor coefficients and
+basis one-forms is completely arbitrary including the extremes of an
+orthonormal frame and a coordinate frame.
+
+\example\index{EXCALC package!example}
+
+\begin{verbatim}
+ coframe e r=d r, e(ph)=r*d ph
+   with metric g=e(r)*e(r)+e(ph)*e(ph);    %Polar coframe
+
+ coframe e(r)=d r,e(ph)=r*d(ph);           %Same as before
+
+ coframe o(t)=d t, o x=d x
+   with signature -1,1;                    %A Lorentz coframe
+
+ coframe b(xi)=d xi, b(eta)=d eta          %A lightcone coframe
+   with metric w=-1/2*(b(xi)*b(eta)+b(eta)*b(xi));
+
+ coframe e r=d r, e ph=d ph                %Polar coordinate
+   with metric g=e r*e r+r**2*e ph*e ph;   %basis
+
+\end{verbatim}
+
+Individual elements of the metric can be accessed just by calling them
+with the desired indices. The value of the determinant of the
+\index{Determinant!in detm"!*} \ttindextype[EXCALC]{detm"!*}{variable}
+covariant metric is stored in the variable \texttt{detm!*}.  The metric
+is not needed for lowering or raising of indices as the system
+performs this automatically, \emph{i.e.} no matter in what index
+position values were assigned to an indexed quantity, the values can
+be retrieved for any index position just by writing the indexed
+quantity with the desired indices.
+
+\example\index{EXCALC package!example}
+
+\begin{verbatim}
+     coframe e t=d t,e x=d x,e y=d y
+      with signature -1,1,1;
+
+     pform f(k,l)=0;
+
+     index_symmetries f(k,l): antisymmetric;
+
+     f(k,l) := 0$
+     f(-t,-x):=ex$ f(-x,-y):=b$
+     on nero;
+
+     f(k,-l);
+
+       x
+     ns     := - ex
+         t
+
+       t
+     ns     := - ex
+         x
+
+       y
+     ns     := - b
+         x
+
+       x
+     ns    := b
+         y
+\end{verbatim}
+
+Any expression containing differentials of the coordinate functions will
+be transformed into an expression of the basis one-forms.The system also
+knows how to take the exterior derivative of the basis one-forms.
+
+\index{Spherical coordinates}
+\example\ (Spherical coordinates)\index{EXCALC package!example}
+
+\begin{verbatim}
+     coframe e(r)=d(r), e(th)=r*d(th), e(ph)=r*sin(th)*d(ph);
+
+     d r^d th;
+
+       r  th
+     (e ^e  )/r
+
+     d(e(th));
+
+       r  th
+     (e ^e  )/r
+
+
+     pform f=0;
+
+     fdomain f=f(r,th,ph);
+
+     factor e;
+
+     on rat;
+
+     d f;       %the "gradient" of f in spherical coordinates;
+
+      r          th              ph
+     e *@  f + (e  *@   f)/r + (e  *@   f)/(r*sin(th))
+         r           th              ph
+\end{verbatim}
+
+The frame dual to the frame defined by the \f{coframe} command can
+be introduced by \k{frame} command. \ttindextype[EXCALC]{frame}{command}
+\hypertarget{command:FRAME}{}
+
+\hspace*{2em} \k{frame} \s{identifier};\label{FRAME}
+
+This command causes the
+dual property to be recognized, and the tangent vectors of the
+coordinate functions are replaced by the frame basis vectors.
+
+\example\index{EXCALC package!example}
+
+\begin{verbatim}
+   coframe b r=d r,b ph=r*d ph,e z=d z; %Cylindrical coframe;
+
+   frame x;
+
+   on nero;
+
+   x(-k) _| b(l);
+
+       r
+   ns    := 1
+     r
+
+        ph
+   ns      := 1
+     ph
+
+       z
+   ns    := 1
+     z
+
+   x(-k) |_ x(-l);       %The commutator of the dual frame;
+
+
+   ns     := x  /r
+     ph r     ph
+
+
+   ns     := ( - x  )/r  %i.e. it is not a coordinate base;
+     r ph         ph
+
+\end{verbatim}
+
+\ttindextype[EXCALC]{displayframe}{command} \index{Tracing!EXCALC package}\index{EXCALC package!tracing}
+\hypertarget{command:DISPLAYFRAME}{}
+As a convenience, the frames can be displayed at any point in a program
+by the command \f{displayframe;}\label{DISPLAYFRAME}.
+
+\index{Hodge-* duality operator}
+The Hodge-* duality operator returns the explicitly constructed dual
+element if applied to coframe base elements. The metric is properly
+taken into account.
+
+\index{Levi-Cevita tensor} \ttindextype[EXCALC]{eps}{operator}
+The total antisymmetric Levi-Cevita tensor \f{eps}\label{EPS} is
+also available.  The value of \f{eps} with an even permutation of the
+indices in a covariant position is taken to be +1.
+
+
+\subsection{Riemannian Connections}
+
+\index{Riemannian Connections}
+The command \f{riemannconx} is provided for calculating the
+\ttindextype[EXCALC]{riemannconx}{command} \label{RIEMANNCONX}
+\hypertarget{command:RIEMANNCONX}{}
+connection 1 forms.  The values are stored on the name given to
+\f{riemannconx}.  This command is far more efficient than calculating the
+connection from the differential of the basis one-forms and using
+inner products.
+
+\example (Calculate the connection 1-form and curvature 2-form on S(2))
+\index{EXCALC package!example}
+
+\begin{verbatim}
+   coframe e th=r*d th,e ph=r*sin(th)*d ph;
+
+   riemannconx om;
+
+   om(k,-l);                 %Display the connection forms;
+
+     th
+   ns      := 0
+        th
+
+     ph         ph
+   ns      := (e  *cos(th))/(sin(th)*r)
+        th
+
+     th            ph
+   ns      := ( - e  *cos(th))/(sin(th)*r)
+        ph
+
+     ph
+   ns      := 0
+        ph
+
+   pform curv(k,l)=2;
+
+
+   curv(k,-l):=d om(k,-l) + om(k,-m)^om(m-l);
+                 %The curvature forms
+
+       th
+   curv      := 0
+          th
+
+       ph            th  ph   2
+   curv      := ( - e  ^e  )/r
+          th               %Of course it was a sphere with
+                           %radius R.
+
+       th         th  ph   2
+   curv      := (e  ^e  )/r
+          ph
+
+       ph
+   curv      := 0
+          ph
+\end{verbatim}
+
+\subsection{Killing Vectors}
+
+\index{Killing Vectors}
+The command \f{killing\_vector} is provided for calculating the
+\ttindextype[EXCALC]{killing\_vector}{command} \label{KILLING_VECTOR}
+\hypertarget{command:KILLING_VECTOR}{}
+determining system of partial differential equations of Killing vectors for
+a given metric structure provided by the coframe statement.  The result is
+a list where the first entry is a vector constructed from the identifier
+given to the command and the second entry consists of a list of partial
+differential equations for the coefficients of this vector.
+
+\example\ (Calculate the determining pde's for a Killing vector of S(2))
+\index{EXCALC package!example}
+\begin{verbatim}
+
+coframe e th = d th,e ph = sin th*d ph;
+
+killing_vector u;
+
+
+      ph        th
+{@  *u   + @  *u  ,
+  ph        th
+
+       th
+ {@  (u  ),
+   th
+
+       ph         2        th
+  @  (u  )*sin(th)  + @  (u  ),
+   th                  ph
+
+           th        ph
+  cos(th)*u   + @  (u  )*sin(th)}}
+                 ph
+
+\end{verbatim}
+
+
+\subsection{Ordering and Structuring}
+
+\index{Ordering!exterior form} \index{Exterior form!ordering}
+\ttindextype[EXCALC]{forder}{command}\hypertarget{command:FORDER}{}
+\hypertarget{command:REMFORDER}{}
+The ordering of an exterior form or vector can be changed by the
+command \f{forder}.\label{FORDER}  In an expression, the first
+identifier or kernel in the arguments of \texttt{forder} is ordered ahead
+of the second, and so on, and ordered ahead of all not appearing as
+arguments.  This ordering is done on the internal level and not only
+on output.  The execution of this statement can therefore have
+tremendous effects on computation time and memory requirements.
+\f{remforder}\label{REMFORDER} brings back standard ordering for those
+elements that are listed as arguments. \ttindextype[EXCALC]{remforder}{command}
+
+An expression can be put in a more structured form by renaming a
+subexpression.  This is done with the command \f{KEEP} which
+has the syntax \ttindextype[EXCALC]{keep}{command}\label{KEEP}
+\hypertarget{command:KEEP}{}
+
+\hspace*{2em} \k{keep}
+\s{name$_1$}=\s{expression$_1$},\s{name$_2$}=\s{expression$_2$}, \ldots
+
+The effect is that rules are set up for simplifying \s{name} without
+introducing its definition in an expression. In an expression the system
+also tries by reordering to generate as many instances of \s{name} as
+possible.
+
+\example\index{EXCALC package!example}
+
+\begin{verbatim}
+     pform x=0,y=0,z=0,f=0,j=3;
+
+     keep j=d x^d y^d z;
+
+     j;
+
+     j
+
+     d j;
+
+     0
+
+     j^d x;
+
+     0
+
+     fdomain f=f(x);
+
+     d f^d y^d z;
+
+     @  f*j
+      x
+\end{verbatim}
+
+\index{Exterior product}
+The capabilities of \f{keep} are currently very limited.  Only exterior
+products should occur as righthand sides in \f{keep}.
+
+\pagebreak
+\subsection{Summary of Operators and Commands}
+Table~\ref{EXCALC:sum} summarizes EXCALC commands and the page number they are
+defined on.
+\nopagebreak
+\begin{table}[!htbp]
+\begin{center}
+\begin{tabular}{l l r}
+\ttindextype[EXCALC]{"\textasciicircum{} (wedge)}{operator!exterior multiplication}
+\index{Wedge}
+\f{\textasciicircum}  &  Exterior Multiplication & \pageref{wedge} \\
+\ttindextype[EXCALC]{"@}{operator!partial differentiation}
+\f{@}  & Partial Differentiation & \pageref{at}  \\
+\ttindextype[EXCALC]{"@}{operator!tangent vector}
+\f{@}  & Tangent Vector  & \pageref{at1}  \\
+\ttindextype[EXCALC]{"\#}{ (Hodge-*) operator}
+\f{\#}  & Hodge-* Operator & \pageref{hodge} \\
+\ttindextype[EXCALC]{\_\textbar}{(inner product) operator}
+\f{\_\textbar}  & Inner Product  & \pageref{innerp} \\
+\ttindextype[EXCALC]{\textbar\_}{(Lie derivative) operator}
+\f{\textbar\_}  & Lie Derivative  & \pageref{lie}  \\
+\f{coframe} & Declaration of a coframe & \pageref{COFRAME} \\
+\ttindextype[EXCALC]{d}{(exterior differentiation) operator}
+\f{d} &  Exterior differentiation & \pageref{d} \\
+\ttindextype[EXCALC]{displayframe}{command}
+\f{displayframe} & Displays the frame & \pageref{DISPLAYFRAME}\\
+\ttindextype[EXCALC]{eps}{! Levi-Civita tensor}
+\f{eps} & Levi-Civita tensor  & \pageref{EPS}  \\
+\ttindextype[EXCALC]{exdegree}{operator}
+\f{exdegree} & Calculates the exterior degree of an expression & \pageref{EXDEGREE}  \\
+\ttindextype[EXCALC]{fdomain}{command}
+\f{fdomain} & Declaration of implicit dependencies &\pageref{FDOMAIN} \\
+\ttindextype[EXCALC]{forder}{command}
+\f{forder} & Ordering command  & \pageref{FORDER} \\
+\ttindextype[EXCALC]{frame}{command}
+\f{frame} & Declares the frame dual to the coframe & \pageref{FRAME} \\
+\ttindextype[EXCALC]{indexrange}{command}
+\f{indexrange} & Declaration of indices & \pageref{INDEXRANGE} \\
+\ttindextype[EXCALC]{index\_symmetries}{command}
+\f{index\_symmetries} & Declares arbitrary index symmetry properties  & \pageref{INDEXSYMMETRIES} \\
+\ttindextype[EXCALC]{keep}{command}
+\f{keep} & Structuring command  & \pageref{KEEP} \\
+\ttindextype[EXCALC]{killing\_vector}{command}
+\f{killing\_vector} & Structuring command  & \pageref{KILLING_VECTOR} \\
+\ttindextype[EXCALC]{metric}{command}
+\f{metric} & Clause of COFRAME to specify a metric & \pageref{COFRAME} \\
+\ttindextype[EXCALC]{noether}{function}
+\f{noether} & Calculates the Noether current & \pageref{NOETHER} \\
+\ttindextype[EXCALC]{nosum}{command}
+\f{nosum} & Inhibits summation convention & \pageref{NOSUM} \\
+\ttindextype[EXCALC]{noxpnd}{command}
+\f{noxpnd} d & Inhibits the use of product rule for d &
+\pageref{NOXPNDD} \\
+\ttindextype[EXCALC]{noxpnd "@}{command}
+\f{noxpnd @} & Inhibits expansion into partial derivatives &
+\pageref{NOXPNDA} \\
+\ttindextype[EXCALC]{pform}{statement}
+\f{pform} & Declaration of exterior forms & \pageref{PFORM} \\
+\ttindextype[EXCALC]{remforder}{command}
+\f{remforder} & Clears ordering  & \pageref{REMFORDER} \\
+\ttindextype[EXCALC]{renosum}{command}
+\f{renosum} & Enables summation convention & \pageref{RENOSUM} \\
+\ttindextype[EXCALC]{riemannconx}{command}
+\f{riemannconx} & Calculation of a Riemannian Connection &
+\pageref{RIEMANNCONX} \\
+\ttindextype[EXCALC]{signature}{command}
+\f{signature} & Clause of coframe to specify a pseudo- & \pageref{SIGNATURE} \\
+  & Euclidean metric &   \\
+\ttindextype[EXCALC]{spacedim}{command}
+\f{spacedim} & Command to set the dimension of a space &
+\pageref{SPACEDIM} \\
+\ttindextype[EXCALC]{tvector}{command}
+\f{tvector} & declaration of vectors  & \pageref{TVECTOR} \\
+\ttindextype[EXCALC]{vardf}{operator}
+\f{vardf} & Variational derivative  & \pageref{VARDF} \\
+\ttindextype[EXCALC]{xpnd}{command}
+\f{xpnd d} & Enables the use of product rule for d & \pageref{XPNDD} \\
+  & (default)  &   \\
+\ttindextype[EXCALC]{xpnd!"@}{command}
+\f{xpnd @} & Enables expansion into partial derivatives & \pageref{XPNDA} \\
+  & (default)
+\end{tabular}
+\caption{EXCALC Command Summary}\label{EXCALC:sum}
+\end{center}
+\end{table}
+\newpage
+\subsection{Examples}
+
+The following examples should illustrate the use of {\bf EXCALC}. It is not
+intended to show the most efficient or most elegant way of stating the
+problems; rather the variety of syntactic constructs are exemplified.
+The examples are on a test file distributed with {\bf EXCALC}.
+\index{EXCALC package!example}
+{\small
+\begin{verbatim}
+% Problem: Calculate the PDE's for the isovector of the heat equation.
+% --------
+%         (c.f. B.K. Harrison, f.B. Estabrook, "Geometric Approach...",
+%          J. Math. Phys. 12, 653, 1971)
+
+% The heat equation @   psi = @  psi is equivalent to the set of exterior
+%                    xx        t
+
+% equations (with u=@ psi, y=@ psi):
+%                    T        x
+
+
+pform {psi,u,x,y,t}=0,a=1,{da,b}=2;
+
+a := d psi - u*d t - y*d x;
+
+da := - d u^d t - d y^d x;
+
+b := u*d x^d t - d y^d t;
+
+
+% Now calculate the PDE's for the isovector.
+
+tvector v;
+
+pform {vpsi,vt,vu,vx,vy}=0;
+fdomain vpsi=vpsi(psi,t,u,x,y),vt=vt(psi,t,u,x,y),vu=vu(psi,t,u,x,y),
+                               vx=vx(psi,t,u,x,y),vy=vy(psi,t,u,x,y);
+
+v := vpsi*@ psi + vt*@ t + vu*@ u + vx*@ x + vy*@ y;
+
+
+factor d;
+on rat;
+
+i1 := v |_ a - l*a;
+
+pform o=1;
+
+o := ot*d t + ox*d x + ou*d u + oy*d y;
+
+fdomain f=f(psi,t,u,x,y);
+
+i11 := v _| d a - l*a + d f;
+
+let vx=-@(f,y),vt=-@(f,u),vu=@(f,t)+u*@(f,psi),vy=@(f,x)+y*@(f,psi),
+    vpsi=f-u*@(f,u)-y*@(f,y);
+
+factor ^;
+
+i2 := v |_ b - xi*b - o^a + zeta*da;
+
+let ou=0,oy=@(f,u,psi),ox=-u*@(f,u,psi),
+    ot=@(f,x,psi)+u*@(f,y,psi)+y*@(f,psi,psi);
+
+i2;
+
+let zeta=-@(f,u,x)-@(f,u,y)*u-@(f,u,psi)*y;
+
+i2;
+
+let xi=-@(f,t,u)-u*@(f,u,psi)+@(f,x,y)+u*@(f,y,y)+y*@(f,y,psi)+@(f,psi);
+
+i2;
+
+let @(f,u,u)=0;
+
+i2;      % These PDE's have to be solved.
+
+
+clear a,da,b,v,i1,i11,o,i2,xi,t;
+remfdomain f,vpsi,vt,vu,vx,vy;
+clear @(f,u,u);
+
+
+% Problem:
+% --------
+% Calculate the integrability conditions for the system of PDE's:
+% (c.f. B.F. Schutz, "Geometrical Methods of Mathematical Physics"
+% Cambridge University Press, 1984, p. 156)
+
+
+% @ z /@ x + a1*z  + b1*z  = c1
+%    1           1       2
+
+% @ z /@ y + a2*z  + b2*z  = c2
+%    1           1       2
+
+% @ z /@ x + f1*z  + g1*z  = h1
+%    2           1       2
+
+% @ z /@ y + f2*z  + g2*z  = h2
+%    2           1       2      ;
+
+
+pform w(k)=1,integ(k)=4,{z(k),x,y}=0,{a,b,c,f,g,h}=1,
+      {a1,a2,b1,b2,c1,c2,f1,f2,g1,g2,h1,h2}=0;
+
+fdomain  a1=a1(x,y),a2=a2(x,y),b1=b1(x,y),b2=b2(x,y),
+         c1=c1(x,y),c2=c2(x,y),f1=f1(x,y),f2=f2(x,y),
+         g1=g1(x,y),g2=g2(x,y),h1=h1(x,y),h2=h2(x,y);
+
+
+a:=a1*d x+a2*d y$
+b:=b1*d x+b2*d y$
+c:=c1*d x+c2*d y$
+f:=f1*d x+f2*d y$
+g:=g1*d x+g2*d y$
+h:=h1*d x+h2*d y$
+
+% The equivalent exterior system:
+factor d;
+w(1) := d z(-1) + z(-1)*a + z(-2)*b - c;
+w(2) := d z(-2) + z(-1)*f + z(-2)*g - h;
+indexrange 1,2;
+factor z;
+% The integrability conditions:
+
+integ(k) := d w(k) ^ w(1) ^ w(2);
+
+clear a,b,c,f,g,h,x,y,w(k),integ(k),z(k);
+remfdomain a1,a2,b1,c1,c2,f1,f2,g1,g2,h1,h2;
+
+% Problem:
+% --------
+% Calculate the PDE's for the generators of the d-theta symmetries of
+% the Lagrangian system of the planar Kepler problem.
+% c.f. W.Sarlet, F.Cantrijn, Siam Review 23, 467, 1981
+% Verify that time translation is a d-theta symmetry and calculate the
+% corresponding integral.
+
+pform {t,q(k),v(k),lam(k),tau,xi(k),eta(k)}=0,theta=1,f=0,
+      {l,glq(k),glv(k),glt}=0;
+
+tvector gam,y;
+
+indexrange 1,2;
+
+fdomain tau=tau(t,q(k),v(k)),xi=xi(t,q(k),v(k)),f=f(t,q(k),v(k));
+
+l := 1/2*(v(1)**2 + v(2)**2) + m/r$      % The Lagrangian.
+
+pform r=0;
+fdomain r=r(q(k));
+let @(r,q 1)=q(1)/r,@(r,q 2)=q(2)/r,q(1)**2+q(2)**2=r**2;
+
+lam(k) := -m*q(k)/r;                                % The force.
+
+gam := @ t + v(k)*@(q(k)) + lam(k)*@(v(k))$
+
+eta(k) := gam _| d xi(k) - v(k)*gam _| d tau$
+
+y  := tau*@ t + xi(k)*@(q(k)) + eta(k)*@(v(k))$     % Symmetry generator.
+
+theta := l*d t + @(l,v(k))*(d q(k) - v(k)*d t)$
+
+factor @;
+
+s := y |_ theta - d f$
+
+glq(k) := @(q k) _| s;
+glv(k) := @(v k) _| s;
+glt := @(t) _| s;
+
+% Translation in time must generate a symmetry.
+xi(k) := 0;
+tau := 1;
+
+glq k := glq k;
+glv k := glv k;
+glt;
+
+% The corresponding integral is of course the energy.
+integ := - y _| theta;
+
+
+clear l,lam k,gam,eta k,y,theta,s,glq k,glv k,glt,t,q k,v k,tau,xi k;
+remfdomain r,f,tau,xi;
+
+% Problem:
+% --------
+% Calculate the "gradient" and "Laplacian" of a function and the "curl"
+% and "divergence" of a one-form in elliptic coordinates.
+
+
+coframe e u = sqrt(cosh(v)**2 - sin(u)**2)*d u,
+        e v = sqrt(cosh(v)**2 - sin(u)**2)*d v,
+        e phi = cos u*sinh v*d phi;
+
+pform f=0;
+
+fdomain f=f(u,v,phi);
+
+factor e,^;
+on rat,gcd;
+order cosh v, sin u;
+% The gradient:
+d f;
+
+factor @;
+% The Laplacian:
+# d # d f;
+
+% Another way of calculating the Laplacian:
+-#vardf(1/2*d f^#d f,f);
+
+remfac @;
+
+% Now calculate the "curl" and the "divergence" of a one-form.
+
+pform w=1,a(k)=0;
+
+fdomain a=a(u,v,phi);
+
+w := a(-k)*e k;
+% The curl:
+x := # d w;
+
+factor @;
+% The divergence:
+y := # d # w;
+
+
+remfac @;
+clear x,y,w,u,v,phi,e k,a k;
+remfdomain a,f;
+
+
+% Problem:
+% --------
+% Calculate in a spherical coordinate system the Navier Stokes equations.
+
+coframe e r=d r, e theta =r*d theta, e phi = r*sin theta *d phi;
+frame x;
+
+fdomain v=v(t,r,theta,phi),p=p(r,theta,phi);
+
+pform v(k)=0,p=0,w=1;
+
+% We first calculate the convective derivative.
+
+w := v(-k)*e(k)$
+
+factor e; on rat;
+
+cdv := @(w,t) + (v(k)*x(-k)) |_ w - 1/2*d(v(k)*v(-k));
+
+%next we calculate the viscous terms;
+
+visc := nu*(d#d# w - #d#d w) + mu*d#d# w;
+
+% Finally we add the pressure term and print the components of the
+% whole equation.
+
+pform nasteq=1,nast(k)=0;
+
+nasteq := cdv - visc + 1/rho*d p$
+
+factor @;
+
+nast(-k) := x(-k) _| nasteq;
+
+remfac @,e;
+
+clear v k,x k,nast k,cdv,visc,p,w,nasteq,e k;
+remfdomain p,v;
+
+
+% Problem:
+% --------
+% Calculate from the Lagrangian of a vibrating rod the equation of
+% motion and show that the invariance under time translation leads
+% to a conserved current.
+
+pform {y,x,t,q,j}=0,lagr=2;
+
+fdomain y=y(x,t),q=q(x),j=j(x);
+
+factor ^;
+
+lagr := 1/2*(rho*q*@(y,t)**2 - e*j*@(y,x,x)**2)*d x^d t;
+
+vardf(lagr,y);
+
+% The Lagrangian does not explicitly depend on time; therefore the
+% vector field @ t generates a symmetry. The conserved current is
+
+pform c=1;
+factor d;
+
+c := noether(lagr,y,@ t);
+
+% The exterior derivative of this must be zero or a multiple of the
+% equation of motion (weak conservation law) to be a conserved current.
+
+remfac d;
+
+d c;
+
+% i.e. it is a multiple of the equation of motion.
+
+clear lagr,c,j,y,q;
+remfdomain y,q,j;
+
+% Problem:
+% --------
+% Show that the metric structure given by Eguchi and Hanson induces a
+% self-dual curvature.
+% c.f. T. Eguchi, P.B. Gilkey, A.J. Hanson, "Gravitation, Gauge Theories
+% and Differential Geometry", Physics Reports 66, 213, 1980
+
+for all x let cos(x)**2=1-sin(x)**2;
+
+pform f=0,g=0;
+fdomain f=f(r), g=g(r);
+
+coframe   o(r) = f*d r,
+      o(theta) = (r/2)*(sin(psi)*d theta - sin(theta)*cos(psi)*d phi),
+        o(phi) = (r/2)*(-cos(psi)*d theta - sin(theta)*sin(psi)*d phi),
+        o(psi) = (r/2)*g*(d psi + cos(theta)*d phi);
+
+frame e;
+
+
+pform gamma(a,b)=1,curv2(a,b)=2;
+index_symmetries gamma(a,b),curv2(a,b): antisymmetric;
+
+factor o;
+
+gamma(-a,-b) := -(1/2)*( e(-a) _| (e(-c) _| (d o(-b)))
+		        -e(-b) _| (e(-a) _| (d o(-c)))
+		        +e(-c) _| (e(-b) _| (d o(-a))) )*o(c)$
+
+
+curv2(-a,b) := d gamma(-a,b) + gamma(-c,b)^gamma(-a,c)$
+
+let f=1/g,g=sqrt(1-(a/r)**4);
+
+pform chck(k,l)=2;
+index_symmetries chck(k,l): antisymmetric;
+
+% The following has to be zero for a self-dual curvature.
+
+chck(k,l) := 1/2*eps(k,l,m,n)*curv2(-m,-n) + curv2(k,l);
+
+clear gamma(a,b),curv2(a,b),f,g,chck(a,b),o(k),e(k),r,phi,psi;
+remfdomain f,g;
+
+% Example: 6-dimensional FRW model with quadratic curvature terms in
+% -------
+% the Lagrangian (Lanczos and Gauss-Bonnet terms).
+% cf. Henriques, Nuclear Physics, B277, 621 (1986)
+
+for all x let cos(x)**2+sin(x)**2=1;
+
+pform {r,s}=0;
+fdomain r=r(t),s=s(t);
+
+coframe o(t) = d t,
+        o(1) = r*d u/(1 + k*(u**2)/4),
+        o(2) = r*u*d theta/(1 + k*(u**2)/4),
+        o(3) = r*u*sin(theta)*d phi/(1 + k*(u**2)/4),
+        o(4) = s*d v1,
+        o(5) = s*sin(v1)*d v2
+ with metric g =-o(t)*o(t)+o(1)*o(1)+o(2)*o(2)+o(3)*o(3)
+                +o(4)*o(4)+o(5)*o(5);
+
+frame e;
+
+on nero; factor o,^;
+
+riemannconx om;
+
+pform curv(k,l)=2,{riemann(a,b,c,d),ricci(a,b),riccisc}=0;
+
+index_symmetries curv(k,l): antisymmetric,
+                 riemann(k,l,m,n): antisymmetric in {k,l},{m,n}
+                                   symmetric in {{k,l},{m,n}},
+                 ricci(k,l): symmetric;
+
+curv(k,l) := d om(k,l) + om(k,-m)^om(m,l);
+
+riemann(a,b,c,d) := e(d) _| (e (c) _| curv(a,b));
+
+% The rest is done in the Ricci calculus language,
+
+ricci(-a,-b) := riemann(c,-a,-d,-b)*g(-c,d);
+
+riccisc := ricci(-a,-b)*g(a,b);
+
+pform {laglanc,inv1,inv2} = 0;
+
+index_symmetries riemc3(k,l),riemri(k,l),
+                 hlang(k,l),einst(k,l): symmetric;
+
+pform {riemc3(i,j),riemri(i,j)}=0;
+
+riemc3(-i,-j) := riemann(-i,-k,-l,-m)*riemann(-j,k,l,m)$
+inv1 := riemc3(-i,-j)*g(i,j);
+riemri(-i,-j) := 2*riemann(-i,-k,-j,-l)*ricci(k,l)$
+inv2 := ricci(-a,-b)*ricci(a,b);
+laglanc := (1/2)*(inv1 - 4*inv2 + riccisc**2);
+
+
+pform {einst(a,b),hlang(a,b)}=0;
+
+hlang(-i,-j) := 2*(riemc3(-i,-j) - riemri(-i,-j) -
+		   2*ricci(-i,-k)*ricci(-j,K) +
+		   riccisc*ricci(-i,-j) - (1/2)*laglanc*g(-i,-j));
+
+% The complete Einstein tensor:
+
+einst(-i,-j) := (ricci(-i,-j) - (1/2)*riccisc*g(-i,-j))*alp1 +
+		hlang(-i,-j)*alp2$
+
+alp1 := 1$
+factor alp2;
+
+einst(-i,-j) := einst(-i,-j);
+
+clear o(k),e(k),riemc3(i,j),riemri(i,j),curv(k,l),riemann(a,b,c,d),
+      ricci(a,b),riccisc,t,u,v1,v2,theta,phi,r,om(k,l),einst(a,b),
+      hlang(a,b);
+
+remfdomain r,s;
+
+% Problem:
+% --------
+% Calculate for a given coframe and given torsion the Riemannian part and
+% the torsion induced part of the connection. Calculate the curvature.
+
+% For a more elaborate example see E.Schruefer, F.W. Hehl, J.D. McCrea,
+% "Application of the REDUCE package EXCALC to the Poincare gauge field
+% theory of gravity", GRG Journal, vol. 19, (1988)  197--218
+
+pform {ff, gg}=0;
+
+fdomain ff=ff(r), gg=gg(r);
+
+coframe o(4) = d u + 2*b0*cos(theta)*d phi,
+        o(1) = ff*(d u + 2*b0*cos(theta)*d phi) + d r,
+        o(2) = gg*d theta,
+        o(3) = gg*sin(theta)*d phi
+ with metric g = -o(4)*o(1)-o(4)*o(1)+o(2)*o(2)+o(3)*o(3);
+
+frame e;
+
+pform {tor(a),gwt(a)}=2,gamma(a,b)=1,
+      {u1,u3,u5}=0;
+
+index_symmetries gamma(a,b): antisymmetric;
+
+fdomain u1=u1(r),u3=u3(r),u5=u5(r);
+
+tor(4) := 0$
+
+tor(1) := -u5*o(4)^o(1) - 2*u3*o(2)^o(3)$
+
+tor(2) := u1*o(4)^o(2) + u3*o(4)^o(3)$
+
+tor(3) := u1*o(4)^o(3) - u3*o(4)^o(2)$
+
+gwt(-a) := d o(-a) - tor(-a)$
+
+% The following is the combined connection.
+% The Riemannian part could have equally well been calculated by the
+% RIEMANNCONX statement.
+
+gamma(-a,-b) := (1/2)*( e(-b) _| (e(-c) _| gwt(-a))
+	               +e(-c) _| (e(-a) _| gwt(-b))
+                       -e(-a) _| (e(-b) _| gwt(-c)) )*o(c);
+
+pform curv(a,b)=2;
+index_symmetries curv(a,b): antisymmetric;
+factor ^;
+
+curv(-a,b) := d gamma(-a,b) + gamma(-c,b)^gamma(-a,c);
+
+clear o(k),e(k),curv(a,b),gamma(a,b),theta,phi,x,y,z,r,s,t,u,v,p,q,c,cs;
+remfdomain u1,u3,u5,ff,gg;
+
+showtime;
+end;
+\end{verbatim}
+}

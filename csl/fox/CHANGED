@@ -1,0 +1,272 @@
+The file in this directory are a derived work of FOX 1.6.49, and are
+subject to the LGPL, a copy of which is present here. One requirement
+of that is that changes are prominently noted and a date is attached. This
+file is to collect that information in a way intended to be as clear and
+easy for people to use as possible. I am taking the view that files that one
+would re-generate using the gnu autoconf tools (eg Makefile.in) do not need
+to be marked or listed provided the master copy (eg Makefile.am) that they
+are derived from is. I will also use this as a place to provide a very very
+brief annotation as to why some of these files had to be altered.
+
+
+
+(a) Changed files
+
+autogen.sh                     remake "configure" script etc
+configure.ac                   all sorts of changes to support my world.
+
+include/FXText.h               add TEXT_COLUMNWRAP manifest
+include/fxdefs.h               extra test to support Cygwin wrt wchar_t
+src/FXText.cpp                 option to wrap at a fixed column plus
+                               a load of stuff to support maths display
+src/Makefile.am                support 64-bit windows build using
+                               x86_64-w64-mingw32-g++, add in my new files,
+                               remove use of libtool.
+utils/Makefile.am              if cross-building use gcc to compile utils.
+
+
+(b) New files
+
+include/FXDCNativePrinter.h    header files for my new stuff
+include/FXPostscriptFont.h
+include/FXReduceDialog.h
+include/FXShowMath.h
+include/FXTerminal.h
+
+src/FXDCNativePrinter.cpp      can use windows native printing as well as
+                               printing to postscript
+src/FXPostscriptFont.cpp       Postscript font metrics for printing
+src/FXPrintSample.cpp          accompanied the basis that FXDCNativePrinter
+                               built on
+src/FXShowMath.cpp             display mathematical expressions
+src/FXTerminal.cpp             a terminal for interactive sessions to run in
+src/FXReduceDialog.cpp         Reduce specific menu support
+src/FXReduceMenus.cpp          table of the new menu text
+src/FXWorker.cpp               thread-related parts assocated with FXTermninal
+
+src/cmfont-info.c              extract metrics from font info in a way I want
+src/font-info.c                more maths font support
+src/fwin.c                     my termainl-like interface
+src/FinderLaunch.c             Macintosh support code
+src/fox-icons.c                icons for fwin, csl and reduce
+src/termed.c                   local editing for console apps
+
+============================================================
+
+
+Changes to the ACN parts of the code:
+
+January 2014:
+  FXShowMath.cpp: alter treatment of TeX "~" to use character code 0xb6
+     to stand for it. It measures as if it was "x" but is not printed at
+     all, so it acts like a blank character. This improves the behaviour
+     Reduce has on
+         write "this is a message with blanks in";
+     Well actually I make the width 2/3 that of an "x" which looks nicer.
+     Also a fix so that
+         write "#";
+     works properly. It used to generate a messy failure message.
+     Use a downwards displaced n-rule to show "\_" so that names
+     with embedded underscores are handled a bit better. Then re-correct
+     so that matrices can again be displayed OK.
+
+February 2014: Move towards some Unicode interface to terminal handling so
+     that non-ASCII characters may eventually be handled better.
+
+     (Feb 9) The code builds with FXMathText.cpp brought much more up to
+     date, and characters with codes beyond the range 32-127 are now
+     semi coped-with by the GUI even if application code that uses it may
+     not cope. However as part of the changes to deal with this COPY
+     operations in FXTerminal.cpp have been disabled until they can be
+     revistited and recast so as to be able to use UTF-8. Also it seems that
+     input such as "A B <pound> C" leads to a screen display with a small
+     amount of junk visible to the right of the "C", so there is somewhere
+     that allowance for multi-octet sequences has not been got quite right.
+     I might HOPE to fix both of these soon. I believe that the second
+     only arises if you type in an extended characters (eg an accented
+     letter on a non-UK/non-US keyboard or a pounds sign on a UK keyboard)
+     and that had previously been even more broken... so I will not view
+     that as too high priority.
+     (Feb 11) Above changes broken and so now undone - will check them in
+     again when better tested! Start migration to a copy of the stuff
+     here based on fox 1.6.49
+
+     (Feb 26) Most of migration to fox 1.6.49 complete.
+     (Feb 27) Further tidying up. COPY & PASTE still need to be put back.
+     (Feb 28) Support for plain text in buffer to support COPY of maths
+              output.
+     (Mar 13) ignore SIGTTOU message so that if code is started in the
+              background attempts to use tcsetattr do not make it hang.
+     (Mar 26) ignore "win" prefix and "32" suffix when extracting program
+              name.
+     (Apr 18) more care with 2-byte wchar_t, and make "TERM=dumb" behave.
+
+December 2014: Change logic for finding help files.
+
+February 2015: Add menus to pop up dialog boxes for a range of Reduce
+     algebraic operations.
+
+March 2015: increase the pool size in FXShowMath.cpp because when it overflows
+     everything seems to crash. I will need a proper fix some time because
+     my change of buffer size delays rather than cures the issue!
+
+April 2015: A proper fix (I hope) for the issue noted from March 2015.
+
+July 2015: adjustment to characters used in the display of \left| and
+           \right|, plus a spelling fix.
+
+December 2015: changes (mostly to fwin.cpp & immediate friends) to support
+      packing a macintosh build into an application bundle.
+      Then follow-on corrections to get the Windows case working again!
+
+January 2016: Updates to fwin.cpp to break a single huge procedure into
+      several smaller chunks, and fix bugs introduced over the previous
+      few weeks!
+
+January 2016: Correction of typos in the FXReduceMenus.cpp
+      (and another few of the same...)     
+
+November 2016: Correction re updating the switches menu state.
+
+March 2016: Small changes in the ACN/Reduce specific code to track what
+      I have done in the cslbase directory
+
+April 2017. Small tidy up operations in the ACN specific code.
+
+August 2017. Tidy up the use of "namespace" with the files that I had
+      added. A consequence of this is that FOX must be re-build for
+      use with versions of CSL that adhere to the new namespace treatment.
+
+May 2018. Put test for presence of sigaction into the autoconf stuff, so that
+      my fwin.h/fwin.cpp can use if where available.
+
+September 2018. I have tried to rationalize the issue about builds that do
+      or do not support windowing and ones that do or do not support
+      local editing via cursor addressing at a console - both with those
+      choices made at build time and when it is not clear until run-time
+      what can happen. I have made what should be enhancements to terminal
+      handling code that should - for instance - make detection of ^C more
+      prompt and reliable. And input history here now gets saved from
+      session to session.
+
+February 2019: Changes in FXterminal.cpp and my parts of FXText.cpp that
+      put an extra level of buffering into the transfer of matereial to
+      the GUI.
+      This (I hope!) speeds up display of huge formulae in Reduce.
+
+March 2019. The word "register" will be utterly rejected in C++17, and now
+      we are in 2019, and so C++17 gradually become the default. Since the
+      keyword was only ever to help with performance I will just delete it
+      everywhere it occurs! Yuk for the C++ standard breaking existing code!
+
+      (more in March) All sorts of adjustment to get the September 2018
+      changes working after many of them got accidentally messed up in an
+      editing error. Also edit configure.ac to force compilation in at least
+      C++11 mode. This adds a directory "fox/m4" with a macro for detecting
+      C++ versions, but subversion will tend to report a conflict fetching
+      that because there will be an existing m4 directory. Resolve eg by going
+      "svn -R revert ." in the fox directory followed by a further svn update,
+      or possibly deleting the fox/m4 directory and then letting subversion
+      restore it (and then doing a full reconfigure)...
+      #include both <stdlib.h> and <cstdlib> in fx.h so that one can be
+      certain of accessing library functions either with undecorated names
+      like "abort" and with qualified ones like "std::abort"
+
+      One checkin had left some stray trace print statements in... I have
+      now removed them.
+
+      Fixes to make the situation where input is not direct from a terminal
+      in termed.cpp work again!
+
+      Add some debugging hooks to fx.h, eg my_assert and friends.
+
+      #include both <stdlib.h> and <cstdlib> so that library functions can be
+      referenced either as (eg) "abort" or "std::abort", where I view the
+      latter as the safer and more forward looking, if uglier!
+
+      Ensure that lines that are to be printed are nul-terminated when
+      passed to printBufferText  
+
+      Correct accessing the "gap" when trying to get a pointer to the box structure
+      for the formula.
+
+May 2019. A lot more changes to terminal handling and ^C processing. My latest
+      model is that it should be
+        ^C raise an exception in the Lisp that unwinds without a backtrace
+        ^G raise an exception that unwinds with a backtrace
+        ALT-^C exit the system at once
+        ALG-^G run a break loop
+      At present CSL has the start of a framework for break loops but has
+      not got that in a workable state, so ALT-^G causes an odd effect - but
+      that is an issue for CSL not for my FOX adjustments here.
+      Futher fix when cfmakeraw is available.w
+      Yet further fix down to stupid error regarding the order of args to
+      memcpy!
+
+June 2019. A fix related to the judgment as to whether we are running "reduce"
+      or "something else" in as much as that has an impact on how history
+      is collected.
+
+July 2019. On the Mac try a bit harder to find a font that will exist, and
+      also in the FOX code consolidate which logging functions I use.
+      
+October 2019. Some of the files shared with and specific to CSL now use
+      eg <cstdio> rather than <stdio.h> and prefix function names etc with
+      std:: so that they are "more C++ like".
+
+November 2019. Fixes so that the TeX input 2 \* 2^\frac{1,2} gets treated as
+      if it has \times rather than \* so that the pair of almost-adjacent
+      digits do not cause confusion.
+
+November 2019. If it looks as if the fontconfig configuration file is not
+      present use a version that I copied from the macports version of
+      fontconfig and that I then hide in the Application Bundle.
+
+December 2019. Use RAII rather than atexit() in a couple of places and
+      terminate keyboard thread on Windows is a way that is a little messier
+      to code but that may be safer.
+
+January 2020. Fixing re the December adjustment so that closing a window
+      causes the underlying application to exit.
+
+January 2020. Remove PRINT, CUT, PASTE menu items since the underlying code
+      does not function - this is to be seen as a request that some volunteer
+      with C++ skills join in and reinstate these facilities. If somebody
+      is making a proper start at that I will advise the the extent that I am
+      able. Note that the code that does all this is fairly separate from the
+      Reduce algebra engine and so working on it does not require familiarity
+      with Reduce internals, Lisp, computer algebra etc!
+
+January 2020. Fixes to Windows console handling...
+      Also arrange that if argv[0] is enclosed in single quotes (to allow
+      for whitespace) that they are removed when I am thinking about file
+      paths for the image file.
+
+October 2020. fwin.cpp (and configure.ac) changed so that in some cases the
+      C++17 std::filesystem capabilities will be used.
+
+February 2021. Change configure.ac as that it does not override CXXFLAGS and
+      thus prevent users of the configure script for passing down options
+      that are in fact needed.
+
+March 2021. Review autoconf files to ensure survival against autoconf 2.71
+      without generating excessive warnings, and add a header file #include
+      in FXThread.cpp where gettimeofday() was not otherwise declared.
+
+March 2021.   FXShowMath.cpp.  Support \wp  as cmmi:0x7d and \ell as cmmi:0x60
+              Also allow Math Calligraphic characters csym:0x41 through to 0x5a
+	      by adding support for \mathcal via function doMathCal.
+
+April 2021. Put --enable-test and --enable-experiement to be recognized in
+      configure.ac
+
+May  2021.    FXShowMath.cpp & FXShowMath.h: Added support for a new Box type
+     	      LinedBox and for \bar, \overline and \underline -- Alan Barnes
+
+June 2021.    A few more lines in FXShowMath.cpp so that debugging of the
+              width of glyphs can be more easily debugged.
+
+Sept 2021.    Flush stdout & stderr when - on the Mac - a call to execv
+              fails. This should never happen!
+	      
+<end of CHANGED>

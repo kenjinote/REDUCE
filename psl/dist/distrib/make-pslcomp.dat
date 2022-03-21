@@ -1,0 +1,9 @@
+(setq loaddirectories* '("" "$pl/" "$pnkl/" "$pll/"))
+(on verboseload)
+(load pslcomp init-file)
+(load strings common)
+(let ((*usermode nil)(*redefmsg nil))
+  (copyd 'main 'original-main))
+(savesystem "PSL 4.2 Compiler" "$psys/pslcomp"
+   '((read-init-file "pslcomp")))
+(exitlisp)

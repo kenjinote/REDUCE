@@ -1,0 +1,3583 @@
+\index{Gr\"abe, Hans-Gert}
+\index{People!Gr\"abe, Hans-Gert}
+
+\newcommand{\ind}[1]{\emph{#1}\index{#1!Cali package@\textsc{Cali} package}}
+\newcommand{\indf}[2]{\f{#1}\ttindextype[CALI]{#1}{#2}}
+\newcommand{\indid}[1]{\texttt{#1}\ttindextype[CALI]{#1}{symbol}}
+\newcommand{\indsw}[1]{\sw{#1}\ttindexswitch[CALI]{#1}}
+\newcommand{\calipbx}[1]{\mbox{}\hfill \parbox[t]{12cm}{#1} \pagebreak[3]}
+
+Key words:
+affine and projective monomial curves,
+affine and projective sets of points,
+analytic spread,
+associated graded ring,
+blowup,
+border bases,
+constructive commutative algebra,
+dual bases,
+elimination,
+equidimensional part,
+extended Gr\"obner factorizer,
+free resolution,
+Gr\"obner algorithms for ideals and module,
+Gr\"obner factorizer,
+ideal and module operations,
+independent sets,
+intersections,
+lazy standard bases,
+local free resolutions,
+local standard bases,
+minimal generators,
+minors,
+normal forms,
+pfaffians,
+polynomial maps,
+primary decomposition,
+quotients,
+symbolic powers,
+symmetric algebra,
+triangular systems,
+weighted Hilbert series,
+primality test,
+radical,
+unmixed radical.
+
+
+\subsection{Introduction}
+
+This package contains algorithms for computations in commutative
+algebra closely related to the Gr\"obner algorithm for ideals and modules.
+Its heart is a new implementation of the Gr\"obner algorithm\footnote{The
+data representation even for polynomials is different from that given
+in the \package{Groebner} package distributed with \REDUCE (and rests on ideas
+ in the \package{Dipoly} package).} that allows the computation of
+syzygies, too. This implementation is also applicable to submodules of
+free modules with generators represented as rows of a matrix.
+
+Moreover \package{CALI} contains facilities for local computations, using a
+modern implementation of Mora's standard basis algorithm, see
+\cite{MoraPfisterTraverso:92} and \cite{Graebe:94}, that works for arbitrary term orders.
+The full analogy between modules over the local ring \linebreak[1]
+$k[x_v:v\in H]_{\mathbf{m}}$ and homogeneous (in fact H-local) modules
+over $k[x_v:v\in H]$ is reflected through the switch
+\ttindexswitch[CALI]{Noetherian}.
+Turn it on (Gr\"obner basis, the default) or off (local
+standard basis) to choose appropriate algorithms
+automatically. In v.~2.2 we present an unified approach to both
+cases, using reduction with bounded ecart for non Noetherian term
+orders, see \cite{Graebe:95a} for details. This allows to have a common
+driver for the Gr\"obner algorithm in both cases.
+
+\package{CALI} extends also the restricted term order facilities of the
+\package{groebner} package, defining term orders by degree vector lists, and
+the rigid implementation of the sugar idea, by a more flexible
+\ind{ecart} vector, in particular useful for local computations, see
+\cite{Graebe:94}.
+\medskip
+
+The package was designed mainly as a symbolic mode programming
+environment extending the build-in facilities of \REDUCE for the
+computational approach to problems arising naturally in commutative
+algebra. An algebraic mode interface accesses (in a more rigid frame)
+all important features implemented symbolically and thus
+should be favored for short sample computations.
+
+On the other hand, tedious computations are strongly recommended to
+be done symbolically since this allows considerably more flexibility
+and avoids unnecessary translations of intermediate results from
+\package{CALI}'s internal data representation to the algebraic mode and vice
+versa. Moreover, one can easily extend the package with new symbolic
+mode scripts, or do more difficult interactive computations. For all
+these purposes the symbolic mode interface offers substantially more
+facilities than the algebraic one.
+\medskip
+
+For a detailed description of special symbolic mode procedures one
+should consult the source code and the comments therein. In this
+manual we can give only a brief description of the main ideas
+incorporated into the package \package{CALI}. We concentrate on the data
+structure design and the description of the more advanced algorithms.
+For sample computations from several fields of commutative algebra
+the reader may consult also the \emph{cali.tst} file.
+\medskip
+
+As main topics \package{CALI} contains facilities for
+\begin{itemize}
+\item defining rings, ideals and modules,
+
+\item computing Gr\"obner bases and local standard bases,
+
+\item computing syzygies, resolutions and (graded) Betti numbers,
+
+\item computing (now also weighted) Hilbert series, multiplicities,
+independent sets, and dimensions,
+
+\item computing normal forms and representations,
+
+\item computing sums, products, intersections, quotients, stable
+quotients, elimination ideals etc.,
+
+\item primality tests, computation of radicals, unmixed radicals,
+equidimensional parts, primary decompositions etc. of ideals and
+modules,
+
+\item advanced applications of Gr\"obner bases (blowup, associated graded
+ring, analytic spread, symmetric algebra, monomial curves etc.),
+
+\item applications of linear algebra techniques to zero dimensional
+	ideals, as e.g.\ the FGLM change of term orders, border bases
+	and affine and projective ideals of sets of points,
+
+\item splitting polynomial systems of equations mixing factorization and
+the Gr\"obner algorithm, triangular systems, and different versions of the
+extended Gr\"obner factorizer.
+
+\end{itemize}
+
+Below we will use freely without further explanation the notions
+common for text books and papers about constructive commutative
+algebra, assuming the reader to be familiar with the corresponding
+ideas and concepts. For further references see e.g.\ the text books
+\cite{Becker:93}, \cite{Cox:92} and \cite{Mishra:93} or the survey papers
+\cite{Buchberger:85}, \cite{Buchberger:88} and \cite{Robbiano:89}.
+
+\subsubsection{Description of the Documents Distributed with \package{CALI}}
+
+The \package{CALI} package contains the following files:
+\begin{quote}
+cali.chg
+
+\calipbx{a detailed report of changes from v.~2.1 to v.~2.2. and 2.2.1}
+
+cali.log
+
+\calipbx{the output file, that cali.tst should produce with
+\begin{quote} \tt
+load\_package cali;
+
+out "logfile"\$
+
+in "cali.tst";
+
+shut "logfile"\$
+\end{quote}}
+
+cali.red
+
+\calipbx{the \package{CALI} source file.}
+
+cali.tex
+
+\calipbx{this manual.}
+
+cali.tst
+
+\calipbx{a test file with various examples and applications of \package{CALI}.}
+
+\end{quote}
+
+\package{CALI} should be
+\iffalse
+precompiled as usual, i.e.\ either using the \emph{makefasl} utility of \REDUCE or ``by hand'' via
+\begin{verbatim}
+    faslout "cali"$
+    in "cali.red"$
+    faslend$
+\end{verbatim}
+and then
+\fi
+loaded via
+\begin{verbatim}
+    load_package cali;
+\end{verbatim}
+Upon successful loading \package{CALI} responds with a message containing the
+version number and the last update of the distribution.
+
+\begin{center}
+\fbox{\parbox{12cm}{Feel free to contact me by email if You have
+problems to get \package{CALI} started. Also comments, hints, bug reports etc.
+are welcome.}}
+\end{center}
+
+\subsubsection{CALI's Language Concept}
+
+From a certain point of view one of the major disadvantage of the
+current RLISP (and the underlying Lisp) language is the fact
+that it supports modularity and data encapsulation only in a
+rudimentary way.  Since all parts of code loaded into a session are
+visible all the time, name conflicts between different packages may
+occur, will occur (even not issuing a warning message), and are hard
+to prevent, since packages are developed (and are still developing)
+by different research groups at different places and different time.
+
+A (yet rudimentary) concept of \REDUCE packages and modules indicates the
+direction into what the \REDUCE designers are looking for a solution
+for this general problem.
+\medskip
+
+\package{CALI} (2.0 and higher) follows a name concept for internal procedures
+to mimick data encapsulation at a semantical level. We hope this way
+on the one hand to resolve the conflicts described above at least for
+the internal part of \package{CALI} and on the other hand to anticipate a
+desirable future and already foregoing development of \REDUCE towards
+a true modularity.
+
+The package \package{CALI} is divided into several modules, each of them
+introducing either a single new data type together with basic
+facilities, constructors, and selectors or a collection of algorithms
+subject to a common problem. Each module contains \ind{internal
+procedures}, conceptually hidden by this module, \ind{local
+procedures}, designed for a \package{CALI} wide use, and \ind{global
+procedures}, exported by \package{CALI} into the general (algebraic or
+symbolic) environment of \REDUCE. A header \ind{module cali} contains
+all (fluid) global variables and switches defined by the package
+\package{CALI}.
+
+Along these lines the \package{CALI} procedures available in symbolic mode are
+divided into three types with the following naming convention:
+\begin{quote}
+\texttt{module!=procedure}
+
+\calipbx{internal to the given module.}
+
+\texttt{module\textbackslash procedure}
+
+\calipbx{exported by the given module into the local \package{CALI} environment.}
+
+\texttt{procedure!*}
+
+\calipbx{a global procedure usually having a semantically equivalent
+procedure (possibly with another parameter list) without trailing
+asterisk in algebraic mode.}
+\end{quote}
+There are also symbolic mode equivalents without trailing asterisk, if
+the algebraic procedure is not a \emph{psopfn}, but a \emph{symbolic
+operator}. They transfer data to \package{CALI}'s internal structure and call
+the corresponding procedure with trailing asterisk. \package{CALI} 2.2
+distinguishes between algebraic and symbolic calls of such a
+procedure. In symbolic mode such a procedure calls the corresponding
+procedure with trailing asterisk directly without data transfer.
+\medskip
+
+\package{CALI} 2.2 follows also a more concise concept for global
+variables. There are three types of them:
+\begin{quote}
+True \emph{fluid} global variables,
+
+\calipbx{that are part of the current data structure, as e.g.\ the current
+base ring and the degree vector. They are often locally rebound to be
+restored after interrupts.}
+
+Global variables, stored on the property list of the package name \texttt{cali},
+
+\calipbx{that reflect the state of the computational model as e.g.\ the
+trace level, the output print level or the chosen version of the Gr\"obner
+basis algorithm. There are several such parameters in the module
+\ind{dualbases} to serve the common dual basis driver with
+information for different applications.}
+
+\emph{Switches,}
+
+\calipbx{that allow to choose different branches of algorithms. Note that
+this concept interferes with the second one. Different \emph{versions}
+of algorithms, that apply different functions in a common driver, are
+\emph{not} implemented through switches.}
+\end{quote}
+
+\subsubsection{New and Improved Facilities in v.~2.1}
+
+The major changes in v.~2.1 reflect the experience we've got from the
+use of \package{CALI} 2.0. The following changes are worth mentioning
+explicitely:
+\begin{enumerate}
+\item The algebraic rule concept was adapted to \package{CALI}. It allows to
+supply rule based coefficient domains. This is a more efficient way
+to deal with (easy) algebraic numbers than through the \emph{arnum
+package}.
+
+\item \ind{listtest} and \ind{listminimize} provide an unified
+concept for different list operations previously scattered in the
+source text.
+
+\item There are several new quotient algorithms at the symbolic level
+(both the general element and the intersection approaches are
+available) and new features for the computation of equidimensional
+hull and equidimensional radical.
+
+\item A new \ind{module scripts} offers advanced applications of Gr\"obner
+bases.
+
+\item Several advanced procedures initialize a Gr\"obner basis computation
+over a certain intermediate base ring or term order as e.g.\
+\ind{eliminate}, \ind{resolve}, \ind{matintersect} or all
+\ind{primary decomposition} procedures. Interrupting a computation in
+v.~2.1 now restores the original values of \package{CALI}'s global variables,
+since all intermediate procedures work with local copies of
+the global variables.\footnote{Note that recovering the base
+ring this way may cause some trouble since the intermediate ring,
+installed with \ind{setring}, changed possibly the internal variable
+order set by \emph{setkorder}.} This doesn't apply to advanced
+procedures that change the current base ring as e.g.\ \ind{blowup},
+\ind{preimage}, \ind{sym} etc.
+
+\end{enumerate}
+
+\subsubsection{New and Improved Facilities in v.~2.2}
+
+Version 2.2 (beside bug fixes) incorporates several new facilities of
+constructive non linear algebra that we investigated the last two
+years, as e.g.\ dual bases, the Gr\"obner factorizer, triangular systems, and
+local standard bases. Essential changes concern the following topics:
+\begin{enumerate}
+\item The \package{CALI} modules \ind{red} and \ind{groeb} were rewritten and
+the \ind{module mora} was removed. This is
+due to new theoretical insight into standard bases theory as
+e.g.\ described in \cite{Graebe:94} or \cite{Graebe:95a}. The Gr\"obner basis algorithm
+is reorganized as a Gr\"obner driver with simplifier and base lists, that
+involves different versions of polynomial reduction according to the
+setting via \ind{gbtestversion}. It applies now to
+both noetherian and non noetherian term orders in a unified way.
+
+The switches \sw{binomial} and  \sw{lazy} were removed.
+
+\item The Gr\"obner factorizer was thoroughly revised, extended along the
+lines explained in \cite{Graebe:94a}, and collected into a separate
+\ind{module groebf}. It now allows a list of constraints also in
+algebraic mode. Two versions of an \ind{extended Gr\"obner factorizer}
+produce \ind{triangular systems},
+i.e.\ a decomposition into quasi prime components, see \cite{Graebe:95b},
+that are well suited for further (numerical) evaluation. There is also
+a version of the Gr\"obner factorizer that allows a list of problems as
+input. This is especially useful, if a system is splitted with respect
+to a ``cheap'' (e.g. degrevlex) term order and the pieces are
+recomputed with respect to a ``hard'' (e.g. pure lex) term order.
+
+The extended Gr\"obner factorizer involves, after change to dimension zero,
+the computation of \ind{triangular systems}. The corresponding module
+\ind{triang} extends the facilities for zero dimensional ideals and
+modules in the \ind{module odim}.
+
+\item A new \ind{module lf} implements the \ind{dual bases} approach
+as described in \cite{Marinari:91}. On this basis there are new
+implementations of \indf{affine\_points}{operator} and \indf{proj\_points}{operator}, that
+are significantly faster than the old ones. The linear algebra
+\ind{change of term orders} \cite{Faugere:93} is available, too. There are
+two versions, one with precomputed \ind{border basis}, the other with
+conventional normal forms.
+
+\item \ind{dpmat}s now have a \ind{gb-tag} that indicates, whether the
+given ideal or module basis is already a Gr\"obner basis. This avoids
+certain Gr\"obner basis recomputations especially during advanced algorithms
+as e.g.\ prime decomposition. In the algebraic interface Gr\"obner bases are
+computed automatically when needed rather than to issue an error
+message as in v.~2.1. So one can call \indf{modequalp}{operator} or \indf{dim}{operator}
+etc. not having computed Gr\"obner bases in advance. Note that such
+automatic computation can be avoided with \ind{setgbasis}.
+
+\item Hilbert series are now \ind{weighted Hilbert series}, since
+e.g.\ for blow up rings the generating ideal is multigraded. Usual
+Hilbert series are computed as in v.~2.1 with respect to the
+\ind{ecart vector}. Weighted Hilbert series accept a list of (integer)
+weight lists as second parameter.
+
+\item There are some name and conceptual changes to existing
+procedures and variables to have a more concise semantic concept. This
+concerns
+\begin{quote}
+\ind{Tracing} (the trace parameter is now stored on the property list
+of \texttt{cali} and should be set with \ind{setcalitrace}),
+
+choosing different versions of the Gr\"obner algorithm (through
+\ind{gbtestversion}) and the Hilbert series computation (through
+\ind{hftestversion}),
+
+some names (\ind{mat2list} replaced \ind{flatten}, \ind{HilbertSeries}
+replaced \emph{hilbseries}) and
+
+parameter lists of some local and internal procedures (consult \emph{cali.chg} for details).
+\end{quote}
+
+\item The \ind{revlex term order} is now the reverse lexicographic
+term order on the \textbf{reversely} ordered variables. This is consistent
+with other computer algebra systems (e.g.\ SINGULAR or
+AXIOM)\footnote{But different to the currently distibuted \texttt{groebner} package in \REDUCE. Note that the computations in
+\cite{Graebe:94a} were done \emph{before} these changes.} and implies the same
+order on the variables for deglex and degrevlex term orders (this was
+the main reason to change the definition).
+
+\item Ideals of minors, pfaffians and related stuff are now
+implemented as extension of the internal \texttt{matrix} package and
+collected into a separate \ind{module calimat}. Thus they allow more
+general expressions, especially with variable exponents, as general
+\REDUCE matrices do. So one can define generic ideals as e.g.\ ideals
+of minors or pfaffians of matrices, containing generic expressions as
+elements. They must be specified for further use in \package{CALI} substituting
+general exponents by integers.
+
+\end{enumerate}
+
+\subsubsection{New and Improved Facilities in v.~2.2.1\label{221}}
+
+The main change concerns the primary decomposition algorithm, where I
+fixed a serious bug for deciding, which embedded primes are really
+embedded\footnote{That there must be a bug was pointed out to me by
+Shimoyama Takeshi who compared different p.d.\ implementations. The
+bug is due to an incorrect test for embedded primes: A (superfluous)
+primary component may contain none of the isolated primary components,
+but their intersection! Note that neither \cite{Gianni:88} nor \cite{Becker:93}
+comment on that. Details of the implementation will appear in
+\cite{Graebe:97}.}. During that remake I incorporated also the Gr\"obner
+factorizer to compute isolated primes. Since \REDUCE has no
+multivariate \emph{modular} factorizer, the switch \ind{factorprimes}
+may be turned off to switch to the former algorithm.
+
+
+
+Some minor bugs are fixed, too, e.g.\ the bug that made \ind{radical}
+crashing.
+
+
+
+
+\subsection{The Computational Model}
+
+This section gives a short introduction into the data type design of
+\package{CALI} at different levels. First (\S 1 and 2) we describe \package{CALI}'s way
+of algorithmic translation of the abstract algebraic objects
+\emph{ring of polynomials, ideal} and (finitely generated) \emph{module}.
+Then (\S 3 and 4) we describe the algebraic mode interface of \package{CALI}
+and the switches and global variables to drive a session. In the next
+chapter we give a more detailed overview of the basic (symbolic mode) data
+structures involved with \package{CALI}. We refer to the appendix for a short
+summary of the commands available in algebraic mode.
+
+\subsubsection{The Base Ring}
+
+A polynomial ring consists in \package{CALI} of the following data:
+\begin{quote}
+a list of variable names
+
+\calipbx{All variables not occuring in the list of ring names are treated
+as parameters. Computations are executed denominatorfree, but the
+results are valid only over the corresponding parameter \emph{field}
+extension.}
+
+a term order and a term order tag
+
+\calipbx{They describe the way in which the terms in each polynomial (and
+polynomial vector) are ordered.}
+
+an ecart vector
+
+\calipbx{A list of positive integers corresponding to the variable
+names.}
+\end{quote}
+
+A \ind{base ring} may be defined (in algebraic mode) through the
+command
+\begin{syntax}
+ \f{setring} \meta{ring}
+\end{syntax}
+with \meta{ring>} ::= \{\, vars,\,tord,\,tag\,[,\,ecart\,]\,\} resp.
+\begin{verbatim}
+ setring(vars, tord, tag [,ecart])
+\end{verbatim}
+\ttindextype[CALI]{setring}{command}
+\hypertarget{command:SETRING}{}
+This sets the global (symbolic) variable
+\var{cali!=basering}\ttindextype[CALI]{cali"!=basering}{global symbolic variable}. Here
+\texttt{vars} is the list of variable names, \texttt{tord} a (possibly
+empty) list of weight lists, the \ind{degree vectors}, and \texttt{tag}
+the tag LEX or REVLEX. Optionally one can supply \texttt{ecart}, a list
+of positive integers of the same length as \texttt{vars}, to set an ecart
+vector different from the default one (see below).
+
+The degree vectors must have the same length as \texttt{vars}. If $(w_1\
+\ldots\ w_k)$ is the list of degree vectors then
+\begin{center}
+\begin{tabular}{*{3}{l@{\hspace*{2em}}}*{2}{l@{\hspace*{1.5em}}}l}
+  $x^a<x^b$ & $:\Leftrightarrow$ & either &
+  $w_j(x^a)=w_j(x^b)$ & for $j<i$ & and \\[8pt]
+  &&& $w_i(x^a)<w_i(x^b)$ \\[10pt]
+  && or & $w_j(x^a)=w_j(x^b)$ & for all $j$ & and \\[8pt]
+  &&& \multicolumn{3}{l}{$x^a<_{lex}x^b$ resp.\ $x^a<_{revlex}x^b$}
+\end{tabular}
+\end{center}
+Here $<_{lex}$ resp. $<_{revlex}$ denote the
+\ind{lexicographic} (tag=LEX) resp. \ind{reverse lexicographic}
+(tag=REVLEX) term orders\footnote{The definition of the revlex term
+order changed for version 2.2.}
+with respect to the variable order given in \texttt{vars}, i.e.\
+\[x^a<x^b \quad :\Leftrightarrow \quad
+\exists\ j\ \forall\ i<j\ :\ a_i=b_i\quad\mbox{and}\quad a_j<b_j\
+\mbox{(lex.)}\]
+or
+\[x^a<x^b \quad :\Leftrightarrow \quad
+\exists\ j\ \forall\ i>j\ :\ a_i=b_i\quad\mbox{and}\quad a_j>b_j\
+\mbox{(revlex.)}\]
+
+Every term order can be represented in such a way, see \cite{Mora:88}.
+
+During the ring setting the term order will be checked to be
+Noetherian (i.e.\ to fulfill the descending chain condition) provided
+the switch \ttindexswitch[CALI]{Noetherian} is on (the default). The same applies
+turning \emph{noetherian on}: If the term order of the underlying
+base ring isn't Noetherian the switch can't be turned over. Hence,
+starting from a non Noetherian term order, one should define
+\emph{first} a new ring and \emph{then} turn the switch on.
+
+Useful term orders can be defined by the procedures
+\begin{itemize}
+\item []
+\begin{syntax}
+  \f{degreeorder} \meta{vars}
+\end{syntax}
+\ttindextype[CALI]{degreeorder}{procedure}
+\calipbx{that returns $tord=\{\{1,\ldots ,1\}\}$.}
+
+\item []
+\begin{syntax}
+  \f{localorder} \meta{vars}
+\end{syntax}
+\ttindextype[CALI]{localorder}{procedure}
+\calipbx{that returns $tord=\{\{-1,\ldots ,-1\}\}$ (a non Noetherian term
+order for computations in local rings).}
+
+\item[]
+\begin{syntax}
+ \f{eliminationorder}( \meta{vars},\meta{elimvars})
+\end{syntax}
+\ttindextype[CALI]{eliminationorder}{procedure}
+\calipbx{that returns a term order for elimination of the variables in
+\meta{elimvars}, a subset of all \meta{vars}. It's recommended to
+combine it with the tag revlex.}
+
+\item[]
+\begin{syntax}
+ \f{blockorder}( \meta{vars},\meta{vars,integerlist})
+\end{syntax}
+\ttindextype[CALI]{blockorder}{procedure}
+\calipbx{that returns the list of degree vectors for the block order with
+block lengths given in the \meta{integerlist}. Note that these numbers
+should sum up to the length of the variable list supplied as the first
+argument.}
+\end{itemize}
+
+\noindent Examples:
+\begin{verbatim}
+vars:={x,y,z};
+tord:=degreeorder vars;   % Returns {{1,1,1}}.
+setring(vars,tord,lex);   % GRADLEX in the groebner package.
+
+% or
+
+setring({a,b,c,d},{},lex); % LEX in the groebner package.
+
+% or
+
+vars:={a,b,c,x,y,z};
+tord:=eliminationorder(vars,{x,y,z});
+tord:=reverse blockorder(vars,{3,3});
+                          % Return both {{0,0,0,1,1,1},{1,1,1,0,0,0}}.
+setring(vars,tord,revlex);
+\end{verbatim}
+\pagebreak[2]
+
+The base ring is initialized with
+\begin{verbatim}
+
+   {{t,x,y,z},{{1,1,1,1}},revlex,{1,1,1,1}}
+\end{verbatim}
+i.e.\ $S=k[t,x,y,z]$ supplied with the degreewise reverse
+lexicographic term order.
+\begin{itemize}
+\item[]
+\begin{syntax}
+    \f{getring} \meta{m}
+\end{syntax}
+\ttindextype[CALI]{getring}{procedure}
+\hypertarget{operator:GETRING}{}
+\calipbx{returns the ring attached to the object with the identifier
+\meta{m}. E.g.\ }
+
+\item[]
+\begin{syntax}
+    \f{setring} \f{getring} \meta{m}
+\end{syntax}
+\ttindextype[CALI]{setring}{procedure}
+\hypertarget{operator:SETRING}{}
+\calipbx{(re)sets the base ring to the base ring of the formerly defined
+object (ideal or module) \meta{m}.}
+
+\item[]
+  \begin{syntax}
+    \f{getring}()
+  \end{syntax}
+\calipbx{returns the currently active base ring.}
+\end{itemize}
+
+\package{CALI} defines also an \ind{ecart vector}, attaching to each variable a
+positive weight with respect to that homogenizations and related
+algorithms are executed. It may be set optionally by the user during
+the \ind{setring} command.  (Default: If the term order is a
+(positive) degree order then the ecart is the first degree vector,
+otherwise each ecart equals 1).
+
+The ecart vector is used in several places for efficiency reason (Gr\"obner
+basis computation with the sugar strategy) or for termination (local
+standard bases). If the input is homogeneous the ecart vector should
+reflect this homogeneity rather than the first degree vector to
+obtain the best possible performance. For a discussion of local
+computations with encoupled ecart vector see \cite{Graebe:94}. In general
+the ecart vector is recommended to be chosen in such a way that the
+input examples become close to be homogeneous. \emph{Homogenizations}
+and \ind{Hilbert series} are computed with respect to this ecart
+vector.
+\medskip
+\hypertarget{operator:GETECART}{}
+\texttt{getecart()} \ttindextype[CALI]{getecart}{operator} returns the ecart vector
+currently set.
+
+
+\subsubsection{Ideals and Modules}
+
+If $S=k[x_v,\ v \in H]$ is a polynomial ring, a matrix $M$ of size
+$r\times c$ defines a map
+\[f\ :\ S^r \longrightarrow S^c\]
+by the following rule
+\[ f(v):=v\cdot M \qquad \mbox{ for } v \in S^r.\]
+There are two modules, connected with such a map, $im\ f$, the
+submodule of $S^c$ generated by the rows of $M$, and $\mathop{\mathrm{coker}} f\
+(=S^c/im\ f)$. Conceptually we will identify $M$ with $im\ f$ for the
+basic algebra, and with $\mathop{\mathrm{coker}} f$ for more advanced topics of
+commutative algebra (Hilbert series, dimension, resolution etc.)
+following widely accepted conventions.
+
+With respect to a fixed basis $\{e_1,\ldots ,e_c\}$ one can define
+module term orders on $S^c$, Gr\"obner bases of submodules of $S^c$ etc.
+They generalize the corresponding notions for ideal bases. See
+\cite{Eisenbud:95} or \cite{MoellerMora:86} for a detailed introduction to this area of
+computational commutative algebra. This allows to define joint
+facilities for both ideals and submodules of free modules. Moreover
+computing syzygies the latter come in in a natural way.
+
+\package{CALI} handles ideal and module bases in a unique way representing them
+as rows of a \ind{dpmat} (\textbf{d}istributive \textbf{p}olynomial \textbf{mat}rix).
+It attaches to each unit vector $e_i$ a monomial $x^{a_i}$,
+the $i$-th \ind{column degree} and represents the rows of a dpmat $M$
+as lists of module terms $x^ae_i$, sorted with respect to a
+\ind{module term order}, that may be roughly\footnote{The correct
+definition is even more difficult.} described as
+\bigskip
+\begin{flushleft}
+\begin{tabular}{ccc@{\hspace*{1cm}}c}
+  $x^ae_i<x^be_j$ & $:\Leftrightarrow$ & either &
+  $x^ax^{a_i}<x^bx^{a_j}$ in $S$ \\
+  \mbox{} \\
+  & & or & $x^ax^{a_i}=x^bx^{a_j}$ \\
+  & & & and \\
+  & & & $i<j$ (lex.)\ resp.\ $i>j$ (revlex.)\\
+\end{tabular}
+\end{flushleft}
+Every dpmat $M$ has its own column degrees (no default !).  They are
+managed through a global (symbolic) variable
+\var{cali!=degrees}\ttindextype[CALI]{cali"!=degrees}{global symbolic variable}.
+\begin{itemize}
+\item[]
+  \hypertarget{operator:GETDEGREES}{}
+  \begin{syntax}
+    \f{getdegrees} \meta{m}
+  \end{syntax}
+\ttindextype[CALI]{getdegrees}{operator}
+\calipbx{returns the column degrees of the object with identifier \meta{m}.}
+
+\item[]
+  \begin{syntax}
+\f{getdegrees}()                                                                                                                                                         
+  \end{syntax}
+\calipbx{returns the current setting of \var{cali!=degrees}.}
+
+\item[]
+  \hypertarget{operator:SETDEGREES}{}
+  \begin{syntax}
+    \f{setdegrees} \meta{list of monomials}
+  \end{syntax}
+\ttindextype[CALI]{setdegrees}{operator}
+\calipbx{sets \var{cali!=degrees} correspondingly. Use this command
+before executing \f{setmodule} to give a dpmat prescribed column
+degrees since cali!=degrees has no default value and changes during
+computations. A good guess is to supply the empty list (i.e.\ all
+column degrees are equal to $\mathbf{x}^0$). Be careful defining modules
+without prescribed column degrees.}
+\end{itemize}
+
+To distinguish between \ind{ideals} and \ind{modules} the former are
+represented as a \ind{dpmat} with $c=0$ (and hence without column
+degrees).  If $I \subset S$ is such an ideal one has to distinguish
+between the ideal $I$ (with $c=0$, allowing special ideal operations
+as e.g.\ ideal multiplication) and the submodule $I$ of the free
+one dimensional module $S^1$ (with $c=1$, allowing matrix operations
+as e.g.\  transposition, matrix multiplication etc.). \ind{ideal2mat}
+converts an (algebraic) list of polynomials into an (algebraic)
+matrix column whereas \ind{mat2list} collects all matrix entries into
+a list.
+
+\subsubsection{The Algebraic Mode Interface}
+
+Corresponding to \package{CALI}'s general philosophy explained in the
+introduction the algebraic mode interface translates algebraic input
+into \package{CALI}'s internal data representation, calls the corresponding
+symbolic functions, and retranslates the result back into algebraic
+mode. Since Gr\"obner basis computations may be very tedious even on small
+examples, one should find a well balance between the storage of
+results computed earlier and the unavoidable time overhead and memory
+request associated with the management of these results.
+
+Therefore \package{CALI} distinguishes between \emph{free} and \emph{bounded}
+\index{free identifier}\index{bounded identifier} identifiers. Free
+identifiers stand only for their value whereas to bounded identifiers
+several internal information is attached to their property list for
+later use.
+\medskip
+
+After the initialization of the \emph{base ring} bounded identifiers
+for ideals or modules should be declared via
+\hypertarget{operator:SETMODULE}{}
+\hypertarget{operator:SETIDEAL}{}
+\begin{syntax}
+\f{setmodule}(\meta{name},\meta{matrix value})
+\end{syntax}
+resp.
+\begin{syntax}
+\f{setideal}(\meta{name},\meta{list of polynomials})
+\end{syntax}
+\ttindextype[CALI]{setmodule}{operator}\ttindextype[CALI]{setideal}{operator}
+This way the corresponding internal representation (as \ind{dpmat})
+is attached to \meta{name} as the property \ind{basis}, the prefix
+form as its value and the current base ring as the property
+\ind{ring}.
+
+Performing any algebraic operation on objects defined this way their
+ring will be compared with the current base ring (including the term
+order). If they are different an error message occurs. If \texttt{m} is
+a valid name, after resetting the base ring
+\begin{verbatim}
+setmodule(m1,m)
+\end{verbatim}
+reevaluates \texttt{m} with respect to the new base ring (since the
+\emph{value} of \texttt{m} is its prefix form) and assigns the reordered
+dpmat to \texttt{m1} clearing all information previously computed for
+\texttt{m1} (\texttt{m1} and \texttt{m} may coincide).
+
+All computations are performed with respect to the ring $S=k[x_v\in
+\texttt{vars}]$ over the field $k$. Nevertheless by efficiency reasons
+\ind{base coefficients} are represented in a denominator free way as
+standard forms. Hence the computational properties of the base
+coefficient domain depend on the \ind{dmode} and also on auxiliary
+variables, contained in the expressions, but not in the variable
+list. They are assumed to be parameters.
+
+Best performance will be obtained with integer or modular domain
+modes, but one can also try \ind{Algebraic numbers} as coefficients
+as e.g.\ generated by \texttt{sqrt} or the \package{Arnum} package. To avoid
+an unnecessary slow-down connected with the management of simplified
+algebraic expressions there is a \ind{switch hardzerotest} (default:
+off) that may be turned on to force an additional simplification of
+algebraic coefficients during each zero test. It should be turned on
+only for domain modes without canonical representations as e.g.\
+mixtures of arnums and square roots. We remind the general zero
+decision problem for such domains.
+
+Alternatively, \package{CALI} offers the possibility to define a set of
+algebraic substitution rules that will affect \package{CALI}'s base coefficient
+arithmetic only.
+\hypertarget{operator:SETRULES}{}
+\begin{itemize}
+\item[]
+\begin{syntax}
+   \f{setrules} \meta{rule list}
+\end{syntax}
+\ttindextype[CALI]{setrules}{operator}
+\calipbx{transfers the (algebraic) \meta{rule list} into the internal
+representation stored at the \texttt{cali} value \texttt{rules}.
+
+In particular, \texttt{setrules \{\}} clears the rules previously set.}
+
+\item[]
+\hypertarget{operator:GETRULES}{}
+\begin{syntax}
+   \f{getrules}()
+\end{syntax}
+\ttindextype[CALI]{getrules}{operator}
+\calipbx{returns the internal \package{CALI} rules list in algebraic form.}
+\end{itemize}
+
+We recommend to use \indf{setrules}{operator} for computations with algebraic
+numbers since they are better adapted to the data structure of \package{CALI}
+than the algebraic numbers provided by the \package{Arnum} package.
+Note, that due to the zero decision problem
+complicated \f{setrules} based computations may produce wrong
+results if base coefficient's pseudo division is involved (as e.g.\
+with \indf{dp\_pseudodivmod}{symbolic procedure}). In this case we recommend to enlarge
+the variable set and add the defining equations of the algebraic
+numbers to the equations of the problem\footnote{A \emph{qring}
+facility for the computation over quotient rings will be incorporated
+into future versions.}.
+\medskip
+
+The standard domain (Integer) doesn't allow denominators for input.
+\f{setideal}\ttindextype[CALI]{setideal}{operator} clears automatically the common denominator of each
+input expression whereas a polynomial matrix with true rational
+coefficients will be rejected by \f{setmodule}\ttindextype[CALI]{setmodule}{operator}.
+\medskip
+
+One can save/initialize ideal and module bases together with their
+accompanying data (base ring, degrees) to/from a file:
+\begin{syntax}
+\f{savemat}(\meta{m},\meta{name})
+\end{syntax}
+resp.
+\begin{syntax}
+\f{initmat} \meta{name}
+\end{syntax} execute the file transfer from/to disk files with the
+specified file \meta{name}. e.g.\
+\begin{verbatim}
+savemat(m,"myfile");
+\end{verbatim}
+saves the base ring and the ideal basis of \texttt{m} to the file ``\texttt{myfile}''
+whereas
+\begin{verbatim}
+setideal(m,initmat "myfile");
+\end{verbatim}
+sets the current base ring (via a call to \f{setring}) to the base
+ring of \texttt{m} saved at ``\texttt{myfile}'' and then recovers the basis of \texttt{m}
+from the same file.
+
+\subsubsection{Switches and Global Variables}
+
+There are several switches, (fluid) global variables, a trace
+facility, and global parameters on the property list of the package
+name \texttt{cali} to control \package{CALI}'s computations.
+\medskip
+
+\subsubsection*{Switches}
+
+\begin{description}
+\item{\sw{bcsimp}}
+  \ttindexswitch[CALI]{bcsimp}
+  \hypertarget{switch:BCSIMP}{}
+  (Default:on) \\
+  On: Cancel out gcd's of base coefficients.
+
+\item[\sw{detectunits}]
+  \ttindexswitch[CALI]{detectunits}
+  \hypertarget{switch:DETECTUNITS}{}
+  (Default: off)\\
+On: replace polynomials of the form 
+$\langle monomial\rangle *
+\langle polynomial\ unit\rangle $ by $\langle monomial\rangle$
+during interreductions and standard basis computations.
+
+Affects only local computations.
+
+\item[\sw{factorprimes}]
+  \ttindexswitch[CALI]{factorprimes}
+  \hypertarget{switch:FACTORPRIMES}{}
+  (Default: on)\\
+On: Invoke the Gr\"obner factorizer during computation of isolated
+primes.  Note that \REDUCE lacks a modular multivariate
+factorizer, hence for modular prime decomposition computations this
+switch has to be turned off.
+
+\item[\sw{factorunits}]
+  \ttindexswitch[CALI]{factorunits}
+  \hypertarget{switch:FACTORUNITS}{}
+  (Default: off) \\
+On: factor polynomials and remove polynomial unit factors
+during interreductions and standard basis computations.
+
+Affects only local computations.
+
+\item[\sw{hardzerotest}]
+  \ttindexswitch[CALI]{hardzerotest}
+  \hypertarget{switch:HARDZEROTEST}{}
+  (Default: off) \\
+  On: try an additional algebraic simplification of base
+coefficients at each base coefficient's zero test. Useful only for
+advanced base coefficient domains without canonical \REDUCE
+representation. May slow down the computation drastically.
+
+\item[\sw{lexefgb}]
+  \ttindexswitch[CALI]{lexefgb}
+  \hypertarget{switch:LEXEFGB}{}
+  (Default: off)
+On: Use the pure lexicographic term order and \ind{zerosolve}
+during reduction to dimension zero in the \ind{extended Gr\"obner
+factorizer}. This is a single, but possibly hard task compared to the
+degrevlex invocation of \ind{zerosolve1}. See \cite{Graebe:95b} for a
+discussion of different zero dimensional solver strategies.
+
+\item[\sw{Noetherian}]
+  \ttindexswitch[CALI]{Noetherian}
+  \hypertarget{switch:NOETHERIAN}{}
+  (Default: on)\\
+On: choose algorithms for Noetherian term orders.
+
+Off: choose algorithms for local term orders.
+
+\item[\sw{red\_total}]
+  \ttindexswitch[CALI]{red\_total}
+  \hypertarget{switch:RED_TOTAL}{}
+  (Default: on)\\
+On: compute total normal forms, i.e. apply reduction (Noetherian
+term orders) or reduction with bounded ecart (non Noetherian term
+orders to tail terms of polynomials, too.
+
+Off: Do only top reduction.
+
+\end{description}
+
+\subsubsection*{Tracing}
+
+Different to v.~2.1 now intermediate output during the computations
+is controlled by the value of the \texttt{trace} and \texttt{printterms}
+entries on the property list of the package name \texttt{cali}. The
+former value controls the intensity of the intermediate output
+(Default: 0, no tracing), the latter the number of terms printed in
+such intermediate polynomials (Default: all).
+\begin{itemize}
+\item[]
+  \hypertarget{operator:SETCALITRACE}{}
+  \begin{syntax}
+    \f{setcalitrace} \meta{n}
+  \end{syntax}
+\ttindextype[CALI]{setcalitrace}{operator}
+Changes the trace intensity. Set $n=2$ for a sparse tracing (a
+dot for each reduction step).
+Other good suggestions are the values 30 or 40 for tracing the Gr\"obner
+algorithm or $n>70$ for tracing the normal form algorithm. The higher
+$n$ the more intermediate information will be given.
+
+\item[]
+  \hypertarget{operator:SETCALIPRINTTERMS}{}
+  \begin{syntax}
+    \f{setcaliprintterms} \meta{n}
+  \end{syntax}
+\ttindextype[CALI]{setcaliprintterms}{operator}
+Sets the number of terms that are printed in intermediate
+polynomials. Note that this does not affect the output of whole
+\emph{dpmats}. The output of polynomials with more than $n$ terms ($n>0$)
+breaks off and continues with ellipses.
+
+\item[]
+  \hypertarget{operator:CLEARCALIPRINTTERMS}{}
+  \begin{syntax}
+    \f{clearcaliprintterms}()
+  \end{syntax}
+\ttindextype[CALI]{clearcaliprintterms}{operator}
+Clears the \texttt{printterms} value forcing full intermediate
+output (according to the current trace level).
+\end{itemize}
+
+\subsubsection*{Global Variables}
+
+\begin{description}
+\item[\var{cali!=basering}]\ttindextype[CALI]{cali"!=basering}{global variable}
+\hypertarget{variable:CALI!=BASERING}{}
+The currently active base ring initialized e.g.\ by
+\f{setring}\ttindextype[CALI]{setring}{operator}.
+
+\item[\var{cali!=degrees}]\ttindextype[CALI]{cali"!=degrees}{global variable}
+\hypertarget{variable:CALI!=DEGREES}{}
+The currently active module component degrees initialized e.g.\
+by \indf{setdegrees}{operator}.
+
+\item[\var{cali!=monset}]\ttindextype[CALI]{cali"!=monset}{global variable}
+\hypertarget{variable:CALI!=MONSET}{}
+A list of variable names considered as non zero divisors during
+Gr\"obner basis computations initialized e.g.\ by \indf{setmonset}{operator}. Useful
+e.g.\ for binomial ideals defining monomial varieties or other prime
+ideals.
+
+\end{description}
+
+\subsubsection*{Entries on the Property List of \texttt{cali}}
+
+This approach is new for v.~2.2. Information concerning the state of
+the computational model as e.g.\ trace intensity, base coefficient
+rules, or algorithm versions are stored as values on the property list
+of the identifier (package name) \texttt{cali}. This concerns
+\begin{description}
+\item[]\indid{trace} and \indid{printterms}
+
+  \calipbx{see above.}
+
+\item[]\indid{efgb}
+
+  \calipbx{Changed by the \ind{switch lexefgb}.}
+
+\item[]\indid{groeb!=rf}
+\calipbx{Reduction function invoked during the Gr\"obner algorithm. It can be
+changed with \ind{gbtestversion}\ $<n>$ ($n=1,2,3$, default is 1).}
+
+\item[]\indid{hf!=hf}
+
+  \calipbx{Variant for the computation of the Hilbert series numerator. It
+can be changed with \ind{hftestversion}\ $<n>$ ($n=1,2$, default is 1).}
+
+\item[]\indid{rules}
+
+  \calipbx{Algebraic ``replaceby'' rules introduced to \package{CALI} with the
+\indid{setrules} command.}
+
+\item[]\indid{evlf}, \indid{varlessp}, \indid{sublist}, \indid{varnames},
+\indid{oldborderbasis}, \indid{oldring}, \indid{oldbasis}
+
+\calipbx{see \ind{module lf}, implementing the dual bases approach.}
+\end{description}
+
+
+\subsection{Basic Data Structures}
+
+In the following we describe the data structure layers underlying the
+dpmat representation in \package{CALI} and some important (symbolic) procedures
+to handle them. We refer to the source code and the comments therein for
+a more complete survey about the procedures available for different
+data types.
+
+\subsubsection{The Coefficient Domain}
+
+Base coefficients as implemented in the \ind{module bcsf} are standard
+forms in the variables outside the variable list of the current
+ring. All computations are executed "denominator free" over the
+corresponding quotient field, i.e.\ gcd's are canceled out without
+request. To avoid this set the \sw{bcsimp}\ttindexswitch[CALI]{bcsimp} off.\footnote{This
+induces a rapid base coefficient's growth and doesn't yield \textbf{Z}-Gr\"obner
+bases in the sense of \cite{Gianni:88} since the S-pair criteria are
+different.} In the given implementation we use the s.f. procedure
+\f{qremf} for effective divisibility test. We had some trouble with it
+under \texttt{on factor}.
+
+Additionally it is possible to supply the
+parameters occuring as base coefficients with a (global) set of
+algebraic rules.\footnote{This is different from the \texttt{let} rule
+mechanism since they must be present in symbolic mode. Hence for a
+simultaneous application of the same rules in algebraic mode outside
+\package{CALI} they must additionally be declared in the usual way.}
+\begin{description}
+\item[]
+  \ttindextype[CALI]{setrules"!*}{symbolic procedure}
+  \hypertarget{procedure:SETRULES!*}{}
+  \begin{syntax}
+    \f{setrules!*} \meta{r}
+  \end{syntax}
+\calipbx{converts an algebraic mode rules list $r$ as e.g.\ used in
+WHERE statements into the internal \package{CALI} format.}
+\end{description}
+
+\subsubsection{The Base Ring}
+
+The \ind{base ring} is defined by its \texttt{name list}, the
+\texttt{degree matrix} (a list of lists of integers), the \texttt{ring tag} (LEX
+or REVLEX), and the \texttt{ecart}. The name list contains a phantom
+name \texttt{cali!=mk} for the module component at place 0.
+\medskip
+
+The \ind{module ring} exports among others the selectors
+\indf{ring\_names}{symbolic procedure}, \indf{ring\_degrees}{symbolic procedure},
+\indf{ring\_tag}{symbolic procedure},
+\indf{ring\_ecart}{symbolic procedure}, the test function \indf{ring\_isnoetherian}{symbolic procedure} and the
+transfer procedures from/to an (appropriate, printable by
+\indf{mathprint}{symbolic procedure}) algebraic prefix form \indf{ring\_from\_a}{symbolic procedure} (including
+extensive tests of the supplied parameters for consistency) and
+\indf{ring\_2a}{symbolic procedure}.
+
+The following procedures allow to define a base ring:
+\begin{description}
+\item[]
+  \ttindextype[CALI]{ring\_define}{symbolic procedure}
+  \hypertarget{procedure:RING_DEFINE}{}
+  \begin{syntax}
+    \f{ring\_define}(\meta{name list}, \meta{degree matrix}, \meta{ring tag}, \meta{ecart}
+  \end{syntax}
+\calipbx{combines the given parameters to a ring.}
+
+\item[]
+  \ttindextype[CALI]{setring"!*}{symbolic procedure}
+  \hypertarget{procedure:SETRING!*}{}
+  \begin{syntax}
+    \f{setring!*} \meta{ring}
+  \end{syntax}
+\calipbx{sets \var{cali!=basering} and checks for consistency with the
+\sw{Noetherian}\ttindexswitch[CALI]{Noetherian}. It also sets through
+\indf{setkorder} the current variable list as main variables. It is
+strongly recommended to use \texttt{setring!* \ldots} instead of
+\texttt{cali!=basering := \ldots}.}
+\end{description}
+\ttindextype[CALI]{degreeorder"!*}{symbolic procedure}
+\ttindextype[CALI]{localorder"!*}{symbolic procedure}
+\ttindextype[CALI]{eliminationorder"!*}{symbolic procedure}
+\ttindextype[CALI]{blockorder"!*}{symbolic procedure}
+\f{degreeorder!*} , \f{localorder!*}, \f{eliminationorder!*}, and
+\f{blockorder!*}
+define term order matrices in full analogy to algebraic mode.
+\medskip
+
+There are three ring constructors for special purposes:
+\begin{description}
+\item[]
+  \begin{syntax}
+    \f{ring\_sum}(\meta{a},\meta{b})
+  \end{syntax}
+  \ttindextype[CALI]{ring\_sum}{symbolic procedure}
+  \hypertarget{procedure:RING_SUM}{}
+\calipbx{returns a ring, that is constructed in the following way: Its
+variable list is the union of the (disjoint) lists of the variables
+of the rings \meta{a} and \meta{b} (in this order) whereas the degree list is
+the union of the (appropriately shifted) degree lists of \meta{b} and \meta{a}
+(in this order). The ring tag is that of \meta{a}. Hence it returns
+(essentially) the ring $b\bigoplus a$ if $b$ has a degree part (e.g.\
+useful for elimination problems, introducing ``big'' new variables)
+and the ring $a\bigoplus b$ if $b$ has no degree part (introducing
+``small'' new variables).}
+
+\item[]
+  \begin{syntax}
+    \f{ring\_rlp}(\meta{r},\meta{u})
+  \end{syntax}
+  \ttindextype[CALI]{ring\_rlp}{symbolic procedure}
+  \hypertarget{procedure:RING_RLP}{}
+
+\calipbx{\meta{u} is a subset of the names of the ring \meta{r}. Returns the ring
+\meta{r}, but with a term order ``first degrevlex on \meta{u}, then the order on \meta{r}''.}
+
+\item[]
+  \begin{syntax}
+    \f{ring\_lp}(\meta{r},\meta{u})
+  \end{syntax}
+  \ttindextype[CALI]{ring\_lp}{symbolic procedure}
+  \hypertarget{procedure:RING_LP}{}
+
+\calipbx{As \f{ring\_rlp}, but with a term order ``first lex on \meta{u}, then the
+order on \meta{r}''.}
+\end{description}
+
+\noindent Example:
+\begin{verbatim}
+vars:='(x y z)
+setring!* ring_define(vars,degreeorder!* vars,'lex,'(1 1 1));
+                        % GRADLEX in the groebner package.
+\end{verbatim}
+
+\subsubsection{Monomials}
+
+The current version uses a place-driven exponent representation
+closely related to a vector model. This model handles term orders  on $S$
+and module term orders on $S^c$ in a unique way. The zero component of the
+exponent list of a monomial contains its module component ($>0$) or 0
+(ring element). All computations are executed with respect to a
+\emph{current ring}
+(\var{cali!=basering}\ttindextype[CALI]{cali"!=basering}{global variable})
+and \emph{current (monomial) weights} of the free generators
+$e_i, i=1,\ldots,c$, of $S^c$
+(\var{cali!=degrees}\ttindextype[CALI]{cali"!=degrees}{global variable}).
+For efficiency reasons every monomial has a
+precomputed degree part that should be reevaluated if \var{cali!=basering}
+(i.e.\ the term order) or \var{cali!=degrees} were
+changed. \var{cali!=degrees} contains the list of column degrees of
+the current module as an assoc. list and will be set automatically by
+(almost) all dpmat procedure calls. Since monomial operations use the
+degree list that was precomputed with respect to fixed column degrees
+(and base ring)
+\begin{quote}
+\textbf{watch carefully for \var{cali!=degrees} programming at the monomial
+or dpoly level !}
+\end{quote}
+
+As procedures there are selectors for the module component, the exponent and
+the degree parts, comparison procedures, procedures for the management of
+the module component and the degree vector, monomial arithmetic, transfer
+from/to prefix form, and more special tools.
+
+\subsubsection{Polynomials and Polynomial Vectors}
+
+\package{CALI} uses a distributive representation as a list of terms for both
+polynomials and polynomial vectors, where a \ind{term} is a dotted
+pair
+\begin{quote}
+  \texttt{(}\meta{monomial} \texttt{.} \meta{base coefficient}\texttt{)}
+\end{quote}
+The \ind{ecart} of a polynomial (vector) $f=\sum{t_i}$ with (module)
+terms $t_i$ is defined as \[\max(\mathop{\mathrm{ec}}(t_i))-\mathop{\mathrm{ec}}(lt(t_i)),\] see
+\cite{Graebe:94}. Here $\mathop{\mathrm{ec}}(t_i)$ denotes the ecart of the term $t_i$, i.e.\
+the scalar product of the exponent vector of $t_i$ (including the
+monomial weight of the module generator) with the ecart vector of the
+current base ring.
+
+As procedures there are selectors, dpoly arithmetic including the management
+of the module component, procedures for reordering (and reevaluating)
+polynomials wrt.\ new term order degrees, for extracting common base
+coefficient or monomial factors, for transfer from/to prefix form and for
+homogenization and dehomogenization (wrt.\ the current ecart vector).
+
+Two advanced procedures use ideal theory ingredients:
+\begin{description}
+\item[]
+  \begin{syntax}
+    \f{dp\_pseudodivmod}(\meta{g},\meta{f})
+  \end{syntax}
+  \ttindextype[CALI]{dp\_pseudodivmod}{symbolic procedure}
+  \hypertarget{procedure:DP_PSEUDODIVMOD}{}
+\calipbx{returns a dpoly list $\{q,r,z\}$ such that $z\cdot g = q\cdot f +
+r$ and $z$ is a dpoly unit (i.e.\ a scalar for Noetherian term
+orders). For non Noetherian term orders the necessary modifications
+are described in \cite{Graebe:95a}.
+
+$g, f$ and $r$ belong to the same free module or ideal.
+}
+
+\item[]
+  \begin{syntax}
+    \f{dpgcd}(\meta{a},\meta{b})
+  \end{syntax}
+  \ttindextype[CALI]{dpgcd}{symbolic procedure}
+  \hypertarget{procedure:DPGCD}{}
+\calipbx{computes the gcd of two dpolys $a$ and $b$ by the syzygy method:
+The syzygy module of $\{a,b\}$ is generated by a single element
+$[-b_0\ \ a_0]$ with $a=ga_0, b=gb_0$, where $g$ is the gcd of $a$
+and $b$. Since it uses dpoly pseudodivision it may work not properly
+with \indf{setrules}{operator}.}
+\end{description}
+
+
+\subsubsection{Base Lists}
+
+Ideal bases are one of the main ingredients for dpmats. They are
+represented as lists of \ind{base elements} and contain together with
+each dpoly entry the following information:
+\begin{itemize}
+\item a number (the row number of the polynomial vector in the
+corresponding dpmat).
+
+\item the dpoly, its ecart (as the main sort criterion), and length.
+
+\item a representation part, that may contain a representation of the
+given dpoly in terms of a certain fixed basis (default: empty).
+\end{itemize}
+
+The representation part is managed during normal form computations
+and other row arithmetic of dpmats appropriately with the following
+procedures:
+\begin{description}
+\item[]
+  \begin{syntax}
+    \f{bas\_setrelations} \meta{b}
+  \end{syntax}
+  \ttindextype[CALI]{bas\_setrelations}{symbolic procedure}
+  \hypertarget{procedure:BAS_SETRELATIONS}{}
+\calipbx{sets the relation part of the base element $i$ in the base list
+\meta{b} to $e_i$.}
+
+\item[]
+  \begin{syntax}
+    \f{bas\_removerelations} \meta{b}
+  \end{syntax}
+  \ttindextype[CALI]{bas\_removerelations}{symbolic procedure}
+  \hypertarget{procedure:BAS_REMOVERELATIONS}{}
+\calipbx{removes all relations, i.e.\ replaces them with the zero
+polynomial vector.}
+
+\item[]
+  \begin{syntax}
+    \f{bas\_getrelations} \meta{b}
+  \end{syntax}
+  \ttindextype[CALI]{bas\_getrelations}{symbolic procedure}
+  \hypertarget{procedure:BAS_GETRELATIONS}{}
+\calipbx{gets the relation part of \meta{b} as a separate base list.}
+\end{description}
+
+Further there are procedures for selection and construction of base
+elements and for the manipulation of lists of base elements as e.g.\
+sorting, renumbering, reordering, simplification, deleting zero base
+elements, transfer from/to prefix form, homogenization and dehomogenization.
+
+\subsubsection{Dpoly Matrices}
+
+Ideals and matrices, represented as \ind{dpmat}s, are the central
+data type of the \package{CALI} package, as already explained above. Every
+dpmat $m$ combines the following information:
+\begin{itemize}
+\item its size (\indf{dpmat\_rows}{symbolic procedure} m,\indf{dpmat\_cols}{symbolic procedure} m),
+
+\item its base list (\indf{dpmat\_list}{symbolic procedure} m) and
+
+\item its column degrees as an assoc. list of monomials
+(\indf{dpmat\_coldegs}{symbolic procedure} m). If this list is empty, all degrees are
+assumed to be equal to $x^0$.
+
+\item New in v.~2.2 there is a \ind{gb-tag} (\indf{dpmat\_gbtag}{symbolic procedure} m),
+indicating that the given base list is already a Gr\"obner basis (under the
+given term order).
+\end{itemize}
+
+The \ind{module dpmat} contains selectors, constructors, and the
+algorithms for the basic management of this data structure as e.g.\
+file transfer, transfer from/to algebraic prefix forms, reordering,
+simplification, extracting row degrees and leading terms, dpmat matrix
+arithmetic, homogenization and dehomogenization.
+
+The modules \emph{matop} and \emph{quot} collect more advanced procedures
+for the algebraic management of dpmats.
+
+\subsubsection{Extending the \REDUCE Matrix Package}
+
+In v.~2.2 minors, Jacobian matrix, and Pfaffians are available for
+general \REDUCE matrices. They are collected in the \ind{module
+calimat} and allow to define procedures in more generality, especially
+allowing variable exponents in polynomial expressions. Such a
+generalization is especially useful for the investigation of whole
+classes of examples that may be obtained from a generic one by
+specialization. In the following \meta{m} is a matrix given in algebraic
+prefix form.
+\begin{description}
+\item[]
+  \begin{syntax}
+    \f{matjac}(\meta{m},\meta{l})
+  \end{syntax}
+  \ttindextype[CALI]{matjac}{symbolic procedure}
+  \hypertarget{procedure:MATJAC}{}
+\calipbx{returns the Jacobian matrix of the ideal \meta{m} (given as an
+algebraic mode list) with respect to the variable list \meta{l}.}
+
+\item[]
+  \begin{syntax}
+    \f{minors}(\meta{m},\meta{k})
+  \end{syntax}
+  \ttindextype[CALI]{minors}{symbolic procedure}
+  \hypertarget{procedure:MINORS}{}
+\calipbx{returns the matrix of $k$-minors of the matrix $m$.}
+
+\item[]
+  \begin{syntax}
+    \f{ideal\_of\_minors}(\meta{m},\meta{k})
+  \end{syntax}
+  \ttindextype[CALI]{ideal\_of\_minors}{symbolic procedure}
+  \hypertarget{procedure:IDEAL_OF_MINORS}{}
+\calipbx{returns the ideal of the $k$-minors of the matrix $m$.}
+
+\item[]
+  \begin{syntax}
+    \f{pfaffian} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{pfaffian}{symbolic procedure}
+  \hypertarget{procedure:PFAFFIAN}{}
+\calipbx{returns the pfaffian of a skewsymmetric matrix $m$.}
+
+\item[]
+  \begin{syntax}
+    \f{ideal\_of\_pfaffians}(\meta{m},\meta{k})
+  \end{syntax}
+  \ttindextype[CALI]{ideal\_of\_pfaffians}{symbolic procedure}
+  \hypertarget{procedure:IDEAL_OF_PFAFFIANS}{}
+\calipbx{returns the ideal of the $2k$-pfaffians of the skewsymmetric
+matrix $m$.}
+
+\item[]
+  \begin{syntax}
+    \f{random\_linear\_form}(\meta{vars},\meta{bound})
+  \end{syntax}
+  \ttindextype[CALI]{random\_linear\_form}{symbolic procedure}
+  \hypertarget{procedure:RANDOM_LINEAR_FORM}{}
+\calipbx{returns a random linear form in algebraic prefix form in the
+supplied variables $vars$ with integer coefficients bounded by the
+supplied $bound$.}
+
+\item[]
+  \begin{syntax}
+    \f{singular\_locus!*}(\meta{m},\meta{c})
+  \end{syntax}
+  \ttindextype[CALI]{singular\_locus"!*}{symbolic procedure}
+  \hypertarget{procedure:SINGULAR_LOCUS!*}{}
+\calipbx{returns the singular locus of $m$ (as dpmat). $m$ must be an
+ideal of codimension $c$ given as a list of polynomials in prefix
+form. \f{singular\_locus}\ttindextype[CALI]{singular\_locus}{operator}
+computes the ideal generated by the
+corresponding Jacobian and $m$ itself.}
+\end{description}
+
+\subsection{About the Algorithms Implemented in \textsc{Cali}}
+
+Below we give a short explanation of the main algorithmic ideas of
+\package{CALI} and the way they are implemented and may be accessed
+(symbolically).
+
+\subsubsection{Normal Form Algorithms}
+
+For v.~2.2 we completely revised the implementation of normal form
+algorithms due to the insight obtained from our investigations of
+normal form procedures for local term orders in \cite{Graebe:95a} and
+\cite{Graebe:94}. It allows a common handling of Noetherian and non
+Noetherian term orders already on this level thus making superfluous
+the former duplication of reduction procedures in the modules
+\emph{red} and \emph{mora} as in v.~2.1.
+\medskip
+
+Normal form algorithms reduce polynomials (or polynomial vectors)
+with respect to a given finite set of generators of an ideal or
+module. The result is not unique except for a total normal form with
+respect to a Gr\"obner basis. Furthermore different reduction strategies
+may yield significant differences in computing time.
+
+\package{CALI} reduces by first matching, usually keeping base lists sorted
+with respect to the sort predicate \ind{red\_better}. In v.~2.2 we
+sort solely by the dpoly length, since the introduction of
+\ind{red\_TopRedBE}, i.e.\ reduction with bounded ecart, guarantees
+termination also for non Noetherian term orders. Overload red\_better
+for other reduction strategies.
+\medskip
+
+Reduction procedures produce for a given ideal basis $B\subset S$ and
+a polynomial $f\in S$ a (pseudo) normal form $h\in S$ such that
+$h\equiv u\cdot f\ mod\ B$ where $u\in S$ is a polynomial unit, i.e.\
+a (polynomially represented) non zero domain element in the Noetherian
+case (pseudodivision of $f$ by $B$) or a polynomial with a scalar as
+leading term in the non Noetherian case. Following up the reduction
+steps one can even produce a presentation of $h-u\cdot f$ as a
+polynomial combination of the base elements in $B$.
+
+More general, given for $f_i\in B$ and $f$ representations $f_i =
+\sum{r_{ik}e_k} = R_i\cdot E^T$ and $f=R\cdot E^T$ as polynomial
+combinations wrt.\ a fixed basis $E$ one can produce such a
+presentation also for $h$. For this purpose the dpoly $f$ and its
+representation are collected into a base element and reduced
+simultaneously by the base list $B$, that collects the base elements
+and their representations.
+\medskip
+
+The main procedures of the newly designed reduction package are the
+following:
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{red\_TopRedBE}(\meta{bas},\meta{model})
+  \end{syntax}
+  \ttindextype[CALI]{red\_TopRedBE}{symbolic procedure}
+  \hypertarget{procedure:RED_TOPREDBE}{}
+\calipbx{Top reduction with bounded ecart of the base element $model$ by
+the base list $bas$, i.e.\ only reducing the top term and only with
+base elements with ecart bounded by that of $model$.}
+
+\item[]
+  \begin{syntax}
+    \f{red\_TopRed}(\meta{bas},\meta{model})
+  \end{syntax}
+  \ttindextype[CALI]{red\_TopRed}{symbolic procedure}
+  \hypertarget{procedure:RED_TOPRED}{}
+\calipbx{Top reduction of $model$, but without restrictions.}
+
+\item[]
+  \begin{syntax}
+    \f{red\_TailRed}(\meta{bas},\meta{model})
+  \end{syntax}
+  \ttindextype[CALI]{red\_TailRed}{symbolic procedure}
+  \hypertarget{procedure:RED_TAILRED}{}
+\calipbx{Make tail reduction on $model$, i.e.\ top reduction on the tail
+terms. For convergence this uses reduction with bounded ecart for non
+Noetherian term orders and full reduction otherwise.}
+\medskip
+
+There is a common \indf{red\_TailRedDriver}{symbolic procedure} that takes a top reduction
+function as parameter. It can be used for experiments with other top
+reduction procedure combinations.
+
+\item[]
+  \begin{syntax}
+    \f{red\_TotalRed}(\meta{bas},\meta{model})
+  \end{syntax}
+  \ttindextype[CALI]{red\_TotalRed}{symbolic procedure}
+  \hypertarget{procedure:RED_TOTALRED}{}
+\calipbx{A terminating total reduction, i.e. for Noetherian term orders
+the classical one and for local term orders using tail reduction with
+bounded ecart.}
+
+\item[]
+  \begin{syntax}
+    \f{red\_Straight} \meta{bas}
+  \end{syntax}
+  \ttindextype[CALI]{red\_Straight}{symbolic procedure}
+  \hypertarget{procedure:RED_STRAIGHT}{}
+\calipbx{Reduce (with \f{red\_TailRed}) the tails of the polynomials in
+the base list $bas$.}
+
+\item[]
+  \begin{syntax}
+    \f{red\_TopInterreduce} \meta{bas}
+  \end{syntax}
+  \ttindextype[CALI]{red\_TopInterreduce}{symbolic procedure}
+  \hypertarget{procedure:RED_TOPINTERREDUCE}{}
+\calipbx{Reduces the base list $bas$ with $red\_TopRed$ until it
+has pairwise incomparable leading terms, computes correct
+representation parts, but does no tail reduction.}
+
+\item[]
+  \begin{syntax}
+    \f{red\_Interreduce} \meta{bas}
+  \end{syntax}
+  \ttindextype[CALI]{red\_Interreduce}{symbolic procedure}
+  \hypertarget{procedure:RED_INTERREDUCE}{}
+\calipbx{Does top and, if the switch \sw{red\_total}\ttindexswitch[CALI]{red\_total} is on, also tail interreduction on
+the base list $bas$.}
+\end{description}
+
+Usually, e.g.\ for ideal generation problems, there is no need to care
+about the multiplier $u$. If nevertheless one needs its value, the
+base element $f$ may be prepared with \indf{red\_prepare}{symbolic procedure} to collect
+this information in the 0-slot of its representation part. Extract
+this information with \indf{red\_extract}{symbolic procedure}.
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{red\_redpol}(\meta{bas},\meta{model})
+  \end{syntax}
+  \ttindextype[CALI]{red\_redpol}{symbolic procedure}
+  \hypertarget{procedure:RED_REDPOL}{}
+\calipbx{combines this tool with a total reduction of the base element
+$model$ and returns a dotted pair}
+\begin{quote}
+  \texttt{(}\meta{reduced model} \texttt{.} \meta{dpoly unit multiplier}\texttt{)}
+\end{quote}     
+\end{description}
+
+Advanced applications call the interfacing procedures
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{interreduce!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{interreduce"!*}{symbolic procedure}
+  \hypertarget{procedure:INTERREDUCE!*(}{}
+\calipbx{that returns an interreduced basis of the dpmat $m$.}
+
+\item[]
+  \begin{syntax}
+    \f{mod!*}(\meta{f},\meta{m})
+  \end{syntax}
+  \ttindextype[CALI]{mod"!*}{symbolic procedure}
+  \hypertarget{procedure:MOD!*}{}
+\calipbx{that returns the dotted pair $(h.u)$ where $h$ is the pseudo
+normal form of the dpoly $f$ modulo the dpmat $m$ and $u$ the
+corresponding polynomial unit multiplier.}
+
+\item[]
+  \begin{syntax}
+    \f{normalform!*}(\meta{a},\meta{b})
+  \end{syntax}
+  \ttindextype[CALI]{normalform"!*}{symbolic procedure}
+  \hypertarget{procedure:NORMALFORM!*}{}
+\calipbx{that returns $\{a_1,r,z\}$ with $a_1=z*a-r*b$ where the rows of
+the dpmat $a_1$ are the normalforms of the rows of the dpmat $a$ with
+respect to the dpmat $b$.}
+\end{description}
+
+For local standard bases the ideal generated by the basic polynomials
+may have components not passing through the origin. Although they do
+not contribute to the ideal in $Loc(S)=S_{\mathbf{m}}$ they usually heavily
+increase the necessary computational effort. Hence for local term
+orders one should try to remove polynomial units as soon as they
+are detected. To remove them from base elements in an early stage of
+the computation one can either try the (cheap) test, whether $f\in S$
+is of the form \meta{monomial} * \meta{polynomial unit}  or factor $f$ completely and remove polynomial unit
+factors. For base elements this may be done with
+\indf{bas\_detectunits}{symbolic procedure} or \indf{bas\_factorunits}{symbolic procedure}.
+
+Moreover there are two switches \indsw{detectunits} and
+\indsw{factorunits}, both off by default, that force such automatic
+simplifications during more advanced computations.
+
+The procedure \f{deleteunits!*}\ttindextype[CALI]{deleteunits"!*}{symbolic procedure} tries explicitely to factor the
+basis polynomials of a dpmat and to remove polynomial units occuring
+as one of the factors.
+
+\subsubsection{The Gr\"obner and Standard Basis Algorithms}
+
+There is now a unique \ind{module groeb} that contains the Gr\"obner
+resp. standard basis algorithms with syzygy computation facility and
+related topics. There are common procedures (working for both
+Noetherian and non Noetherian term orders)
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{gbasis!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{gbasis"!*}{symbolic procedure}
+  \hypertarget{procedure:GBASIS!*}{}
+\calipbx{that returns a minimal Gr\"obner or standard basis of the dpmat $m$,}
+
+\item[]
+  \begin{syntax}
+    \f{syzygies!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{syzygies"!*}{symbolic procedure}
+  \hypertarget{procedure:SYZYGIES!*}{}
+\calipbx{that returns an interreduced basis of the first syzygy module of
+the dpmat $m$ and}
+
+\item[]
+  \begin{syntax}
+    \f{syzygies1!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{syzygies1"!*}{symbolic procedure}
+  \hypertarget{procedure:SYZYGIES1!*}{}
+\calipbx{that returns a (not yet interreduced) basis of the syzygy module
+of the dpmat $m$.}
+\end{description}
+
+These procedures start the outer Gr\"obner engine (now also common for both
+Noetherian and non Noetherian term orders)
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{groeb\_stbasis}(\meta{m},\meta{mgb},\meta{ch},\meta{syz})
+  \end{syntax}
+  \ttindextype[CALI]{groeb\_stbasis}{symbolic procedure}
+  \hypertarget{procedure:GROEB_STBASIS}{}
+\end{description}
+that returns, applied to the dpmat $m$, three dpmats $g,c,s$ with
+\begin{description}
+\item[$g$ ---] the minimal reduced Gr\"obner basis of $m$ if $mgb=t$,
+
+\item[$c$ ---] the transition matrix $g=c\cdot m$ if $ch=t$, and
+
+\item[$s$ ---] the (not yet interreduced) syzygy matrix of $m$ if $syz=t$.
+\end{description}
+
+The next layer manages the preparation of the representation parts
+of the base elements to carry the syzygy information, calls the
+\emph{general internal driver}, and extracts the relevant information
+from the result of that computation. The general internal driver
+branches according to different reduction functions into several
+versions. Upto now there are three different strategies for the
+reduction procedures for the S-polynomial reduction (different
+versions may be chosen via \ind{gbtestversion}):
+\begin{enumerate}
+\item Total reduction with local simplifier lists. For local term
+orders this is (almost) Mora's first version for the tangent cone (the
+default).
+
+\item Total reduction with global simplifier list. For local term
+orders this is (almost) Mora's SimpStBasis, see \cite{MoraPfisterTraverso:92}.
+
+\item Total reduction with bounded ecart.
+\end{enumerate}
+The first two versions (almost) coincide for Noetherian term
+orders. The third version reduces only with bounded ecart, thus
+forcing more pairs to be treated than necessary, but usually less
+expensive to be reduced. It is not yet well understood, whether this
+idea is of practical importance.
+
+\ind{groeb\_lazystbasis} calls the lazy standard basis driver instead,
+that implements Mora's lazy algorithm, see \cite{MoraPfisterTraverso:92}. As
+\ind{groeb\_homstbasis}, the computation of Gr\"obner and standard bases via
+homogenization (Lazard's approach), it is not fully integrated into
+the algebraic interface. Use
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{homstbasis!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{homstbasis"!*}{symbolic procedure}
+  \hypertarget{procedure:HOMSTBASIS!*}{}
+\calipbx{for the invocation of the homogenization approach to compute a
+standard basis of the dpmat $m$ and}
+
+\item[]
+  \begin{syntax}
+    \f{lazystbasis!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{lazystbasis"!*}{symbolic procedure}
+  \hypertarget{procedure:LAZYSTBASIS!*}{}
+\calipbx{for the lazy algorithm.}
+\end{description}
+Experts commonly agree that the classical approach is better for
+``computable'' examples, but computations done by the author
+on large examples indicate, that both approaches are in fact
+independent.
+\medskip
+
+The pair list management uses the sugar strategy, see \cite{Giovini:91},
+with respect to the current ecart vector. If the input is homogeneous
+and the ecart vector reflects this homogeneity then pairs are sorted
+by ascending degree. Hence no superfluous base
+elements will be computed in this case. In general the sugar strategy
+performs best if the ecart vector is chosen to make the input close
+to be homogeneous.
+
+There is another global variable
+\var{cali!=monset}\ttindextype[CALI]{cali"!=monset}{global variable} that may contain
+a list of variable names (a subset of the variable names of the
+current base ring). During the ``pure'' Gr\"obner algorithm (without syzygy
+and representation computations) common monomial factors containing
+only these variables will be canceled out. This shortcut is useful if
+some of the variables are known to be non zero divisors as e.g.\ in
+most implicitation problems.
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{setmonset!*} \meta{vars}
+  \end{syntax}
+  \ttindextype[CALI]{setmonset"!*}{symbolic procedure}
+  \hypertarget{procedure:SETMONSET!*}{}
+\calipbx{initializes \var{cali!=monset} with a given list of variables
+$vars$.}
+\end{description}
+
+The Gr\"obner tools as e.g.\ pair criteria, pair list update, pair
+management and S-polynomial construction are available.
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{groeb\_mingb} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{groeb\_mingb}{symbolic procedure}
+  \hypertarget{procedure:GROEB_MINGB}{}
+\calipbx{extracts a minimal Gr\"obner basis from the dpmat $m$, removing base
+elements with leading terms, divisible by other leading terms.}
+
+\item[]
+  \begin{syntax}
+    \f{groeb\_minimize}(\meta{bas},\meta{syz})
+  \end{syntax}
+  \ttindextype[CALI]{groeb\_minimize}{symbolic procedure}
+  \hypertarget{procedure:GROEB_MINIMIZE}{}
+\calipbx{minimizes the dpmat pair $(bas,syz)$ deleting superfluous base
+elements from $bas$ using syzygies from $syz$ containing unit
+entries.}
+\end{description}
+
+\subsubsection{The Gr\"obner Factorizer}
+
+If $\bar{k}$ is the algebraic closure of $k$,
+$B:=\{f_1,\ldots,f_m\}\subset S$ a finite system of polynomials, and
+$C:=\{g_1,\ldots,g_k\}$ a set of side conditions define the
+\emph{relative set of zeroes}
+\[Z(B,C):=\{a\in \bar{k}^n : \forall\ f\in B\ f(a)=0\mbox{ and }
+\forall g\in C\ g(a)\neq 0\}.\]
+Its Zariski closure is the zero set of $I(B):<\prod C>$.
+
+The Gr\"obner factorizer solves the following problem:
+\begin{quote}
+\textit{Find a collection $(B_\alpha,C_\alpha)$ of Gr\"obner bases $B_\alpha$
+and side conditions $C_\alpha$ such that}
+\[Z(B,C) = \bigcup_\alpha Z(B_\alpha,C_\alpha).\]
+\end{quote}
+The \ind{module groebf} and the \ind{module triang} contain algorithms
+related to that problem, triangular systems, and their generalizations
+as described in \cite{Graebe:94a} and \cite{Graebe:95b}. V. 2.2 thus heavily
+extends the algorithmic possibilities that were implemented in former
+releases of \package{CALI}.
+
+Note that, different to v.~2.1, we work with constraint \emph{lists}.
+\begin{description}
+\item[]
+  \begin{syntax}
+    \f{groebfactor!*}(\meta{bas},\meta{con})
+  \end{syntax}
+  \ttindextype[CALI]{groebfactor"!*}{symbolic procedure}
+  \hypertarget{procedure:GROEBFACTOR!*}{}
+\calipbx{returns for the dpmat ideal $bas$ and the constraint list $con$
+(of dpolys) a minimal list of $(dpmat, constraint\ list)$ pairs with
+the desired property.}
+\end{description}
+During a preprocessing it splits the submitted basis $bas$ by a
+recursive factorization of polynomials and interreduction of bases
+into a (reduced) list of smaller subproblems consisting of a partly
+computed Gr\"obner basis, a constraint list, and a list of pairs not yet
+processed. The main procedure forces the next subproblem to be
+processed until another factorization is possible. Then the
+subproblem splits into subsubproblems, and the subproblem list will
+be updated. Subproblems are kept sorted with respect to their
+expected dimension \ind{easydim} forcing this way a \emph{depth first}
+recursion.  Returned and not yet interreduced Gr\"obner bases are, after
+interreduction, subject to another call of the preprocessor since
+interreduced polynomials may factor anew.
+\begin{description}
+\item[]
+  \begin{syntax}
+    \f{listgroebfactor!*} \meta{l}
+  \end{syntax}
+  \ttindextype[CALI]{listgroebfactor"!*}{symbolic procedure}
+  \hypertarget{procedure:LISTGROEBFACTOR!*}{}
+\calipbx{processes a whole list of dpmats (without constraints) at once and
+strips off constraints at the end.}
+\end{description}
+\medskip
+
+Using the (ordinary) Gr\"obner factorizer even components of different
+dimension may keep gluing together. The \ind{extended Gr\"obner factorizer}
+involves a postprocessing, that guarantees a decomposition into
+puredimensional components, given by triangular systems instead of Gr\"obner
+bases. Triangular systems in positive dimension must not be Gr\"obner bases
+of the underlying ideal. They should be preferred, since they are more
+simple but contain all information about the (quasi) prime component
+that they represent. The complete Gr\"obner basis of the corresponding
+component can be obtained by an easy stable quotient computation, see
+\cite{Graebe:95b}. We refer to the same paper for the definition of
+\ind{triangular systems} in positive dimension, that is consistent
+with our approach.
+\begin{description}
+\item[]
+  \begin{syntaxtable}
+    \f{extendedgroebfactor!*}(\meta{bas},\meta{c}) \\
+    \f{extendedgroebfactor1!*}(\meta{bas},\meta{c})
+  \end{syntaxtable}
+  \ttindextype[CALI]{extendedgroebfactor"!*}{symbolic procedure}
+  \ttindextype[CALI]{extendedgroebfactor1"!*}{symbolic procedure}
+  \hypertarget{procedure:EXTENDEDGROEBFACTOR!*}{}
+\calipbx{return a list of results $\{b_i,c_i,v_i\}$ in algebraic prefix
+form such that $b_i$ is a triangular set wrt.\ the variables $v_i$ and
+$c_i$ is a list of constraints, such that $b_i:<\prod c_i>$ is the
+(puredimensional) recontraction of the zerodimensional ideal
+$b_i\bigotimes_k k(v_i)$. For  the first version the recontraction is
+not computed, hence the output may be not minimal. The second version
+computes recontractions to decide superfluous components already
+during the algorithm. Note that the stable quotient computation
+involved for that purpose may drastically slow down the whole
+attempt.}
+\end{description}
+The postprocessing involves a change to dimension zero and invokes
+(zero dimensional) triangular system computations from the
+\ind{module triang}. In a first step \indf{groebf\_zeroprimes1}{symbolic procedure}
+incorporates the square free parts of certain univariate polynomials
+into these systems and strips off the constraints (since relative sets
+of zeroes in dimension zero are Zariski closed), using a splitting
+approach analogous to the Gr\"obner factorizer. In a second step, according
+to the switch \indsw{lexefgb}, either \f{zerosolve!*}\ttindextype[CALI]{zerosolve"!*}{symbolic procedure} or
+\f{zerosolve1!*}\ttindextype[CALI]{zerosolve1"!*}{symbolic procedure} converts these intermediate results into lists of
+triangular systems in prefix form. If \indsw{lexefgb} is \texttt{off} (the
+default), the zero dimensional term order is degrevlex and
+\f{zerosolve1!*}, the ``slow turn to lex'' is involved, with \sw{lexefgb}
+on the pure lexicographic term order and \f{zerosolve!*},
+M\"ollers original approach, see \cite{Moeller:93}, are used. Note that
+for this term order we need only a single Gr\"obner basis computation at
+this level.
+
+A third version, \f{zerosolve2!*}\ttindextype[CALI]{zerosolve2"!*}{symbolic procedure},
+mixes the first approach with the
+FGLM change of term orders. It is not incorporated into the extended
+Gr\"obner factorizer.
+
+\subsubsection{Basic Operations on Ideals and Modules}
+
+Gr\"obner and local standard bases are the heart of several basic
+algorithms in ideal theory, see e.g.\ \cite[6.2.]{Becker:93}. \package{CALI} offers
+the following facilities:
+\begin{description}
+\item[]
+  \begin{syntax}
+    \f{submodulep!*}(\meta{m},\meta{n})
+  \end{syntax}
+  \ttindextype[CALI]{submodulep"!*}{symbolic procedure}
+  \hypertarget{procedure:SUBMODULEP!*}{}
+\calipbx{tests the dpmat $m$ for being a submodule of the dpmat $n$
+reducing the basis elements of $m$ with respect to $n$. The result
+will be correct provided $n$ is a Gr\"obner basis.}
+
+\item[]
+  \begin{syntax}
+    \f{modequalp!*}(\meta{m},\meta{n})
+  \end{syntax}
+  \ttindextype[CALI]{modequalp"!*}{symbolic procedure}
+  \hypertarget{procedure:MODEQUALP!*}{}
+\calipbx{ = submodulep!*(m,n) and submodulep!*(n,m).}
+
+\item[]
+  \begin{syntax}
+    \f{eliminate!*}(\meta{m},\meta{variable list})
+  \end{syntax}
+  \ttindextype[CALI]{eliminate"!*}{symbolic procedure}
+  \hypertarget{procedure:ELIMINATE!*}{}
+\calipbx{computes the elimination ideal/module eliminating the variables
+in the given variable list (a subset of the variables of the current
+base ring). Changes temporarily the term order to degrevlex.}
+
+\item[]
+  \begin{syntax}
+    \f{matintersect!*} \meta{l}
+  \end{syntax}
+  \ttindextype[CALI]{matintersect"!*}{symbolic procedure}
+  \hypertarget{procedure:MATINTERSECT!*}{}
+\calipbx{computes the intersection of the dpmats in the dpmat list $l$
+  along \cite[6.20]{Becker:93}.\footnotemark}
+\footnotetext{This can be done for ideals and
+modules in an unique way. Hence \emph{idealintersect!*} has been
+removed in v.~2.1.}
+
+\end{description}
+
+\package{CALI} offers several quotient algorithms. They rest on the computation
+of quotients by a single element of the following kind: Assume
+$M\subset S^c, v\in S^c, f\in S$. Then there are
+\begin{itemize}
+  \item[]
+the \ind{module quotient} $M : (v) = \{g\in S\ |\ gv\in M\}$,
+  \item[]
+the \ind{ideal quotient} $M : (f) = \{w\in S^c\ |\ fw\in M\}$, and
+  \item[]
+the \ind{stable quotient} $M : (f)^\infty = \{w\in S^c\ |\ \exists\,
+n\, :\, f^nw\in M\}$.
+\end{itemize}
+\package{CALI} uses the elimination approach \cite[4.4.]{Cox:92} and
+\cite[6.38]{Becker:93} for their computation:
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{matquot!*}(\meta{M},\meta{f})
+  \end{syntax}
+  \ttindextype[CALI]{matquot"!*}{symbolic procedure}
+  \hypertarget{procedure:MATQUOT!*}{}
+\calipbx{returns the module or ideal quotient $M:(f)$ depending on $f$.}
+
+\item[]
+  \begin{syntax}
+    \f{matqquot!*}(\meta{M},\meta{f})
+  \end{syntax}
+  \ttindextype[CALI]{matqquot"!*}{symbolic procedure}
+  \hypertarget{procedure:MATQQUOT!*}{}
+\calipbx{returns the stable quotient $M:(f)^\infty$.}
+\end{description}
+\f{matquot!*} calls the pseudo division with remainder
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{dp\_pseudodivmod!*}(\meta{g},\meta{f})
+  \end{syntax}
+  \ttindextype[CALI]{dp\_pseudodivmod"!*}{symbolic procedure}
+  \hypertarget{procedure:DP_PSEUDODIVMOD!*}{}
+\calipbx{that returns a dpoly list $\{q,r,z\}$ such that $z\cdot g =
+q\cdot f + r$ with a dpoly unit $z$.\ ($g, f$ and $r$ must belong to
+the same free module). This is done uniformly for noetherian and
+local term orders with an extended normal form algorithm as described
+in \cite{Graebe:95a}.}
+\end{description}
+\medskip
+
+In the same way one defines the quotient of a module by another
+module (both embedded in a common free module $S^c$), the quotient of
+a module by an ideal, and the stable quotient of a module by an
+ideal. Algorithms for their computation can be obtained from the
+corresponding algorithms for a single element as divisor either by
+the generic element method \cite{Eisenbud:95} or as an intersection
+\cite[6.31]{Becker:93}. \package{CALI} offers both approaches (X=1 or 2 below) at
+the symbolic level, but for true quotients only the latter one is
+integrated into the algebraic mode interface.
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{idealquotientX!*}(\meta{M},\meta{I})
+  \end{syntax}
+  \ttindextype[CALI]{idealquotientX"!*}{symbolic procedure}
+  \hypertarget{procedure:IDEALQUOTIENTX!*}{}
+\calipbx{returns the ideal quotient $M:I$ of the dpmat $M$ by the dpmat
+ideal $I$.}
+
+\item[]
+  \begin{syntax}
+    \f{modulequotientX!*}(\meta{M},\meta{N})
+  \end{syntax}
+  \ttindextype[CALI]{modulequotientX"!*}{symbolic procedure}
+  \hypertarget{procedure:MODULEQUOTIENTX!*}{}
+\calipbx{returns the module quotient $M:N$ of the dpmat $M$ by the dpmat
+$N$.}
+
+\item[]
+  \begin{syntax}
+    \f{annihilatorX!*} \meta{M}
+  \end{syntax}
+  \ttindextype[CALI]{annihilatorX"!*}{symbolic procedure}
+  \hypertarget{procedure:ANNIHILATORX!*}{}
+\calipbx{returns the annihilator of $\mathop{\mathrm{coker}} M$, i.e.\ the module quotient
+$S^c:M$, if $M$ is a submodule of $S^c$.}
+
+\item[]
+  \begin{syntax}
+    \f{matstabquot!*}(\meta{M},\meta{I})
+  \end{syntax}
+  \ttindextype[CALI]{matstabquot"!*}{symbolic procedure}
+  \hypertarget{procedure:MATSTABQUOT!*}{}
+\calipbx{returns the stable quotient $M:I^\infty$ (only by the general element
+method).}
+\end{description}
+
+
+\subsubsection{Monomial Ideals}
+
+Monomial ideals occur as ideals of leading terms of (ideal's) Gr\"obner
+bases and also as components of leading term modules of submodules of
+free modules, see \cite{Graebe:93a}, and reflect some properties of the
+original ideal/module. Several parameters of the original ideal or
+module may be read off from it as e.g.\ dimension and Hilbert series.
+
+The \ind{module moid} contains the corresponding algorithms on
+monomial ideals. Monomial ideals are lists of monomials, kept sorted
+by descending lexicographic order as proposed in \cite{BayerStillman:92}.
+
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{moid\_primes} \meta{u}
+  \end{syntax}
+  \ttindextype[CALI]{moid\_primes}{symbolic procedure}
+  \hypertarget{procedure:MOID_PRIMES}{}
+\calipbx{returns the minimal primes (as a list of lists of variable
+names) of the monomial ideal $u$ using an adaption of the algorithm,
+proposed in \cite{BayerStillman:92} for the computation of the codimension.}
+
+\item[]
+  \begin{syntax}
+    \f{indepvarsets!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{indepvarsets"!*}{symbolic procedure}
+  \hypertarget{procedure:INDEPVARSETS!*}{}
+\calipbx{returns (based on \f{moid\_primes}) the list of strongly
+independent sets of $m$, see \cite{Kredel:88a} and \cite{Graebe:93a} for
+definitions.}
+
+\item[]
+  \begin{syntax}
+    \f{dim!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{dim"!*}{symbolic procedure}
+  \hypertarget{procedure:DIM!*}{}
+\calipbx{returns the dimension of $\mathop{\mathrm{coker}} m$ as the size of the largest
+independent set.}
+
+\item[]
+  \begin{syntax}
+    \f{codim!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{codim"!*}{symbolic procedure}
+  \hypertarget{procedure:CODIM!*}{}
+\calipbx{returns the codimension of $\mathop{\mathrm{coker}} m$.}
+
+\item[]
+  \begin{syntax}
+    \f{easyindepset!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{easyindepset"!*}{symbolic procedure}
+  \hypertarget{procedure:EASYINDEPSET!*}{}
+\calipbx{returns a maximal with respect to inclusion independent set of
+$m$.}
+
+\item[]
+  \begin{syntax}
+    \f{easydim!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{easydim"!*}{symbolic procedure}
+  \hypertarget{procedure:EASYDIM!*}{}
+\calipbx{is a fast dimension algorithm (based on \f{easyindepset}), that
+will be correct if $m$ is (radically) unmixed. Since it is
+significantly faster than the general dimension
+algorithm\footnotemark, it should
+be used, if all maximal independent sets are known to be of equal
+cardinality (as e.g.\ for prime or unmixed ideals, see \cite{Graebe:93a}).}
+\footnotetext{This algorithm is of linear time as opposed to the
+problem to determine the dimension of an arbitrary monomial ideal,
+that is known to be NP-hard in the number of variables, see
+\cite{BayerStillman:92}.}
+\end{description}
+
+\subsubsection{Hilbert Series}
+
+\package{CALI} v. 2.2 now offers also \ind{weighted Hilbert series}, i.e.\
+series that may reflect multihomogeneity of ideals and modules. For
+this purpose
+a weighted Hilbert series has a list of (integer) degree vectors
+as second parameter, and the ideal(s) of leading terms are evaluated
+wrt.\ these weights. For the output and polynomial arithmetic,
+involved during the computation of the Hilbert series numerator, the
+different weight levels are mapped onto the first variables of the
+current ring. If $w$ is such a weight vector list and $I$ is a
+monomial ideal in the polynomial ring $S=k[x_v\,:\,v\in V]$ we get
+(using multi exponent notation)
+\[H(S/I,t) := \sum_{\alpha}{|\{x^a\not\in I\,:\,w(a)=\alpha\}|\cdot
+t^\alpha} = \frac{Q(t)}{\prod_{v\in V}{\left(1-t^{w(x_v)}\right)} }\]
+for a certain polynomial Hilbert series numerator $Q(t)$. $H(R/I,t)$
+is known to be a rational function with pole order at $t=1$ equal to
+$dim\ R/I$. Note that \ind{WeightedHilbertSeries} returns a
+\emph{reduced} rational function where the gcd of numerator and denominator
+is canceled out.
+
+(Non weighted) Hilbert series call the weighted Hilbert series
+procedure with a single weight vector, the ecart vector of the current
+ring.
+
+The Hilbert series numerator $Q(t)$ is computed using (the obvious
+generalizations to the weighted case of) the algorithms in \cite{BayerStillman:92}
+and \cite{Bigatti:93}. Experiments suggest that the former is better for few
+generators of high degree whereas the latter has to be preferred for
+many generators of low degree. Choose the version with
+\ind{hftestversion} $n$, $n=1,\,2$. Bayer/Stillman's approach ($n=1$)
+is the default. In the following $m$ is a dpmat and Gr\"obner basis.
+
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{hf\_whilb}(\meta{m},\meta{w})
+  \end{syntax}
+  \ttindextype[CALI]{hf\_whilb}{symbolic procedure}
+  \hypertarget{procedure:HF_WHILB}{}
+\calipbx{returns the weighted Hilbert series numerator $Q(t)$ of $m$
+according to the version chosen with \ind{hftestversion}.}
+
+\item[]
+  \begin{syntax}
+    \f{WeightedHilbertSeries!*}(\meta{m},\meta{w})
+  \end{syntax}
+  \ttindextype[CALI]{WeightedHilbertSeries"!*}{symbolic procedure}
+  \hypertarget{procedure:WEIGHTEDHILBERTSERIES!*}{}
+\calipbx{returns the weighted Hilbert series reduced rational function of
+$m$ as s.q.}
+
+\item[]
+  \begin{syntax}
+    \f{HilbertSeries!*}(\meta{m},\meta{w})
+  \end{syntax}
+  \ttindextype[CALI]{HilbertSeries"!*}{symbolic procedure}
+  \hypertarget{procedure:HILBERTSERIES!*}{}
+\calipbx{returns the Hilbert series reduced rational function of $m$ wrt.\
+the ecart vector of the current ring as s.q.}
+
+\item[]
+  \begin{syntaxtable}
+    \f{hf\_whilb3}(\meta{u},\meta{w})\\
+    \intertext{and}\\
+    \f{hf\_whs\_from\_resolution}(\meta{u},\meta{w})\\
+  \end{syntaxtable}
+  \ttindextype[CALI]{hf\_whilb3}{symbolic procedure}
+  \ttindextype[CALI]{hf\_whs\_from\_resolution}{symbolic procedure}
+  \hypertarget{procedure:HF_WHILB3}{}
+  \hypertarget{procedure:HF_WHS_FROM_RESOLUTION}{}
+\calipbx{compute the weighted Hilbert series numerator and the
+corresponding reduced rational function from (the column degrees of) a
+given resolution $u$.}
+
+\item[]
+  \begin{syntax}
+    \f{degree!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{degree"!*}{symbolic procedure}
+  \hypertarget{procedure:DEGREE!*}{}
+\calipbx{returns the value of the numerator of the reduced Hilbert series
+of $m$ at $t=1$. i.e.\ the sum of its coefficients. For the standard
+ecart this is the degree of $\mathop{\mathrm{coker}} m$.}
+\end{description}
+
+\subsubsection{Resolutions}
+
+Resolutions of ideals and modules, represented as lists of dpmats, are
+computed via repeated syzygy computation with minimization steps
+between them to get minimal bases and generators of syzygy
+modules. Note that the algorithms apply simultaneously to both
+Noetherian and non Noetherian term orders. For compatibility reasons
+with further releases v. 2.2 introduces a second parameter to
+bound the number of syzygy modules to be computed, since Hilbert's
+syzygy theorem applies only to regular rings.
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{Resolve!*}(\meta{m},\meta{d})
+  \end{syntax}
+  \ttindextype[CALI]{Resolve"!*}{symbolic procedure}
+  \hypertarget{procedure:RESOLVE!*}{}
+\calipbx{computes a minimal resolution of the dpmat $m$, i.e. a list of
+dpmats $\{s_0, s_1, s_2,\ldots\}$, where $s_k$ is the $k$-th syzygy
+module of $m$, upto part $s_d$.}
+
+\item[]
+  \begin{syntaxtable}
+    \f{BettiNumbers!*} \meta{c}\\
+    \intertext{and}\\
+    \f{GradedBettiNumbers!*} \meta{c}
+  \end{syntaxtable}
+  \ttindextype[CALI]{BettiNumbers"!*}{symbolic procedure}
+  \ttindextype[CALI]{GradedBettiNumbers"!*}{symbolic procedure}
+  \hypertarget{procedure:BETTINUMBERS!*}{}
+  \hypertarget{procedure:GRADEDBETTINUMBERS!*}{}
+\calipbx{returns the Betti numbers resp.\ the graded Betti numbers of the
+resolution $c$, i.e.\ the list of the lengths resp.\ the degree lists
+(according to the ecart) themselves of the dpmats in $c$.}
+\end{description}
+
+\subsubsection{Zero Dimensional Ideals and Modules}
+
+There are several algorithms that either force the reduction of a
+given problem to dimension zero or work only for zero dimensional
+ideals or modules.  The \ind{module odim} offers such
+algorithms. It contains, e.g.\
+\begin{description}
+\item[]
+  \begin{syntax}
+    \f{dimzerop!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{dimzerop"!*}{symbolic procedure}
+  \hypertarget{procedure:DIMZEROP!*}{}
+\calipbx{that tests a dpmat $m$ for being zero dimensional.}
+
+\item[]
+  \begin{syntax}
+    \f{getkbase!*} \meta{u}
+  \end{syntax}
+  \ttindextype[CALI]{getkbase"!*}{symbolic procedure}
+  \hypertarget{procedure:GETKBASE!*}{}
+\calipbx{that returns a (monomial) k-vector space basis of $Coker\ m$
+provided $m$ is a Gr\"obner basis.}
+
+\item[]
+  \begin{syntax}
+    \f{odim\_borderbasis} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{odim\_borderbasis}{symbolic procedure}
+  \hypertarget{procedure:ODIM_BORDERBASIS}{}
+\calipbx{that returns a border basis, see \cite{Marinari:91}, of the
+zero dimensional dpmat $m$ as a  list of base elements.}
+
+\item[]
+  \begin{syntax}
+    \f{odim\_parameter} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{odim\_parameter}{symbolic procedure}
+  \hypertarget{procedure:ODIM_PARAMETER}{}
+\calipbx{that returns a parameter of the dpmat $m$, i.e.\ a variable $x
+\in vars$ such that $k[x]\bigcap Ann\ S^c/m=(0)$, or \emph{nil} if $m$
+is zero dimensional.}
+
+\item[]
+  \begin{syntax}
+    \f{odim\_up}(\meta{a},\meta{m})
+  \end{syntax}
+  \ttindextype[CALI]{odim\_up}{symbolic procedure}
+  \hypertarget{procedure:ODIM_UP}{}
+\calipbx{that returns an univariate polynomial (of smallest possible
+degree if $m$ is a gbasis) in the variable $a$, that belongs to the
+zero dimensional dpmat ideal $m$, using Buchberger's approach
+\cite{Buchberger:85}.}
+\end{description}
+
+\subsubsection{Primary Decomposition and Related Algorithms}
+
+The algorithms of the \ind{module prime} implement the ideas of
+\cite{Gianni:88} with modifications along \cite{Kredel:87} and their natural
+generalizations to modules as e.g.\ explained in \cite{Rutman:92}. Version
+2.2.1 fixes a serious bug detecting superfluous embedded primary
+components, see section \ref{221}, and contains now a second primary
+decomposition algorithm, based on ideal separation, as standard. For a
+discussion about embedded primes and the ideal separation approach,
+see \cite{Graebe:97}.
+
+
+\package{CALI} contains also algorithms for the computation of the unmixed part
+of a given module and the unmixed radical of a given ideal (along the
+same lines). We followed the stepwise recursion decreasing dimension
+in each step by 1 as proposed in (the final version of) \cite{Gianni:88}
+rather than the ``one step'' method described in \cite{Becker:93} since
+handling leading coefficients, i.e.\ standard forms, depending on
+several variables is a quite hard job for
+\REDUCE\footnote{\f{prime!=decompose2}\ttindextype[CALI]{primt"!=decompose2}{symbolic procedure}
+implements this strategy in the symbolic mode layer.}.
+
+In the following procedures $m$ must be a Gr\"obner basis.
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{zeroradical!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{zeroradical"!*}{symbolic procedure}
+  \hypertarget{procedure:ZERORADICAL!*}{}
+\calipbx{returns the radical of the zero dimensional ideal $m$, using
+squarefree decomposition of univariate polynomials.}
+
+\item[]
+  \begin{syntax}
+    \f{zeroprimes!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{zeroprimes"!*}{symbolic procedure}
+  \hypertarget{procedure:ZEROPRIMES!*}{}
+\calipbx{computes as in \cite{Gianni:88} the list of prime ideals of $Ann\ F/M$
+if $m$ is zero dimensional, using the (sparse) general position
+argument from \cite{Kredel:88a}.}
+
+\item[]
+  \begin{syntax}
+    \f{zeroprimarydecomposition!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{zeroprimarydecomposition!!*}{symbolic procedure}
+  \hypertarget{procedure:ZEROPRIMARYDECOMPOSITION!*}{}
+\calipbx{computes the primary components of the zero dimensional dpmat $m$
+using prime splitting with the prime ideals of $Ann\ F/M$. It returns
+a list of pairs with first entry the primary component
+and second entry the corresponding associated prime ideal.}
+
+\item[]
+  \begin{syntax}
+    \f{isprime!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{isprime"!*}{symbolic procedure}
+  \hypertarget{procedure:ISPRIME!*}{}
+\calipbx{a (one step) primality test for ideals, extracted from
+\cite{Gianni:88}.}
+
+\item[]
+  \begin{syntax}
+    \f{isolatedprimes!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{isolatedprimes"!*}{symbolic procedure}
+  \hypertarget{procedure:ISOLATEDPRIMES!*}{}
+\calipbx{computes (only) the isolated prime ideals of $Ann\ F/M$.}
+
+\item[]
+  \begin{syntax}
+    \f{radical!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{radical"!*}{symbolic procedure}
+  \hypertarget{procedure:RADICAL!*}{}
+\calipbx{computes the radical of the dpmat ideal $m$, reducing as in
+\cite{Gianni:88} to the zero dimensional case.}
+
+\item[]
+  \begin{syntax}
+    \f{easyprimarydecomposition!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{easyprimarydecomposition"!*}{symbolic procedure}
+  \hypertarget{procedure:EASYPRIMARYDECOMPOSITION!*}{}
+\calipbx{computes the primary components of the dpmat $m$, if it has no
+embedded components. The algorithm uses prime splitting with the
+isolated prime ideals of $Ann\ F/M$. It returns a list of pairs as in
+\f{zeroprimarydecomposition!*}.}
+
+\item[]
+  \begin{syntax}
+    \f{primarydecomposition!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{primarydecomposition"!*}{symbolic procedure}
+  \hypertarget{procedure:PRIMARYDECOMPOSITION!*}{}
+\calipbx{computes the primary components of the dpmat $m$ along the lines
+  of \cite{Gianni:88}. It returns a list of two-element lists as in
+  \f{zeroprimarydecomposition!*}.}
+
+\item[]
+  \begin{syntax}
+    \f{unmixedradical!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{unmixedradical"!*}{symbolic procedure}
+  \hypertarget{procedure:UNMIXEDRADICAL!*}{}
+\calipbx{returns the unmixed radical, i.e.\ the intersection of the
+isolated primes of top dimension, associated to the dpmat ideal $m$.}
+
+\item[]
+  \begin{syntax}
+    \f{eqhull!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{eqhull"!*}{symbolic procedure}
+  \hypertarget{procedure:EQHULL!*}{}
+\calipbx{returns the equidimensional hull, i.e.\ the intersection of the
+ top dimensional primary components of the dpmat $m$.}
+\end{description}
+
+\subsubsection{Advanced Algorithms}
+
+The \ind{module scripts} just under further development offers some
+advanced topics of the Gr\"obner bases theory. It introduces the new data
+structure of a \ind{map} between base rings:
+\medskip
+
+A ring map
+\[ \phi\ :\ R\longrightarrow S\]
+for $R=k[r_i], S=k[s_j]$ is represented in symbolic mode as a list
+\[   \{preimage\_ring\ R,\ image\_ring\ S, subst\_list\},\]
+where \texttt{subst\_list} is a substitution list $\{r_1=\phi_1(s),
+r_2=\phi_2(s),\ldots \}$ in algebraic prefix form, i.e.\ looks like
+\texttt{(list (equal var image) \ldots )}.
+
+The central tool for several applications is the computation of the
+preimage $\phi^{-1}(I)\subset R$ of an ideal $I\subset S$ either
+under a polynomial map $\phi$ or its closure in $R$ under a rational
+map $\phi$, see \cite[7.69 and 7.71]{Becker:93}.
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{preimage!*}(\meta{m},\meta{map})
+  \end{syntax}
+  \ttindextype[CALI]{preimage"!*}{symbolic procedure}
+  \hypertarget{procedure:PREIMAGE!*}{}
+\calipbx{computes the preimage of the ideal $m$ in algebraic prefix form
+under the given polynomial map and sets the current base ring to the
+preimage ring. Returns the result also in algebraic prefix form.}
+
+\item[]
+  \begin{syntax}
+    \f{ratpreimage!*}(\meta{m},\meta{map})
+  \end{syntax}
+  \ttindextype[CALI]{ratpreimage"!*}{symbolic procedure}
+  \hypertarget{procedure:RATPREIMAGE!*}{}
+\calipbx{computes the closure of the preimage of the ideal $m$ in
+algebraic prefix form under the given rational map and sets the
+current base ring to the preimage ring. Returns the result also in
+algebraic prefix form.}
+
+\end{description}
+
+Derived applications are
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{affine\_monomial\_curve!*}(\meta{l},\meta{vars})
+  \end{syntax}
+  \ttindextype[CALI]{affine\_monomial\_curve"!*}{symbolic procedure}
+  \hypertarget{procedure:AFFINE_MONOMIAL_CURVE!*}{}
+\calipbx{$l$ is a list of integers, $vars$ a list of variable names of the
+same length as $l$. The procedure sets the current base ring and
+returns the defining ideal of the affine monomial curve with generic
+point $(t^i\ :\ i\in l)$ computing the corresponding preimage.}
+
+
+\item[]
+  \begin{syntax}
+    \f{analytic\_spread!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{analytic\_spread"!*}{symbolic procedure}
+  \hypertarget{procedure:ANALYTIC_SPREAD!*}{}
+\calipbx{Computes the analytic spread of $M$, i.e.\ the dimension of the
+exceptional fiber ${\cal R}(M)/m{\cal R}(M)$ of the blowup along $M$
+over the irrelevant ideal $m$ of the current base ring.}
+
+\item[]
+  \begin{syntax}
+    \f{assgrad!*}(\meta{M},\meta{N},\meta{vars})
+  \end{syntax}
+  \ttindextype[CALI]{assgrad"!*}{symbolic procedure}
+  \hypertarget{procedure:ASSGRAD!*}{}
+\calipbx{Computes the associated graded ring \[gr_R(N):=
+(R/N\oplus N/N^2\oplus\ldots)={\cal R}(N)/N{\cal R}(N)\] over the ring
+$R=S/M$, where $M$ and
+$N$ are dpmat ideals defined over the current base ring $S$. \meta{vars}
+is a list of new variable names one for each generator of $N$.
+They are used to create a second ring $T$ with degree order
+corresponding to the ecart of the row degrees of $N$ and a ring map
+\[\phi : S\oplus T\longrightarrow S.\]
+It returns a dpmat ideal $J$ such that $(S\oplus T)/J$ is  a
+presentation of the
+desired associated graded ring over the new current base ring
+$S\oplus T$.}
+
+\item[]
+  \begin{syntax}
+    \f{blowup!*}(\meta{M},\meta{N},\meta{vars})
+  \end{syntax}
+  \ttindextype[CALI]{blowup"!*}{symbolic procedure}
+  \hypertarget{procedure:BLOWUP!*}{}
+\calipbx{Computes the blow up ${\cal R}(N):=R[N\cdot t]$ of $N$ over
+the ring $R=S/M$, where $M$ and $N$ are dpmat ideals defined over the
+current base ring $S$. \texttt{vars} is a list of new variable names one
+for each generator of $N$. They are used to create a second ring $T$
+with degree order corresponding to the ecart of the row degrees of
+$N$ and a ring map
+\[\phi : S\oplus T\longrightarrow S.\]
+It returns a dpmat ideal $J$ such that $(S\oplus T)/J$ is
+a presentation of the
+desired blowup ring over the new current base ring $S\oplus T$.}
+
+\item[]
+  \begin{syntax}
+    \f{proj\_monomial\_curve!*}(\meta{l},\meta{vars})
+  \end{syntax}
+  \ttindextype[CALI]{proj\_monomial\_curve"!*}{symbolic procedure}
+  \hypertarget{procedure:PROJ_MONOMIAL_CURVE!*}{}
+\calipbx{$l$ is a list of integers, $vars$ a list of variable names of the
+same length as $l$. The procedure set the current base ring and
+returns the defining ideal of the projective monomial curve with
+generic point \mbox{$(s^{d-i}\cdot t^i\ :\ i\in l)$} in $R$, where
+\mbox{$d=max\{ x\, :\, x\in l\}$}, computing the corresponding preimage.}
+
+\item[]
+  \begin{syntax}
+    \f{sym!*}(\meta{M},\meta{vars})
+  \end{syntax}
+  \ttindextype[CALI]{sym"!*}{symbolic procedure}
+  \hypertarget{procedure:SYM!*}{}
+\calipbx{Computes the symmetric algebra $Sym(M)$ where $M$ is a dpmat ideal
+defined over the current base ring $S$. \meta{vars} is a list of new
+variable names one for each generator of $M$. They are used to create
+a second ring $R$ with degree order corresponding to the ecart of the
+row degrees of $N$ and a ring map
+\[\phi : S\oplus R\longrightarrow S.\]
+It returns a dpmat ideal $J$ such that $(S\oplus R)/J$ is the
+desired symmetric algebra over the new current base ring $S\oplus R$.}
+
+\end{description}
+
+
+There are several other applications:
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{minimal\_generators!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{minimal\_generators"!*}{symbolic procedure}
+  \hypertarget{procedure:MINIMAL_GENERATORS!*}{}
+\calipbx{returns a set of minimal generators of the dpmat $m$ inspecting
+the first syzygy module.}
+
+\item[]
+  \begin{syntax}
+    \f{nzdp!*}(\meta{f},\meta{m})
+  \end{syntax}
+  \ttindextype[CALI]{nzdp"!*}{symbolic procedure}
+  \hypertarget{procedure:NZDP!*}{}
+\calipbx{tests whether the dpoly $f$ is a non zero divisor on $\mathop{\mathrm{coker}}
+m$. $m$ must be a Gr\"obner basis.}
+
+\item[]
+  \begin{syntax}
+    \f{symbolic\_power!*}(\meta{m},\meta{d})
+  \end{syntax}
+  \ttindextype[CALI]{symbolic\_power"!*}{symbolic procedure}
+  \hypertarget{procedure:SYMBOLIC_POWER!*}{}
+\calipbx{returns the $d$\/th symbolic power of the prime dpmat ideal $m$ as
+the equidimensional hull of the $d$\/th true power. (Hence applies also
+to unmixed ideals.)}
+
+\item[]
+  \begin{syntax}
+    \f{varopt!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{varopt"!*}{symbolic procedure}
+  \hypertarget{procedure:VAROPT!*}{}
+\calipbx{finds a heuristically optimal variable order by the approach in
+\cite{Boege:86} and returns the corresponding list of variables.}
+\end{description}
+
+
+\subsubsection{Dual Bases}
+
+
+For the general ideas underlying the dual bases approach see e.g.\
+\cite{Marinari:91}. This paper explains, that constructive problems from very
+different areas of commutative algebra can be formulated in a unified
+way as the computation of a basis for the intersection of the kernels
+of a finite number of linear functionals generating a dual
+$S$-module. Our implementation honours
+this point of view, presenting two general drivers \ind{dualbases} and
+\ind{dualhbases} for the computation of such bases (even as submodules
+of a free module $M=S^m$) with affine resp.\ projective dimension zero.
+
+Such a collection of $N$ linear functionals
+\[L\,:\, M=S^m \longrightarrow k^N\]
+should be given through values $\{[e_i,L(e_i)], i=1,\ldots,m\}$ on the
+generators $e_i$ of $M$ and an evaluation function \texttt{evlf([p,L(p)],x)},
+that evaluates $L(p\cdot x)$ from $L(p)$ for $p\in
+M$ and the variable $x\in S$.
+
+\ind{dualbases} starts with a list of such generator/value constructs
+generating $M$ and performs Gaussian reduction on expressions $[p\cdot
+x,L(p\cdot x)]$, where $p$ was already processed, $L(p)\neq 0$, and
+$x\in S$ is a variable. These elements are processed in ascending order
+wrt.\ the term order on $M$. This guarantees both termination and that
+the resulting basis of $ker\ L$ is a Gr\"obner basis. The $N$ values of $L$
+are attached to $N$ variables, that are ordered linearly. Gaussian
+elimination is executed wrt.\ this variable order.
+
+To initialize the dual bases driver one has to supply the basic
+generator/value list (through the parameter list; for ideals just the
+one element list containing the generator $[1\in S,L(1)]$), the
+evaluation function, and the linear algebra variable order. The latter
+are supplied via the property list of \texttt{cali} as properties \texttt{evlf}
+and \texttt{varlessp}. Different applications need more entries
+on the property list of \texttt{cali} to manage the communication between
+the driver and the calling routine.
+
+\ind{dualhbases} realizes the same idea for (homogeneous) ideals and
+modules of (projective) dimension zero. It produces zerodimensional
+``slices'' with ascending degree until it reaches a supremum supplied
+by the user, see \cite{Marinari:91} for details.
+\medskip
+
+Applications concern affine and projective defining ideals of a finite
+number of points\footnote{This substitutes the ``brute force'' method
+computing the corresponding intersections directly as it was
+implemented in v. 2.1. The new approach is significantly faster. The
+old stuff is available as \f{affine\_points1!*}\ttindextype[CALI]{affine\_points1"!*}{symbolic procedure}
+and \f{proj\_points1!*}\ttindextype[CALI]{proj\_points1"!*}{symbolic procedure}.}
+and two versions (with and without precomputed
+border basis) of term order
+changes for zerodimensional ideals and modules as first described in
+\cite{Faugere:93}.
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{affine\_points!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{affine\_points"!*}{symbolic procedure}
+  \hypertarget{procedure:AFFINE_POINTS!*}{}
+\calipbx{$m$ is a matrix of domain elements (in algebraic prefix form)
+with as many columns as the current base ring has ring variables. This
+procedure returns the defining ideal of the collection of points in
+affine space with coordinates given by the rows of $m$. Note that $m$
+may contain parameters. In this case $k$ is treated as rational
+function field.}
+
+\item[]
+  \begin{syntaxtable}
+    \f{change\_termorder!*}(\meta{m},\meta{r}) \\
+    \intertext{and}\\
+    \f{change\_termorder1!*}(\meta{m},\meta{r}) \\
+  \end{syntaxtable}
+  \ttindextype[CALI]{change\_termorder"!*}{symbolic procedure}
+  \ttindextype[CALI]{change\_termorder1"!*}{symbolic procedure}
+  \hypertarget{procedure:CHANGE_TERMORDER!*}{}
+  \hypertarget{procedure:CHANGE_TERMORDER1!*}{}
+\calipbx{$m$ is a Gr\"obner basis of a zero dimensional ideal wrt.\ the current
+base ring. These procedures change the current ring to $r$ and compute
+the Gr\"obner basis of $m$ wrt.\ the new ring $r$. The former uses a
+precomputed border basis.}
+
+\item[]
+  \begin{syntax}
+    \f{proj\_points!*} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{proj\_points"!*}{symbolic procedure}
+  \hypertarget{procedure:PROJ_POINTS!*}{}
+\calipbx{$m$ is a matrix of domain elements (in algebraic prefix form)
+with as many columns as the current base ring has ring variables. This
+procedure returns the defining ideal of the collection of points in
+projective space with homogeneous coordinates given by the rows of
+$m$. Note that $m$ may as for \f{affine\_points} contain
+parameters.}
+\end{description}
+
+%\pagebreak
+
+%\appendix
+\subsection[Procedures for Algebraic Mode]{A Short Description of Procedures Available in Algebraic
+Mode}
+
+Here we give a short description, ordered alphabetically, of \textbf{algebraic}
+procedures offered by \package{CALI} in the algebraic mode
+interface\footnote{It does \textbf{not} contain switches, get\ldots\
+procedures, setting trace level and related stuff.}.
+
+If not stated explicitely procedures take (algebraic mode) polynomial
+matrices ($c>0$) or polynomial lists ($c=0$) $m,m1,m2,\ldots\ $ as
+input and return results of the same type. \meta{gb} stands for a bounded
+identifier\footnote{Different to v. 2.1 a Gr\"obner basis will be computed
+automatically, if necessary.}, \meta{gbr} for one with precomputed
+resolution. For the mechanism of \ind{bounded identifier} see the
+section ``Algebraic Mode Interface''.
+
+\begin{description}
+
+\item[]
+  \begin{syntax}
+    \f{affine\_monomial\_curve}(\meta{l},\meta{vars})
+  \end{syntax}
+  \ttindextype[CALI]{affine\_monomial\_curve}{operator}
+  \hypertarget{operator:AFFINE_MONOMIAL_CURVE}{}
+\calipbx{$l$ is a list of integers, $vars$ a list of variable names of the
+same length as $l$. The procedure sets the current base ring and
+returns the defining ideal of the affine monomial curve with generic
+point $(t^i\ :\ i\in l)$.}
+
+\item[]
+  \begin{syntax}
+    \f{affine\_points} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{affine\_points}{operator}
+  \hypertarget{operator:AFFINE_POINTS}{}
+\calipbx{$m$ is a matrix of domain elements (in algebraic prefix form)
+with as many columns as the current base ring has ring variables. This
+procedure returns the defining ideal of the collection of points in
+affine space with coordinates given by the rows of $m$. Note that $m$
+may contain parameters. In this case $k$ is treated as rational
+function field.}
+
+\item[]
+  \begin{syntax}
+    \f{analytic\_spread} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{analytic\_spread}{operator}
+  \hypertarget{operator:ANALYTIC_SPREAD}{}
+\calipbx{Computes the analytic spread of $m$.}
+
+\item[]
+  \begin{syntax}
+    \f{annihilator} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{annihilator}{operator}
+  \hypertarget{operator:ANNIHILATOR}{}
+\calipbx{returns the annihilator of the dpmat $m\subseteq S^c$, i.e.\
+$Ann\ S^c/M$.}
+
+\item[]
+  \begin{syntax}
+    \f{assgrad}(\meta{M},\meta{N},\meta{vars})
+  \end{syntax}
+  \ttindextype[CALI]{assgrad}{operator}
+  \hypertarget{operator:ASSGRAD}{}
+\calipbx{Computes the associated graded ring $gr_R(N)$ over $R=S/M$, where
+$S$ is the current
+base ring. \meta{vars} is a list of new variable names, one for
+each generator of $N$.  They are used to create a second ring $T$
+to return an ideal $J$ such that $(S\oplus T)/J$ is the desired
+associated graded ring over the new current base ring $S\oplus T$.}
+
+\item[]
+  \begin{syntax}
+    \f{bettiNumbers} \meta{gbr}
+  \end{syntax}
+  \ttindextype[CALI]{bettiNumbers}{operator}
+  \hypertarget{operator:BETTINUMBERS}{}
+\calipbx{extracts the list of Betti numbers from the resolution of $gbr$.}
+
+\item[]
+  \begin{syntax}
+    \f{blowup}(\meta{M},\meta{N},\meta{vars})
+  \end{syntax}
+  \ttindextype[CALI]{blowup}{operator}
+  \hypertarget{operator:BLOWUP}{}
+\calipbx{Computes the blow up ${\cal R}(N)$ of $N$ over the ring $R=S/M$,
+where $S$ is the current base ring. \texttt{vars} is a list of new
+variable names, one for each generator of $N$. They are used to create
+a second ring $T$ to return an ideal $J$ such that $(S\oplus T)/J$ is
+the desired blowup ring over the new current base ring $S\oplus T$.}
+
+\item[]
+  \begin{syntaxtable}
+    \f{change\_termorder}(\meta{m},\meta{r})\\
+    \intertext{and}\\
+    \f{change\_termorder1}(\meta{m},\meta{r})
+  \end{syntaxtable}
+  \ttindextype[CALI]{change\_termorder}{operator}
+  \ttindextype[CALI]{change\_termorder1}{operator}
+  \hypertarget{operator:CHANGE_TERMORDER}{}
+  \hypertarget{operator:CHANGE_TERMORDER1}{}
+\calipbx{Change the current ring to $r$ and compute the Gr\"obner basis of $m$
+wrt.\ the new ring $r$ by the FGLM approach. The former uses
+internally a precomputed border basis.}
+
+\item[]
+  \begin{syntax}
+    \f{codim} \meta{gb}
+  \end{syntax}
+  \ttindextype[CALI]{codim}{operator}
+  \hypertarget{operator:CODIM}{}
+\calipbx{returns the codimension of $S^c/gb$.}
+
+\item[]
+  \begin{syntax}
+    \f{degree} \meta{gb}
+  \end{syntax}
+  \ttindextype[CALI]{degree}{operator}
+  \hypertarget{operator:DEGREE}{}
+\calipbx{returns the multiplicity of $gb$ as the sum of the coefficients
+of the (classical) Hilbert series numerator.}
+
+\item[]
+  \begin{syntax}
+    \f{degsfromresolution} \meta{gbr}
+  \end{syntax}
+  \ttindextype[CALI]{degsfromresolution}{operator}
+  \hypertarget{operator:DEGSFROMRESOLUTION}{}
+\calipbx{returns the list of column degrees from the minimal resolution
+of $gbr$.}
+
+\item[]
+  \begin{syntax}
+    \f{deleteunits} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{deleteunits}{operator}
+  \hypertarget{operator:DELETEUNITS}{}
+\calipbx{factors each basis element of the dpmat ideal $m$ and removes
+factors that are polynomial units. Applies only to non Noetherian
+term orders.}
+
+\item[]
+  \begin{syntax}
+    \f{dim} \meta{gb}
+  \end{syntax}
+  \ttindextype[CALI]{dim}{operator}
+  \hypertarget{operator:DIM}{}
+\calipbx{returns the dimension of $S^c/gb$.}
+
+\item[]
+  \begin{syntax}
+    \f{dimzerop} \meta{gb}
+  \end{syntax}
+  \ttindextype[CALI]{dimzerop}{operator}
+  \hypertarget{operator:DIMZEROP}{}
+\calipbx{tests whether $S^c/gb$ is zerodimensional.}
+
+\item[]
+  \begin{syntax}
+    \f{directsum}(\meta{m1},\meta{m2},\ldots)
+  \end{syntax}
+  \ttindextype[CALI]{directsum}{operator}
+  \hypertarget{operator:DIRECTSUM}{}
+\calipbx{returns the direct sum of the modules $m1,m2,\ldots$, embedded
+into the direct sum of the corresponding free modules.}
+
+\item[]
+  \begin{syntax}
+    \f{dpgcd}(\meta{f},\meta{g})
+  \end{syntax}
+  \ttindextype[CALI]{dpgcd}{operator}
+  \hypertarget{operator:DPGCD}{}
+\calipbx{returns the gcd of two polynomials $f$ and $g$, computed by the
+syzygy method.}
+
+\item[]
+  \begin{syntaxtable}
+    \f{easydim} \meta{m} \\
+    \intertext{and}\\
+    \f{easyindepset} \meta{m}
+  \end{syntaxtable}
+  \ttindextype[CALI]{easydim}{operator}
+  \ttindextype[CALI]{easyindepset}{operator}
+  \hypertarget{operator:EASYDIM}{}
+  \hypertarget{operator:EASYINDEPSET}{}
+\calipbx{ If the given ideal or module is unmixed (e.g.\ prime) then all
+maximal strongly independent sets are of equal size and one can look
+for a maximal with respect to inclusion rather than size strongly
+independent set. These procedures don't test the input for being a
+Gr\"obner basis or unmixed, but construct a maximal with respect to
+inclusion independent set of the basic leading terms resp.\ detect
+from this (an approximation for) the dimension.}
+
+\item[]
+  \begin{syntax}
+    \f{easyprimarydecomposition} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{easyprimarydecomposition}{operator}
+  \hypertarget{operator:EASYPRIMARYDECOMPOSITION}{}
+\calipbx{a short primary decomposition using ideal separation of isolated
+primes of $m$, that yields true results only for modules without
+embedded components. Returns a list of $\{component, associated\
+prime\}$ pairs.}
+
+\item[]
+  \begin{syntax}
+    \f{eliminate}(\meta{m},\meta{variable list})
+  \end{syntax}
+  \ttindextype[CALI]{eliminate}{operator}
+  \hypertarget{operator:ELIMINATE}{}
+\calipbx{computes the elimination ideal/module eliminating the variables
+in the given variable list (a subset of the variables of the current
+base ring). Changes temporarily the term order to degrevlex.}
+
+\item[]
+  \begin{syntax}
+    \f{eqhull} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{eqhull}{operator}
+  \hypertarget{operator:EQHULL}{}
+\calipbx{returns the equidimensional hull of the dpmat $m$.}
+
+\item[]
+  \begin{syntaxtable}
+    \f{extendedgroebfactor}(\meta{m},\meta{c}) \\
+    \intertext{and} \\
+    \f{extendedgroebfactor1}(\meta{m},\meta{c})
+  \end{syntaxtable}
+  \ttindextype[CALI]{extendedgroebfactor}{operator}
+  \ttindextype[CALI]{extendedgroebfactor1}{operator}
+  \hypertarget{operator:EXTENDEDGROEBFACTOR}{}
+  \hypertarget{operator:EXTENDEDGROEBFACTOR1}{}
+\calipbx{return for a polynomial ideal $m$ and a list of (polynomial)
+constraints $c$ a list of results $\{b_i,c_i,v_i\}$, where $b_i$ is a
+triangular set wrt.\ the variables $v_i$ and $c_i$ is a list of
+constraints, such that
+$Z(m,c) = \bigcup Z(b_i,c_i)$. For the first version the output may be
+not minimal. The second version decides superfluous components already
+during the algorithm.}
+
+\item[]
+  \begin{syntax}
+    \f{gbasis} \meta{gb}
+  \end{syntax}
+  \ttindextype[CALI]{gbasis}{operator}
+  \hypertarget{operator:GBASIS}{}
+\calipbx{returns the Gr\"obner resp. local standard basis of $gb$.}
+
+\item[]
+  \begin{syntax}
+    \f{getkbase} \meta{gb}
+  \end{syntax}
+  \ttindextype[CALI]{getkbase}{operator}
+  \hypertarget{operator:GETKBASE}{}
+\calipbx{returns a k-vector space basis of $S^c/gb$, consisting of module
+terms, provided $gb$ is zerodimensional.}
+
+\item[]
+  \begin{syntax}
+    \f{getleadterms} \meta{gb}
+  \end{syntax}
+  \ttindextype[CALI]{getleadterms}{operator}
+  \hypertarget{operator:GETLEADTERMS}{}
+\calipbx{returns the dpmat of leading terms of a Gr\"obner resp. local standard
+basis of $gb$.}
+
+\item[]
+  \begin{syntax}
+    \f{GradedBettinumbers} \meta{gbr}
+  \end{syntax}
+  \ttindextype[CALI]{GradedBettinumbers}{operator}
+  \hypertarget{operator:GRADEDBETTINUMBERS}{}
+\calipbx{extracts the list of degree lists of the free summands in a
+minimal resolution of $gbr$.}
+
+\item[]
+  \begin{syntax}
+    \f{groebfactor} (\meta{m}[,\meta{c}])
+  \end{syntax}
+  \ttindextype[CALI]{groebfactor}{operator}
+  \hypertarget{operator:GROEBFACTOR}{}
+\calipbx{returns for the dpmat ideal $m$ and an optional constraint list
+$c$ a (reduced) list of dpmats such that the union of their zeroes is
+exactly $Z(m,c)$. Factors all polynomials involved in the Gr\"obner
+algorithms of the partial results.}
+
+\item[]
+  \begin{syntax}
+    \f{HilbertSeries} \meta{gb}
+  \end{syntax}
+  \ttindextype[CALI]{HilbertSeries}{operator}
+  \hypertarget{operator:HILBERTSERIES}{}
+\calipbx{returns the Hilbert series of $gb$ with respect to the current
+ecart vector.}
+
+\item[]
+  \begin{syntax}
+    \f{homstbasis} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{homstbasis}{operator}
+  \hypertarget{operator:HOMSTBASIS}{}
+\calipbx{computes the standard basis of $m$ by Lazard's homogenization
+approach.}
+
+\item[]
+  \begin{syntax}
+    \f{ideal2mat} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{ideal2mat}{operator}
+  \hypertarget{operator:IDEAL2MAT}{}
+\calipbx{converts the ideal (=list of polynomials) $m$ into a column
+vector.}
+
+\item[]
+  \begin{syntax}
+    \f{ideal\_of\_minors}(\meta{mat},\meta{k})
+  \end{syntax}
+  \ttindextype[CALI]{ideal\_of\_minors}{operator}
+  \hypertarget{operator:IDEAL_OF_MINORS}{}
+\calipbx{computes the generators for the ideal of $k$-minors of the matrix
+$mat$.}
+
+\item[]
+  \begin{syntax}
+    \f{ideal\_of\_pfaffians}(\meta{mat},\meta{k})
+  \end{syntax}
+  \ttindextype[CALI]{ideal\_of\_pfaffians}{operator}
+  \hypertarget{operator:IDEAL_OF_PFAFFIANS}{}
+\calipbx{computes the generators for the ideal of the $2k$-pfaffians of
+the skewsymmetric matrix $mat$.}
+
+\item[]
+  \begin{syntax}
+    \f{idealpower}(\meta{m},\meta{n})
+  \end{syntax}
+  \ttindextype[CALI]{idealpower}{operator}
+  \hypertarget{operator:IDEALPOWER}{}
+\calipbx{returns the interreduced basis of the ideal power $m^n$ with
+respect to the integer $n\geq 0$.}
+
+\item[]
+  \begin{syntax}
+    \f{idealprod}(\meta{m1},\meta{m2},\ldots)
+  \end{syntax}
+  \ttindextype[CALI]{idealprod}{operator}
+  \hypertarget{operator:IDEALPROD}{}
+\calipbx{returns the interreduced basis of the ideal product
+\mbox{$m1\cdot m2\cdot \ldots$} of the ideals $m1,m2,\ldots$.}
+
+\item[]
+  \begin{syntax}
+    \f{idealquotient}(\meta{m1},\meta{m2})
+  \end{syntax}
+  \ttindextype[CALI]{idealquotient}{operator}
+  \hypertarget{operator:CALI_IDEALQUOTIENT}{}
+\calipbx{returns the ideal quotient $m1:m2$ of the module $m1\subseteq
+S^c$ by the ideal $m2$.}
+
+\item[]
+  \begin{syntax}
+    \f{idealsum}(\meta{m1},\meta{m2},\ldots)
+  \end{syntax}
+  \ttindextype[CALI]{idealsum}{operator}
+  \hypertarget{operator:IDEALSUM}{}
+\calipbx{returns the interreduced basis of the ideal sum $m1+m2+\ldots$.}
+
+\item[]
+  \begin{syntax}
+    \f{indepvarsets} \meta{gb}
+  \end{syntax}
+  \ttindextype[CALI]{indepvarsets}{operator}
+  \hypertarget{operator:INDEPVARSETS}{}
+\calipbx{returns the list of strongly independent sets of $gb$ with
+respect to the current term order, see \cite{Kredel:88a} for a definition in
+the case of ideals and \cite{Graebe:93a} for submodules of free modules.}
+
+\item[]
+  \begin{syntax}
+    \f{initmat}(\meta{m},\meta{filename})
+  \end{syntax}
+  \ttindextype[CALI]{initmat}{operator}
+  \hypertarget{operator:INITMAT}{}
+\calipbx{initializes the dpmat $m$ together with its base ring, term order
+and column degrees from a file.}
+
+\item[]
+  \begin{syntax}
+    \f{interreduce} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{interreduce}{operator}
+  \hypertarget{operator:INTERREDUCE}{}
+\calipbx{returns the interreduced module basis given by the rows of $m$,
+i.e.\ a basis with pairwise indivisible leading terms.}
+
+\item[]
+  \begin{syntax}
+    \f{isolatedprimes} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{isolatedprimes}{operator}
+  \hypertarget{operator:ISOLATEDPRIMES}{}
+\calipbx{returns the list of isolated primes of the dpmat $m$, i.e.\ the
+isolated primes of $Ann\ S^c/M$.}
+
+\item[]
+  \begin{syntax}
+    \f{isprime} \meta{gb}
+  \end{syntax}
+  \ttindextype[CALI]{isprime}{operator}
+  \hypertarget{operator:ISPRIME}{}
+\calipbx{tests the ideal $gb$ to be prime.}
+
+\item[]
+  \begin{syntax}
+    \f{iszeroradical} \meta{gb}
+  \end{syntax}
+  \ttindextype[CALI]{iszeroradical}{operator}
+  \hypertarget{operator:ISZERORADICAL}{}
+\calipbx{tests the zerodimensional ideal $gb$ to be radical.}
+
+\item[]
+  \begin{syntax}
+    \f{lazystbasis} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{lazystbasis}{operator}
+  \hypertarget{operator:LAZYSTBASIS}{}
+\calipbx{computes the standard basis of $m$ by the lazy algorithm, see
+e.g.\ \cite{MoraPfisterTraverso:92}.}
+
+\item[]
+  \begin{syntax}
+    \f{listgroebfactor} \meta{in}
+  \end{syntax}
+  \ttindextype[CALI]{listgroebfactor}{operator}
+  \hypertarget{operator:LISTGROEBFACTOR}{}
+\calipbx{computes for the list $in$ of ideal bases a list $out$ of Gr\"obner
+bases by the Gr\"obner factorization method, such that
+$\bigcup_{m\in in}Z(m) = \bigcup_{m\in out}Z(m)$.}
+
+\item[]
+  \begin{syntax}
+    \f{mat2list} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{mat2list}{operator}
+  \hypertarget{operator:MAT2LIST}{}
+\calipbx{converts the matrix $m$ into a list of its entries.}
+
+\item[]
+  \begin{syntax}
+    \f{matappend}(\meta{m1},\meta{m2},\ldots)
+  \end{syntax}
+  \ttindextype[CALI]{matappend}{operator}
+  \hypertarget{operator:MATAPPEND}{}
+\calipbx{collects the rows of the dpmats $m1,m2,\ldots $ to a common
+matrix. $m1,m2,\ldots$ must be submodules of the same free module,
+i.e.\ have equal column degrees (and size).}
+
+\item[]
+  \begin{syntax}
+    \f{mathomogenize}(\meta{m},\meta{var})\footnotemark
+  \end{syntax}
+  \ttindextype[CALI]{mathomogenize}{operator}
+  \hypertarget{operator:MATHOMOGENIZE}{}
+\footnotetext{Dehomogenize with \texttt{sub(z=1,m)} if $z$ is the
+homogenizing variable.}
+\calipbx{returns the result obtained by homogenization of the rows of m
+with respect to the variable \meta{var} and the current \ind{ecart
+  vector}.}
+
+\item[]
+  \begin{syntax}
+    \f{matintersect}(\meta{m1},\meta{m2},\ldots)
+  \end{syntax}
+  \ttindextype[CALI]{matintersect}{operator}
+  \hypertarget{operator:MATINTERSECT}{}
+\calipbx{returns the interreduced basis of the intersection $m1\bigcap
+m2\bigcap \ldots$.}
+
+\item[]
+  \begin{syntax}
+    \f{matjac}(\meta{m},\meta{variable list})
+  \end{syntax}
+  \ttindextype[CALI]{matjac}{operator}
+  \hypertarget{operator:MATJAC}{}
+\calipbx{returns the Jacobian matrix of the ideal m with respect to the
+supplied variable list}
+
+\item[]
+  \begin{syntax}
+    \f{matqquot}(\meta{m},\meta{f})
+  \end{syntax}
+  \ttindextype[CALI]{matqquot}{operator}
+  \hypertarget{operator:MATQQUOT}{}
+\calipbx{returns the stable quotient $m:(f)^\infty$ of the dpmat $m$ by
+the polynomial $f\in S$.}
+
+\item[]
+  \begin{syntax}
+    \f{matquot}(\meta{m},\meta{f})
+  \end{syntax}
+  \ttindextype[CALI]{matquot}{operator}
+  \hypertarget{operator:MATQUOT}{}
+\calipbx{returns the quotient $m:(f)$ of the dpmat $m$ by the polynomial
+$f\in S$.}
+
+\item[]
+  \begin{syntax}
+    \f{matstabquot}(\meta{m1},\meta{id})
+  \end{syntax}
+  \ttindextype[CALI]{matstabquot}{operator}
+  \hypertarget{operator:MATSTABQUOT}{}
+\calipbx{returns the stable quotient $m1:id^\infty$ of the dpmat $m1$ by
+the ideal $id$.}
+
+\item[]
+  \begin{syntax}
+    \f{matsum}(\meta{m1},\meta{m2},\ldots)
+  \end{syntax}
+  \ttindextype[CALI]{matsum}{operator}
+  \hypertarget{operator:MATSUM}{}
+\calipbx{returns the interreduced basis of the module sum $m1+m2+\ldots$
+in a common free module.}
+
+\item[]
+  \begin{syntax}
+    \f{minimal\_generators} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{minimal\_generators}{operator}
+  \hypertarget{operator:MINIMAL_GENERATORS}{}
+\calipbx{returns a set of minimal generators of the dpmat $m$.}
+
+\item[]
+  \begin{syntax}
+    \f{minors}(\meta{m},\meta{n})
+  \end{syntax}
+  \ttindextype[CALI]{minors}{operator}
+  \hypertarget{operator:MINORS}{}
+\calipbx{returns the matrix of minors of size $b\times b$ of the matrix
+$m$.}
+
+\item[]
+  \begin{syntax}
+    \meta{a} \f{mod} \meta{b}
+  \end{syntax}
+  \ttindextype[CALI]{mod}{infix operator}
+  \hypertarget{operator:CALI_MOD}{}
+\calipbx{computes the (true) normal form(s), i.e.\ a standard quotient
+representation, of $a$ modulo the dpmat $m$. $a$ may be either a
+polynomial or a polynomial list ($c=0$) or a matrix ($c>0$) of the
+correct number of columns.}
+
+\item[]
+  \begin{syntax}
+    \f{modequalp}(\meta{gb1},\meta{gb2})
+  \end{syntax}
+  \ttindextype[CALI]{modequalp}{operator}
+  \hypertarget{operator:MODEQUALP}{}
+\calipbx{tests, whether $gb1$ and $gb2$ are equal (returns YES or NO).}
+
+\item[]
+  \begin{syntax}
+    \f{modulequotient}(\meta{m1},\meta{m2})
+  \end{syntax}
+  \ttindextype[CALI]{modulequotient}{operator}
+  \hypertarget{operator:MODULEQUOTIENT}{}
+\calipbx{returns the module quotient $m1:m2$ of two dpmats $m1,m2$ in a
+common free module.}
+
+\item[]
+  \begin{syntax}
+    \f{normalform}(\meta{m1},\meta{m2})
+  \end{syntax}
+  \ttindextype[CALI]{normalform}{operator}
+  \hypertarget{operator:NORMALFORM}{}
+\calipbx{returns a list of three dpmats $\{m3,r,z\}$, where $m3$ is the
+normalform of $m1$ modulo $m2$, $z$ a scalar matrix of polynomial
+units (i.e.\ polynomials of degree 0 in the noetherian case and
+polynomials with leading term of degree 0 in the tangent cone case),
+and $r$ the relation matrix, such that \[m3=z*m1+r*m2.\]}
+
+\item[]
+  \begin{syntax}
+    \f{nzdp}(\meta{f},\meta{m})
+  \end{syntax}
+  \ttindextype[CALI]{nzdp}{operator}
+  \hypertarget{operator:NZDP}{}
+\calipbx{tests whether the dpoly $f$ is a non zero divisor on $\mathop{\mathrm{coker}}
+m$.}
+
+\item[]
+  \begin{syntax}
+    \f{pfaffian} \meta{mat}
+  \end{syntax}
+  \ttindextype[CALI]{pfaffian}{operator}
+  \hypertarget{operator:PFAFFIAN}{}
+\calipbx{returns the pfaffian of a skewsymmetric matrix $mat$.}
+
+\item[]
+  \begin{syntax}
+    \f{preimage}(\meta{m},\meta{map})
+  \end{syntax}
+  \ttindextype[CALI]{preimage}{operator}
+  \hypertarget{operator:PREIMAGE}{}
+  \calipbx{computes the preimage of the ideal $m$ under the given
+polynomial map and sets the current base ring to the preimage ring.}
+
+\item[]
+  \begin{syntax}
+    \f{primarydecomposition} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{primarydecomposition}{operator}
+  \hypertarget{operator:PRIMARYDECOMPOSITION}{}
+\calipbx{returns the primary decomposition of the dpmat $m$ as a list of
+$\{component, associated\ prime\}$ pairs.}
+
+\item[]
+  \begin{syntax}
+    \f{proj\_monomial\_curve}(\meta{l},\meta{vars})
+  \end{syntax}
+  \ttindextype[CALI]{proj\_monomial\_curve}{operator}
+  \hypertarget{operator:PROJ_MONOMIAL_CURVE}{}
+\calipbx{$l$ is a list of integers, $vars$ a list of variable names of the
+same length as $l$. The procedure sets the current base ring and
+returns the defining ideal of the projective monomial curve with
+generic point \mbox{$(s^{d-i}\cdot t^i\ :\ i\in l)$} in $R$ where $d=max\{
+x\, :\, x\in l\}$.}
+
+\item[]
+  \begin{syntax}
+    \f{proj\_points} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{proj\_points}{operator}
+  \hypertarget{operator:PROJ_POINTS}{}
+\calipbx{$m$ is a matrix of domain elements (in algebraic prefix form)
+with as many columns as the current base ring has ring variables. This
+procedure returns the defining ideal of the collection of points in
+projective space with homogeneous coordinates given by the rows of
+$m$. Note that $m$ may as for \texttt{affine\_points} contain
+parameters.}
+
+\item[]
+  \begin{syntax}
+    \f{radical} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{radical}{operator}
+  \hypertarget{operator:RADICAL}{}
+\calipbx{returns the radical of the dpmat ideal $m$.}
+
+\item[]
+  \begin{syntax}
+    \f{random\_linear\_form}(\meta{vars},\meta{bound})
+  \end{syntax}
+  \ttindextype[CALI]{random\_linear\_form}{operator}
+  \hypertarget{operator:RANDOM_LINEAR_FORM}{}
+\calipbx{returns a random linear form in the variables \meta{vars} with integer
+coefficients less than the supplied \texttt{bound}.}
+
+\item[]
+  \begin{syntax}
+    \f{ratpreimage}(\meta{m},\meta{map})
+  \end{syntax}
+  \ttindextype[CALI]{ratpreimage}{operator}
+  \hypertarget{operator:RATPREIMAGE}{}
+\calipbx{computes the closure of the preimage of the ideal $m$ under the
+given rational map and sets the current base ring to the preimage
+ring.}
+
+\item[]
+  \begin{syntax}
+    \f{resolve}(\meta{m}[,\meta{d}])
+  \end{syntax}
+  \ttindextype[CALI]{resolve}{operator}
+  \hypertarget{operator:RESOLVE}{}
+\calipbx{returns the first $d$ members of the minimal resolution of the
+bounded identifier $m$ as a list of matrices. If the resolution has
+less than $d$ non zero members, only those are collected. (Default:
+$d=100$)}
+
+\item[]
+  \begin{syntax}
+    \f{savemat}(\meta{m},\meta{file name})
+  \end{syntax}
+  \ttindextype[CALI]{savemat}{operator}
+  \hypertarget{operator:SAVEMAT}{}
+\calipbx{save the dpmat $m$ together with the settings of it base ring,
+term order and column degrees to a file.}
+
+\item[]
+  \begin{syntax}
+    \f{setgbasis} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{setgbasis}{operator}
+  \hypertarget{operator:SETGBASIS}{}
+\calipbx{declares the rows of the bounded identifier $m$ to be already a
+Gr\"obner resp. local standard basis thus avoiding a possibly time
+consuming Gr\"obner or standard basis computation.}
+
+\item[]
+  \begin{syntax}
+    \f{sive}(\meta{m},\meta{variable list})
+  \end{syntax}
+  \ttindextype[CALI]{sieve}{operator}
+  \hypertarget{operator:SIEVE}{}
+\calipbx{sieves out all base elements with leading terms having a factor
+contained in the specified variable list (a subset of the variables
+of the current base ring). Useful for elimination problems solved
+``by hand''.}
+
+\item[]
+  \begin{syntax}
+    \f{singular\_locus}(\meta{M},\meta{c})
+  \end{syntax}
+  \ttindextype[CALI]{singular\_locus}{operator}
+  \hypertarget{operator:SINGULAR_LOCUS}{}
+\calipbx{returns the defining ideal of the singular locus of $Spec\ S/M$
+where $M$ is an ideal of codimension $c$, adding to $M$ the generators
+of the ideal of the $c$-minors of the Jacobian of $M$.}
+
+\item[]
+  \begin{syntax}
+    \f{submodulep}(\meta{m},\meta{gb})
+  \end{syntax}
+  \ttindextype[CALI]{submodulep}{operator}
+  \hypertarget{operator:SUBMODULEP}{}
+\calipbx{tests, whether $m$ is a submodule of $gb$ (returns YES or NO).}
+
+\item[]
+  \begin{syntax}
+    \f{sym}(\meta{M},\meta{vars})
+  \end{syntax}
+  \ttindextype[CALI]{sym}{operator}
+  \hypertarget{operator:SYM}{}
+\calipbx{Computes the symmetric algebra $Sym(M)$ where $M$ is an ideal
+defined over the current base ring $S$. \meta{vars} is a list of new
+variable names, one for each generator of $M$. They are used to create
+a second ring $R$ to return an ideal $J$ such that $(S\oplus R)/J$ is
+the desired symmetric algebra over the new current base ring $S\oplus
+R$.}
+
+\item[]
+  \begin{syntax}
+    \f{symbolic\_power}(\meta{m},\meta{d})
+  \end{syntax}
+  \ttindextype[CALI]{symbolic\_power}{operator}
+  \hypertarget{operator:SYMBOLIC_POWER}{}
+\calipbx{returns the $d$th symbolic power of the prime dpmat ideal $m$.}
+
+\item[]
+  \begin{syntax}
+    \f{syzygies} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{syzygies}{operator}
+  \hypertarget{operator:SYZYGIES}{}
+\calipbx{returns the first syzygy module of the bounded identifier $m$.}
+
+\item[]
+  \begin{syntax}
+    \f{tangentcone} \meta{gb}
+  \end{syntax}
+  \ttindextype[CALI]{tangentcone}{operator}
+  \hypertarget{operator:TANGENTCONE}{}
+\calipbx{returns the tangent cone part, i.e.\ the homogeneous part of
+highest degree with respect to the first degree vector of the term
+order from the Gr\"obner basis elements of the dpmat $gb$. The term order
+must be a degree order.}
+
+\item[]
+  \begin{syntax}
+    \f{unmixedradical} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{unmixedradical}{operator}
+  \hypertarget{operator:UNMIXEDRADICAL}{}
+\calipbx{returns the unmixed radical of the dpmat ideal $m$.}
+
+\item[]
+  \begin{syntax}
+    \f{varopt} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{varopt}{operator}
+  \hypertarget{operator:VAROPT}{}
+  \calipbx{finds a heuristically optimal variable order, see \cite{Boege:86}.
+    \begin{quote}
+      \texttt{vars:=varopt m; setring(vars,\{\},lex); setideal(m,m);}
+    \end{quote}
+changes to the lexicographic term order with heuristically best
+performance for a lexicographic Gr\"obner basis computation.}
+
+\item[]
+  \begin{syntax}
+    \f{WeightedHilbertSeries}(\meta{m},\meta{w})
+  \end{syntax}
+  \ttindextype[CALI]{WeightedHilbertSeries}{operator}
+  \hypertarget{operator:WEIGHTEDHILBERTSERIES}{}
+\calipbx{returns the weighted Hilbert series of the dpmat $m$. Note that
+$m$ is not a bounded identifier and hence not checked to be a Gr\"obner
+basis. $w$ is a list of integer weight vectors.}
+
+\item[]
+  \begin{syntax}
+    \f{zeroprimarydecomposition} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{zeroprimarydecomposition}{operator}
+  \hypertarget{operator:ZEROPRIMARYDECOMPOSITION}{}
+\calipbx{returns the primary decomposition of the zerodimensional dpmat
+$m$ as a list of $\{component, associated\ prime\}$ pairs.}
+
+\item[]
+  \begin{syntax}
+    \f{zeroprimes} \meta{m}
+  \end{syntax}
+  \ttindextype[CALI]{zeroprimes}{operator}
+  \hypertarget{operator:ZEROPRIMES}{}
+\calipbx{returns the list of primes of the zerodimensional dpmat $m$.}
+
+\item[]
+  \begin{syntax}
+    \f{zeroradical} \meta{gb}
+  \end{syntax}
+  \ttindextype[CALI]{zeroradical}{operator}
+  \hypertarget{operator:ZERORADICAL}{}
+\calipbx{returns the radical of the zerodimensional ideal $gb$.}
+
+\item[]
+  \begin{syntaxtable}
+    \f{zerosolve} \meta{m} \\
+    \intertext{and} \\
+    \f{zerosolve1} \meta{m} \\
+    \intertext{and} \\
+    \f{zerosolve2} \meta{m} 
+  \end{syntaxtable}
+  \ttindextype[CALI]{zerosolve}{operator}
+  \ttindextype[CALI]{zerosolve1}{operator}
+  \ttindextype[CALI]{zerosolve2}{operator}
+  \hypertarget{operator:ZEROSOLVE}{}
+  \hypertarget{operator:ZEROSOLVE1}{}
+  \hypertarget{operator:ZEROSOLVE2}{}
+\calipbx{Returns for a zerodimensional ideal a list of triangular systems
+that cover $Z(m)$. \f{zerosolve} needs a pure lex.\ term order for
+the ``fast'' turn to lex.\ as described in \cite{Moeller:93}, \f{zerosolve1}
+is the ``slow'' turn to lex.\ as described in \cite{Graebe:95b},
+and \f{zerosolve2} incorporated the FGLM term order change into \f{zerosolve1}.}
+\end{description}
+\pagebreak
+
+
+\subsection{The \textsc{Cali} Module Structure}
+\vfill
+
+\begin{tabular}{|p{1.5cm}||p{5.5cm}|p{2cm}|p{4cm}|}
+\hline
+\sloppy
+
+name & subject & data type & representation \\
+\hline
+
+cali & Header module, contains \linebreak
+global variables, switches etc. & --- & ---\\
+
+bcsf & Base coefficient arithmetic & base coeff. & standard forms \\
+
+ring & Base ring setting, definition of the term order & base ring &
+special type RING\\
+
+mo & monomial arithmetic & monomials & (exp. list . degree list)\\
+
+dpoly & Polynomial and vector arith\-metic & dpolys & list of terms\\
+
+bas & Operations on base lists & base list & list of base elements \\
+
+dpmat & Operations on polynomial matrices, the central data type of
+\package{CALI} & dpmat & special type DPMAT\\
+
+red & Normal form algorithms & --- & ---\\
+
+groeb & Gr\"obner basis algorithm and related ones & --- & ---\\
+
+groebf & the Gr\"obner factorizer and its extensions  & --- & ---\\
+
+matop & Operations on (lists of) \linebreak dpmats that correspond to
+ideal/module operations & --- & ---\\
+
+quot & Different quotient algorithms & --- & --- \\
+
+moid & Monomial ideal algorithms & monomial ideal & list of monomials \\
+
+hf & weighted Hilbert series & -- & -- \\
+
+res & Resolutions of dpmats & resolution & list of dpmats \\
+
+intf & Interface to algebraic mode & --- & ---\\
+
+odim & Algorithms for zerodimensional ideals and modules & --- & ---\\
+
+prime & Primary decomposition and related questions & --- & ---\\
+
+scripts & Advanced applications  & --- & ---\\
+
+calimat & Extension of the matrix package & --- & ---\\
+
+lf & The dual bases approach & --- & ---\\
+
+triang & (Zero dimensional) triangular systems & --- & ---\\
+\hline
+\end{tabular}

@@ -1,0 +1,209 @@
+\chapter{Changes since Version 3.8}
+
+\paragraph*{New packages}
+
+assert
+bibasis
+breduce
+cde
+cdiff
+clprl
+gcref
+guardian
+lalr
+lessons
+libreduce
+listvecops
+lpdo
+redfront
+reduce4
+sstools
+utf8
+
+\paragraph*{Core package rlisp}
+
+Support for namespaces (::)
+
+Default value in switch statement
+
+Support for utf8 characters
+
+in\_tex command
+
+\paragraph*{Core package poly}
+
+Improvements for differentiation: new switches \sw{expanddf}, \sw {allowdfint} etc
+(from odesolve)
+
+New operator \f{reimpart}
+
+\paragraph*{Core package alg}
+
+New switch \sw{precise\_complex}
+
+Improvements for switch \sw{combineexpt} (exptchk.red)
+
+New command \f{unset}
+
+New operators \f{continued\_fraction}, \f{totaldeg}
+
+Improvements to the \f{conj} operator, added \f{selfconjugate} declaration.
+
+Added \f{complex\_conjugates} declaration to associate pairs of identifiers
+as mutual complex-conjugates.
+
+\paragraph*{Core Package mathpr}
+
+New switch \sw{unicode\_in\_off\_nat} to have unicode characters
+displayed as such when nat is off.
+
+\paragraph*{Core Package solve}
+
+New boolean operator \f{polyp}(p,var), to determine whether p is a pure polynomial
+in var, ie. the coefficients of p do not contain var.
+
+\paragraph*{Core Package matrix}
+
+New keyword \k{matrixproc} for declaration of matrix-valued procedures, and listproc for declaration of list-valued procedures.
+
+\paragraph*{Operators now defined in the \REDUCE core}
+
+From changevar: \f{changevar},
+
+From polyrat: \f{divide}, \f{pseudo\_divide}, \f{pseudo\_div}, \f{pseudo\_quotient}, \f{pseudo\_remainder},
+
+From specfn: 
+\f{Li}, \f{Si}, \f{Ci}, \f{Shi}, \f{Chi},
+\f{Fresnel\_S}, \f{Fresnel\_C},
+\f{gamma}, \f{igamma}, \f{psi}, \f{polygamma}, \f{beta}, \f{ibeta},
+\f{euler},
+\f{bernoulli}, \f{pochhammer}, \f{lerch\_phi}, \f{polylog}, \f{zeta}, 
+\f{besselj},
+\f{bessely},
+\f{besseli},
+\f{besselk},
+\f{hankel1},
+\f{hankel2},
+\f{kummerM},
+\f{kummerU},
+\f{struveh},
+\f{struvel},
+\f{lommel1},
+\f{lommel2},
+\f{whittakerm},
+\f{whittakerw},
+\f{Airy\_Ai},
+\f{Airy\_Bi},
+\f{Airy\_AiPrime},
+\f{Airy\_biprime},
+\f{binomial},
+\f{solidharmonic},
+\f{sphericalharmonic},
+\f{fibonacci},\f{fibonaccip},
+\f{motzkin},
+\f{hypergeometric}, \f{MeijerG}
+
+From limit: 
+\f{limits}, \f{limit!+}, \f{limit!-},
+
+From taylor and tps
+\f{taylor}, \f{implicit\_taylor}, \f{inverse\_taylor},
+\f{taylororiginal}, \f{taylortemplate}, \f{taylortostandard}, \f{taylorcombine}, \f{taylorseriesp},
+\f{taylorrevert},
+\f{ps}, 
+\f{psexplim}, \f{psordlim}, \f{psterm}, \f{psorder}, \f{pssetorder}, \f{psdepvar}, \f{psexpansionpt},
+\f{psfunction}, \f{pschangevar}, \f{psreverse}, \f{pscompose}, \f{pssum}, \f{pstaylor}, \f{pscopy}, \f{pstruncate}
+
+From fps: \f{fps}, \f{simplede}, \f{infsum}
+
+From compact: \f{compact}
+
+From residue: \f{residue}, \f{poleorder}
+
+From ineq and rsolve: \f{ineq\_solve}, \f{r\_solve}, \f{i\_solve},
+
+From roots:
+\f{realroots}, \f{isolater}, \f{rlrootno}, 
+\f{roots}, \f{roots\_at\_prec}, \f{root\_val}, \f{nearestroot}, \f{firstroot},
+\f{getroot}, \f{mkpoly}, \f{gfnewt}, \f{gfroot},
+
+From laplace: \f{laplace}, \f{invlap},
+
+From defint:
+\f{laplace\_transform}, \f{hankel\_transform}, \f{y\_transform}, \f{k\_transform}, \f{struveh\_transform},
+\f{fourier\_sin}, \f{fourier\_cos},
+
+From arnum: \f{defpoly}, \f{split\_field}
+
+From zeilberg:
+\f{extended\_gosper}, \f{extended\_sumrecursion},
+\f{gosper}, \f{hyperrecursion}, \f{hypersum}, \f{hyperterm},
+\f{sumtohyper}, \f{sumrecursion},
+\f{simplify\_gamma}, \f{simplify\_gamma2}, \f{simplify\_gamman}, \f{simplify\_combinatorial},
+
+From trigsimp: \f{trigsimp}, \f{triggcd}, \f{trigfactorize}
+
+From ratint: \f{ratint}, \f{log\_sum}
+
+From odesolve:
+\f{odesolve}, \f{dsolve}, \f{root\_of\_unity}, \f{plus\_or\_minus},
+
+From gnuplot:
+New operator \f{plot}, new commands \f{gnuplot}, \f{plotshow} and \f{plotreset}.
+
+New switches \sw{tracefps}, \sw{zb\_factor}, \sw{zb\_proof}, \sw{zb\_trace}
+
+Constants now part of the core:\\
+\var{catalan}, \var{euler\_gamma}, \var{golden\_ratio},
+\var{khinchin}.
+
+Variables as part of the core: \f{gosper\_representation},
+\f{zb\_direction}, \f{zb\_order}, \f{zeilberger\_representation},
+
+
+Consistent branch cuts for complex numerical functions.
+
+
+
+\paragraph{Package specfn}
+
+psi (digamma) function can now be calculated numerically for complex arguments.
+
+\paragraph{Package specfn}
+
+New functions: \f{theta1d}, \f{theta2d}, \f{theta3d} and \f{theta4d}
+--- numerical evaluation derivatives of theta functions.
+
+\paragraph{Package specfn}
+
+\f{Weierstrass}, \f{WeierstrassZeta}, \f{sigma}, \f{sigma1}, \f{sigma2},
+\f{sigma3} and \f{sigma4}  --- rules and numerical code added.
+
+\paragraph{Package defint}
+
+Added tracing output printing of which is controlled by the switch \sw{trdefint}.
+
+\paragraph{TeXmacs interface}
+
+Print prompt numbers by setting the switch \sw{promptnumbers} to on by default.
+
+\paragraph{Package excalc}
+
+New command \f{killing\_vector}.
+
+\paragraph{Package specfn}
+
+\f{arcsn}, \f{arccn}, \f{arcdn}, \f{arcns}, \f{arcnc}, \f{arcnd},
+\f{arcsc}, \f{arcsd}, \f{arccs}, \f{arccd}, \f{arcds}, \f{arcdc}
+--- rules and numerical code added for inverse Jacobian elliptic funtions,
+real arguments and values only.
+
+\paragraph{Package ellipfn}
+
+New package comprising modules: \f{ellipfn}, \f{efjacobi}, \f{efellint},
+\f{efjacinv}, \f{eftheta} and \f{efweier}.
+These are essentially copies of the modules \f{sfellip}, \f{sfellipi},
+\f{sfellipinv}, \f{sftheta} and \f{sfweier} which have been removed from
+package \f{specfn}.
+Documentation moved into a new user contributed package in \texttt{ellipfn.tex}.
+

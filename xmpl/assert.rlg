@@ -1,0 +1,139 @@
+symbolic;
+
+
+nil
+
+
+on1 'assert;
+
+
+nil
+
+
+struct Tag;
+*** struct tag is not checked 
+
+
+
+nil
+
+struct PosNumber asserted by PosNumberP;
+
+
+nil
+
+
+procedure PosNumberP(s);
+   numberp s and s > 0;
+
+
+posnumberp
+
+
+asserted procedure hugo(x1: Number, x2: PosNumber, x3: Tag): DottedPair;
+   x3 . (x1 + x2);
+
+
+(hugo)
+
+
+hugo(1, 1, 'y);
+
+
+(y . 2)
+
+hugo(1, -1, 'y);
+
+
+(y . 0)
+
+
+assert_install hugo;
+
+
+nil
+
+
+hugo(1, 1, 'y);
+
+
+(y . 2)
+
+hugo(1, -1, 'y);
+
+
+*** declaration hugo: (number, posnumber, tag) -> dottedpair violated by arg2 -1
+ 
+
+(y . 0)
+
+
+assert_uninstall hugo;
+
+
+nil
+
+
+declare addf: (SF, SF) -> SF;
+
+
+(addf hugo)
+
+declare addsq: (SQ, SQ) -> SQ;
+
+
+(addsq addf hugo)
+
+
+assert_install addf, addsq;
+
+
+nil
+
+
+addsq(simp 'x, numr simp 'x);
+
+
+*** declaration addsq: (sq, sq) -> sq violated by arg2 (((x . 1) . 1)) 
+
+*** declaration addf: (sf, sf) -> sf violated by arg2 ((x . 1) . 1) 
+
+*** declaration addf: (sf, sf) -> sf violated by result ((x . 1) . 1) 
+
+*** declaration addsq: (sq, sq) -> sq violated by result (((x . 1) . 1)) 
+
+(((x . 1) . 1))
+
+
+algebraic;
+
+
+
+assert_analyze();
+
+------------------------------------------------------------------------
+function          #calls              #bad calls   #assertion violations
+------------------------------------------------------------------------
+addf                   1                       1                       2
+addsq                  1                       1                       2
+hugo                   2                       1                       1
+------------------------------------------------------------------------
+sum                    4                       3                       5
+------------------------------------------------------------------------
+
+
+assert_uninstall_all;
+
+
+*** assert not installed for hugo 
+
+
+end;
+
+Tested on x86_64-pc-windows CSL
+Time (counter 1): 0 ms
+
+End of Lisp run after 0.00+0.04 seconds
+real 0.19
+user 0.03
+sys 0.03

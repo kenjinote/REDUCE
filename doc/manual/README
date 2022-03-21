@@ -1,0 +1,65 @@
+How to build the manual from source.
+====================================
+
+There are two scripts:
+
+ mkpdf.sh   -- creates a PDF file using pdflatex
+ mkhtml.sh  -- creates a HTML version using TeX4ht
+
+Prerequisites are:
+ 1. a TeX installation, including pdflatex and makeindex (ie a standard TeX)
+ 2. TeX4ht (see http://www.cse.ohio-state.edu/~gurari/TeX4ht/mn.html)
+
+The file reduce.cfg contains the necessary configuration lines for TeX4ht.
+
+
+LaTeX that works with TeX4ht HTML + MathJax output. FJW, March 2021
+
+Avoid tabbing environments, which don't translate well to HTML.  For
+columns consider a tabular environment.  For indentation of text
+consider a list environment, such as a description environment or if
+necessary a custom list.  For indentation of algorithms or program
+code consider using an appropriate number of ~ characters.
+
+To get correct alignment in tabular environments when using
+\multicolumn it may help to use @{~} as the first column specifier.
+
+New commands and environments that are used in math mode must be
+defined in math mode for use by MathJax (see the MathJax
+documentation), and they must be defined on every page that uses them.
+Any parameters *must* be enclosed in braces and definitions involving
+parameters must be within braces and preceded by \makehashletter,
+otherwise the # characters will be doubled and the definitions will
+fail.  (Thanks to Michal Hoftich <michal.h21@gmail.com> for suggesting
+changing the catcode of #.)  Definitions intended for MathJax cannot
+clash with any others, so \newcommand and \newenvironment are always
+appropriate.  See e.g. guardian.tex, near the top of the file, for an
+example.
+
+Avoid unnecessary use of math mode, and nesting of math mode within
+text mode within math mode within... .  For example, an array
+environment containing a lot of text might work better as a tabular
+environment.  Math-mode facilities that need information from the
+non-math environment, such as \lefteqn, \intertext and gather
+environments, do not work in MathJax and need to be implemented
+differently.  Align environments work but split environments may not.
+Commands related to page breaking, such as \\*, do not work, although
+\\ is fine.
+
+Headings below \subsubsection level should be avoided because they
+disappear in HTML.
+
+Nested tabular-type environments need to be handled specially, such as
+by implementing the inner environment as a new command that is called
+in the output environment; see specfn.tex, towards the end.
+
+Excessively convoluted LaTeX is best avoided and is often unnecessary,
+even if it works in normal LaTeX.
+
+MathJax supports \ref{} and \eqref{}, which must appear verbatim as
+text within the HTML.  The \eqref macro can easily be redefined to
+output itself verbatim, but \ref should only be output verbatim when
+it refers to an equation.  I therefore define a macro \eqnref in
+manual.tex, which outputs \ref{} verbatim when generating MathJax
+output and calls \ref otherwise.  Uses of \ref that relate to
+equations must be changed to \eqnref for this mechanism to work.

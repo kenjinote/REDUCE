@@ -1,0 +1,54 @@
+                    UNIVERSAL PACKAGES ON A MACINTOSH
+
+
+This directory is relevant as of the end of February 2021 but is liable to
+be overtaken by developments elsewhere! It only makes any sense in the context
+of a Macintosh with an M1 (ie arm64) CPU. 
+
+Using MacPorts on an M1 Mac one can often go
+    port install portname +universal
+and end up with a universal version of the library files and executables
+involved. However there are enough cases where particular packages have
+not yet been updated to support this that I wanted an alternative solution.
+The one here is based on maintainng two parallel instances of MacPorts, one
+for arm64 and one for x86_64. I can then build packages for both architectures
+and then use the Apple "lipo" utility to merge the results into single
+universal versions.
+
+The files here attempt to make that easy. The copies of MacPorts are
+installed within the user's home directory so "sudo" is not needed. The
+eventual universal material is places in ${HOME}/ports, and ${HOME}/ports/bin
+should be added to $PATH.
+
+The script set-up-macports.sh fetches MacPorts source and builds it, leaving
+a framework ready for the user to install the particular software they need.
+Then "uinstall p1 p2 ..." will [attempt to] fetch and install universal
+versions of the ports p1, p2... and "uupgrade" will perform the steps that
+would otherwise have been "port selfupdate; port upgrade outdated".
+Small scripts "arm" and "intel" may ease multi-architecture development
+by being just slighly more compact than "arch -arch x86_64 ...".
+"umerge" is the script that merges ARM and Intel variants, and if it is
+given an argument "-force" it merges everything present - normally it is
+just automatically called as part of uinstall or uupgrade to merge newly
+changed stuff.
+
+It is easy to envisage situations when ARM and Intel installations of
+a certain package set up different sets of files or arrange things so as
+to defeat the attempts to consolidate them that are used here. It MAY be
+that in such cases reading the scripts here could allow one to piece together
+an universal version, either by using lipo with a little more manual control
+than in the scripts or by setting up a high level script that can test
+which architecture is in use and then select one of two independent versions.
+Or otherwise!
+
+If all the libraries and programs you need install happily using the
++universal for MacPorts you will not need this.
+
+Note that these scripts will worl on ARM-based Macintoshes. They will
+be less useful on Intel ones because at the time of writing this essentially
+all ports can be built when using an ARM-based Mac (via Rosetta so the build
+happens as on an Intel Mac), but a fair number of ports can not (yet?) be
+built for ARM when runing on an Intel Mac.
+
+
+                                              Arthur Norman.  February 2021

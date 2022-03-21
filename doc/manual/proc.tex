@@ -1,0 +1,373 @@
+\chapter{Procedures}\ttindextype{procedure}{command}
+\hypertarget{command:PROCEDURE}{}
+
+It is often useful to name a statement for repeated use in calculations
+with varying parameters, or to define a complete evaluation procedure for
+an operator. {\REDUCE} offers a procedural declaration for this purpose. Its
+general syntax is:
+\begin{syntax}
+  [\meta{procedural type}]\texttt{ procedure }\meta{name}[\meta{varlist}]\texttt{;}
+    \meta{statement}\texttt{;}
+\end{syntax}
+where
+\begin{syntax}
+  \meta{varlist}\ \BNFprod\ \texttt{(}\meta{variable}\texttt{,}\,\dots\texttt{,}\,\meta{variable}\texttt{)}
+\end{syntax}
+This will be explained more fully in the following sections.
+
+In the algebraic mode of {\REDUCE} the \meta{procedural type} can be
+omitted, since the default is \texttt{algebraic}.  Procedures of type 
+\texttt{integer} or \texttt{real} may also be used.  In the former case, the system
+checks that the value of the procedure is an integer.  At present, such
+checking is not done for a real procedure, although this will change in
+the future when a more complete type checking mechanism is installed.
+Users should therefore only use these types when appropriate.  An empty
+variable list may also be omitted.
+
+All user-defined procedures are automatically declared to be operators.
+
+In order to allow users relatively easy access to the whole {\REDUCE} source
+program, system procedures are not protected against user redefinition. If
+a procedure is redefined, a message
+\begin{verbatim}
+        *** <procedure name> redefined
+\end{verbatim}
+is printed. If this occurs, and the user is not redefining his own
+procedure, he is well advised to rename it, and possibly start over
+(because he has {\em already\/} redefined some internal procedure whose correct
+functioning may be required for his job!)
+
+All required procedures should be defined at the top level, since they
+have global scope throughout a program. In particular, an attempt to
+define a procedure within a procedure will cause an error to occur.
+
+\section{Procedure Heading}\index{Procedure!heading}
+
+Each procedure has a heading consisting of the word \texttt{procedure}
+(optionally preceded by the word \texttt{algebraic}), followed by the name of
+the procedure to be defined, and followed by its formal parameters -- the
+symbols that will be used in the body of the definition to illustrate
+what is to be done.  There are three cases:
+\begin{enumerate}
+\item No parameters. Simply follow the procedure name with a terminator
+(semicolon or dollar sign).
+\begin{verbatim}
+        procedure abc;
+\end{verbatim}
+
+When such a procedure is used in an expression or command, \texttt{abc()}, with
+empty parentheses, must be written.
+
+\item One parameter.  Enclose it in parentheses \emph{or} just leave at
+least one space, then follow with a terminator.
+\begin{verbatim}
+        procedure abc(x);
+\end{verbatim}
+or
+\begin{verbatim}
+        procedure abc x;
+\end{verbatim}
+
+\item More than one parameter. Enclose them in parentheses, separated by
+commas, then follow with a terminator.
+\begin{verbatim}
+        procedure abc(x,y,z);
+\end{verbatim}
+\end{enumerate}
+Referring to the last example, if later in some expression being evaluated
+the symbols \texttt{abc(u,p*q,123)} appear, the operations of the procedure
+body will be carried out as if \texttt{x} had the same value as \texttt{u} does,
+\texttt{y} the same value as \texttt{p*q} does, and \texttt{z} the value 123.  The
+values of \texttt{x}, \texttt{y}, \texttt{z}, after the procedure body operations
+are completed are unchanged.  So, normally, are the values of \texttt{u},
+\texttt{p}, \texttt{q}, and (of course) 123. (This is technically referred to as
+call by value.)\index{Call by value}
+
+The reader will have noted the word \emph{normally} a few lines earlier. The
+call by value protections can be bypassed if necessary, as described
+elsewhere.
+
+\section{Procedure Body}\index{Procedure!body}
+
+Following the delimiter that ends the procedure heading must be a 
+\emph{single} statement defining the action to be performed or the value to be
+delivered.  A terminator must follow the statement.  If it is a semicolon,
+the name of the procedure just defined is printed.  It is not printed if a
+dollar sign is used.
+
+If the result wanted is given by a formula of some kind, the body is just
+that formula, using the variables in the procedure heading.
+
+\textit{Simple Example:}
+
+If \texttt{f(x)} is to mean \texttt{(x+5)*(x+6)/(x+7)}, the entire procedure
+definition could read
+\begin{verbatim}
+        procedure f x; (x+5)*(x+6)/(x+7);
+\end{verbatim}
+Then \texttt{f(10)} would evaluate to 240/17, \texttt{f(a-6)} to
+\texttt{a*(a-1)/(a+1)}, and so on.
+
+\textit{More Complicated Example:}
+
+Suppose we need a function \texttt{p(n,x)} that, for any positive integer
+\texttt{n}, is the Legendre polynomial\index{Legendre polynomials} of order
+$n$. We can define this operator using the
+textbook formula defining these functions:
+\[
+p_n(x) = \left.\frac{1}{n!}\  
+\frac{{d}^n}{dy^n}\ \frac{1}{{(y^2 - 2xy + 1)}^{\frac{1}{2}}}\right\vert_{y=0}
+\]
+Put into words, the Legendre polynomial $p_n(x)$ is the result of
+substituting $y=0$ in the $n^{th}$ partial derivative with respect to $y$
+of a certain fraction involving $x$ and $y$, then dividing that by $n!$.
+
+This verbal formula can easily be written in {\REDUCE}:
+\begin{verbatim}
+        procedure p(n,x);
+           sub(y=0,df(1/(y^2-2*x*y+1)^(1/2),y,n))
+               /(for i:=1:n product i);
+\end{verbatim}
+Having input this definition, the expression evaluation
+\begin{verbatim}
+        2p(2,w);
+\end{verbatim}
+would result in the output
+\begin{verbatim}
+           2
+        3*w  - 1 .
+\end{verbatim}
+If the desired process is best described as a series of steps, then a group
+or compound statement can be used.
+%\extendedmanual{\newpage}
+
+\textit{Example:}
+
+The above Legendre polynomial example can be rewritten as a series of steps
+instead of a single formula as follows:
+\begin{verbatim}
+        procedure p(n,x);
+          begin scalar seed,deriv,top,fact;
+               seed:=1/(y^2 - 2*x*y +1)^(1/2);
+               deriv:=df(seed,y,n);
+               top:=sub(y=0,deriv);
+               fact:=for i:=1:n product i;
+               return top/fact
+          end;
+\end{verbatim}
+Procedures may also be defined recursively.  In other words, the procedure
+body\index{Procedure!body} can include references to the procedure name
+itself, or to other procedures that themselves reference the given
+procedure.  As an example, we can define the Legendre polynomial through
+its standard recurrence relation:
+\begin{verbatim}
+        procedure p(n,x);
+           if n<0 then rederr "Invalid argument to P(N,X)"
+            else if n=0 then 1
+            else if n=1 then x
+            else ((2*n-1)*x*p(n-1,x)-(n-1)*p(n-2,x))/n;
+\end{verbatim}
+
+\hypertarget{operator:REDERR}{}
+The operator \texttt{rederr}\ttindextype{rederr}{operator} in the above example provides
+for a simple error exit from an algebraic procedure (and also a block).
+It can take a string as argument.
+
+It should be noted however that all the above definitions of \texttt{p(n,x)} are
+quite inefficient if extensive use is to be made of such polynomials, since
+each call effectively recomputes all lower order polynomials. It would be
+better to store these expressions in an array, and then use say the
+recurrence relation to compute only those polynomials that have not already
+been derived. We leave it as an exercise for the reader to write such a
+definition.
+
+\section{Matrix- and list-valued Procedures}
+\ttindextype{matrixproc}{keyword}
+\hypertarget{reserved:MATRIXPROC}{}
+
+Normally, procedures can only return scalar values. In order for a procedure to
+return a matrix, it has to be declared of 
+type \k{matrixproc}:\index{Procedure!matrix-valued}
+\begin{verbatim}
+        matrixproc SkewSym1 (w);
+           mat((0,-w(3,1),w(2,1)),
+               (w(3,1),0,-w(1,1)),
+               (-w(2,1), w(1,1), 0));
+\end{verbatim}
+Following this declaration, the call to \texttt{SkewSym1} can be used as a matrix, e.g.
+\begin{verbatim}
+        X := SkewSym1(mat((qx),(qy),(qz)));
+
+
+             [  0     - qz   qy  ]
+             [                   ]
+        x := [ qz      0     - qx]
+             [                   ]
+             [ - qy   qx      0  ]
+
+        X * mat((rx),(ry),(rz));
+
+
+        [ qy*rz - qz*ry  ]
+        [                ]
+        [ - qx*rz + qz*rx]
+        [                ]
+        [ qx*ry - qy*rx  ]
+\end{verbatim}
+\hypertarget{reserved:LISTPROC}{}
+Similarly, by using the keyword \k{listproc}\ttindextype{listproc}{keyword}, an algebraic
+procedure can be declared to return a list:\index{Procedure!list-valued}
+\begin{verbatim}
+listproc spat3(u,v,w);
+   begin scalar x,y;
+     x := u *. w;
+     y := u *. v;
+     return v*x - w*y
+   end;
+\end{verbatim}
+
+
+\section{Using LET Inside Procedures}
+
+By using \texttt{let}\ttindex{let} instead of an assignment in the procedure
+body\index{Procedure!using \texttt{let} inside body} it is possible to bypass the call-by-value
+\index{Call by value} protection.  If \texttt{X} is a formal parameter or local
+variable of the procedure (i.e. is in the heading or in a local
+declaration), and \texttt{let} is used instead of \texttt{:=} to make an
+assignment to \texttt{x}, e.g.
+
+\begin{verbatim}
+        let x = 123;
+\end{verbatim}
+then it is the variable that is the value of \texttt{x} that is changed.
+This effect also occurs with local variables defined in a block.  If the
+value of \texttt{x} is not a variable, but a more general expression, then it
+is that expression that is used on the left-hand side of the \texttt{let}
+statement.  For example, if \texttt{x} had the value \texttt{p*q}, it is as if
+\texttt{let p*q = 123} had been executed.
+
+\section{LET Rules as Procedures}
+
+The \texttt{let}\ttindex{let} statement offers an alternative syntax and
+semantics for procedure definition.
+
+In place of
+\begin{verbatim}
+        procedure abc(x,y,z); <procedure body>;
+\end{verbatim}
+one can write
+\begin{verbatim}
+        for all x,y,z let abc(x,y,z) = <procedure body>;
+\end{verbatim}
+There are several differences to note.
+
+If the procedure body contains an assignment to one of the formal
+parameters, e.g.
+\begin{verbatim}
+        x := 123;
+\end{verbatim}
+in the \texttt{procedure} case it is a variable holding a copy of the first
+actual argument that is changed.  The actual argument is not changed.
+
+In the \texttt{let} case, the actual argument is changed.  Thus, if \texttt{abc}
+is defined using \texttt{let}, and \texttt{abc(u,v,w)} is evaluated, the value
+of \texttt{u} changes to 123.  That is, the \texttt{let} form of definition
+allows the user to bypass the protections that are enforced by the call
+by value conventions of standard \texttt{procedure} definitions.
+
+\textit{Example:}  We take our earlier \texttt{factorial}\ttindex{factorial}
+procedure and write it as a \texttt{let} statement.
+\begin{verbatim}
+        for all n let factorial n =
+                    begin scalar m,s;
+                    m:=1; s:=n;
+                l1: if s=0 then return m;
+                    m:=m*s;
+                    s:=s-1;
+                    go to l1
+                end;
+\end{verbatim}
+The reader will notice that we introduced a new local variable, \texttt{s},
+and set it equal to \texttt{n}.  The original form of the procedure contained
+the statement \texttt{n:=n-1;}.  If the user asked for the value of
+\texttt{factorial(5)} then \texttt{n} would correspond to, not just have the value
+of, 5, and {\REDUCE} would object to trying to execute the statement
+5 := $5-1$.
+
+If \texttt{pqr} is a procedure with no parameters,
+\begin{verbatim}
+        procedure pqr;
+           <procedure body>;
+\end{verbatim}
+it can be written as a \texttt{let} statement quite simply:
+\begin{verbatim}
+        let pqr = <procedure body>;
+\end{verbatim}
+To call \emph{procedure} \texttt{pqr}, if defined in the latter form, the empty
+parentheses would not be used: use \texttt{pqr} not \texttt{pqr()} where a call
+on the procedure is needed.
+
+The two notations for a procedure with no arguments can be combined. \texttt{pqr}
+can be defined in the standard \texttt{procedure} form. Then a \texttt{let}
+statement
+\begin{verbatim}
+        let pqr = pqr();
+\end{verbatim}
+would allow a user to use \texttt{pqr} instead of \texttt{pqr()} in calling the
+procedure.
+
+A feature available with \texttt{let}-defined procedures and not with procedures
+defined in the standard way is the possibility of defining partial
+functions.\index{Function!partial}\index{Partial function}
+\begin{verbatim}
+    for all x such that numberp x let uvw(x)=<procedure body>;
+\end{verbatim}
+Now \texttt{uvw} of an integer would be calculated as prescribed by the procedure
+body, while \texttt{uvw} of a general argument, such as \texttt{z} or \texttt{p+q}
+(assuming these evaluate to themselves) would simply stay \texttt{uvw(z)}
+or \texttt{uvw(p+q)} as the case may be.
+
+
+\section{REMEMBER Statement}\ttindextype{remember}{statement}
+\hypertarget{command:REMEMBER}{}
+
+Setting the remember option for an algebraic procedure by
+\begin{syntax}
+     \texttt{remember (}\meta{procname:procedure}\texttt{);}
+\end{syntax}
+saves all intermediate results of such procedure evaluations, including
+recursive calls.  Subsequent calls to the procedure can then be determined
+from the saved results, and thus the number of evaluations (or the
+complexity) can be reduced.  This mode of evalation costs extra memory, of
+course.  In addition, the procedure must be free of side--effects.
+
+The following examples show the effect of the remember statement
+on two well--known examples.
+
+\begin{samepage}
+\begin{verbatim}
+procedure H(n);      % Hofstadter's function
+ if numberp n then
+ << cnn := cnn +1;   % counts the calls
+ if n < 3 then 1 else H(n-H(n-1))+H(n-H(n-2))>>;
+
+remember h;
+
+<< cnn := 0; H(100); cnn>>;
+
+100
+
+% H has been called 100 times only.
+
+procedure A(m,n);    % Ackermann function
+
+ if m=0 then n+1 else
+  if n=0 then A(m-1,1) else
+  A(m-1,A(m,n-1));
+
+remember a;
+
+A(3,3);
+
+\end{verbatim}
+\end{samepage}

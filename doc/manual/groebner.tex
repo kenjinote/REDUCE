@@ -1,0 +1,1628 @@
+
+\setcounter{examplectr}{0}
+
+\index{Melenk, Herbert}\index{People!Melenk, Herbert}
+\index{M\"oller, H.~M.}\index{People!M\"oller, H.~M.}
+\index{Neun, Winfried}\index{People!Neun, Winfried}
+
+\index{Gr\"obner Bases}
+Gr\"obner bases are a valuable tool for solving problems in
+connection with multivariate polynomials, such as solving systems of
+algebraic equations and analyzing polynomial ideals. For a definition
+of Gr\"obner bases, a survey of possible applications and further
+references, see~\cite{Buchberger:85}. Examples are given in \cite{Boege:86},
+in \cite{Buchberger:88} and also in the test file for this package.
+
+\index{Groebner package} \index{Buchberger's Algorithm}
+The \textsc{Groebner} package calculates Gr\"obner bases using the
+Buchberger algorithm.  It can be used over a variety of different
+coefficient domains, and for different variable and term orderings.
+
+The current version of the package uses parts of a previous
+version, written by  R. Gebauer, A.C. Hearn, H. Kredel and H. M.
+M\"oller. The algorithms implemented in the current version are
+documented in \cite{Faugere:93}, \cite{Gebauer:88},
+\cite{Kredel:88a} and \cite{Giovini:91}.
+The operator \f{saturation} has been implemented in July 2000 (Herbert Melenk).
+
+\subsection{Background}
+
+\subsubsection{Variables, Domains and Polynomials}
+
+The various functions of the \textsc{Groebner} package manipulate
+equations and/or polynomials; equations are internally
+transformed into  polynomials by forming the difference of
+left-hand side and right-hand side, if equations are given.
+
+All manipulations take place in a ring of polynomials in some
+variables $x1, \ldots , xn$ over a coefficient domain $d$:
+\[ d [x1,\ldots , xn], \]
+where $d$ is a field or at least a ring without zero divisors.
+The set of variables $x1,\ldots ,xn$ can be given explicitly by the
+user or it is extracted automatically from the
+input expressions.
+
+All \REDUCE kernels can play the role of ``variables'' in this context;
+examples are
+
+%{\small
+\begin{verbatim}
+x y z22 sin(alpha) cos(alpha) c(1,2,3) c(1,3,2) farina4711
+\end{verbatim}
+%}
+
+The domain $d$ is the current \REDUCE domain with those kernels
+adjoined that are not members of the list of variables. So the
+elements of $d$ may be complicated polynomials themselves over
+kernels not in the list of variables; if, however, the variables are
+extracted automatically from the input expressions, $d$ is identical
+with the current \REDUCE domain. It is useful to regard kernels not
+being members of the list of variables as ``parameters'', e.g.
+\begin{center}
+  \texttt{a * x + (a - b) * y**2} \\
+  with ``variables'' \{$x,y$\} \\
+  and ``parameters'' $\;a\;$ and $\;b\;$.
+\end{center}
+
+The exponents of \textsc{Groebner} variables must be positive integers.
+
+A \textsc{Groebner} variable may not occur as a parameter (or part
+of a parameter) of a coefficient function. This condition is
+tested in the beginning of the \textsc{Groebner} calculation; if it is
+violated, an error message occurs (with the variable name), and the
+calculation is aborted. When the \textsc{Groebner} package is called by
+\f{solve}, the test is switched off internally.
+
+The current version of the Buchberger algorithm has two internal
+modes, a field mode and a ring mode. In the starting phase the
+algorithm analyzes the domain type; if it recognizes $d$ as being a
+ring it uses the ring mode, otherwise the field mode is needed.
+Normally field calculations occur only if all coefficients are numbers
+and if the current \REDUCE domain is a field (e.g. rational numbers,
+modular numbers modulo a prime). In general, the ring mode is faster.
+When no specific
+\REDUCE domain is selected, the ring mode is used, even if the input
+formulas contain fractional coefficients: they are multiplied by their
+common denominators so that they become integer polynomials. Zeroes of the
+denominators are included in the result list.
+
+\subsubsection{Term Ordering}
+\par
+In the theory of Gr\"obner bases, the terms of polynomials are
+considered as ordered. Several order modes are available in
+the current package, including the basic modes:
+\index{lex!term order}\index{Groebner package!term order!lex}
+\index{gradlex!term order}\index{Groebner package!term order!gradlex}
+\index{revgradlex!term order}\index{Groebner package!term order!revgradlex}
+
+\begin{center}
+$lex$, $gradlex$, $revgradlex$
+\end{center}
+
+All orderings are based on an ordering among the variables. For
+each pair of variables $(a,b)$ an order relation must be defined, e.g.
+``$ a\gg b $''. The greater sign $\gg$  does not represent a numerical
+relation among the variables; it can be interpreted only in terms of
+formula representation: ``$a$'' will be placed in front of ``$b$'' or
+``$a$''  is more complicated than ``$b$''.
+
+The sequence of variables constitutes this order base. So the notion
+of
+\[ \{x1,x2,x3\} \]
+
+as a list of variables at the same time means
+\[ x1 \gg x2 \gg x3 \]
+with respect to the term order.
+
+If terms (products of powers of variables) are compared with \emph{lex},
+that term is chosen which has a greater variable or a higher degree
+if the greatest variable is the first in both. With \emph{gradlex} the sum of
+all exponents (the total degree) is compared first, and if that does
+not lead to a decision, the \emph{lex} method is taken for the final decision.
+The \emph{revgradlex} method also compares the total degree first, but
+afterward it uses the \emph{lex} method in the reverse direction; this is the
+method originally used by Buchberger.
+
+\example{} with $\{x,y,z\}$: \index{Groebner package!example}
+
+\begin{center}
+\begin{tabular}{@{}rlll}
+  \multicolumn{2}{l}{\hspace*{-1cm}{\bf lex:}} \\
+  $x * y**3$    & $\gg$ & $y**48$ & (heavier variable) \\
+  $x**4 * y**2$ & $\gg$ & $x**3 * y**10$ & (higher degree in 1st variable) \\[2mm]
+  \multicolumn{2}{l}{\hspace*{-1cm}{\bf gradlex:}} \\
+  $y**3 * z**4$ & $\gg$ & $x**3 * y**3$ & (higher total degree) \\
+  $x*z$         & $\gg$ & $y**2$ & (equal total degree) \\[2mm]
+  \multicolumn{2}{l}{\hspace*{-1cm}{\bf revgradlex:}} \\
+  $y**3 * z**4$ & $\gg$ & $x**3 * y**3$ & (higher total degree) \\
+  $x*z$         & $\ll$ & $y**2$ & (equal total degree, \\
+                &       &        & so reverse order of lex)
+\end{tabular}
+\end{center}
+
+The formal description of the term order modes is similar to
+\cite{Kredel:88}; this description regards only the exponents of a term,
+which are written as vectors of integers with $0$ for exponents of a
+variable which does not occur:
+\[
+\begin{array}{l}
+  (e) = (e1,\ldots , en) \;\mbox{ representing }\; x1**e1 \ x2**e2 \cdots
+  xn**en. \\
+  \deg(e) \; \mbox{ is the sum over all elements of } \;(e) \\
+  (e) \gg (l) \Longleftrightarrow (e)-(l)\gg (0) = (0,\ldots ,0)
+\end{array}
+\]
+\begin{center}
+\begin{tabular}{@{}rll}
+  \multicolumn{1}{l}{\hspace*{-.5cm}{\bf lex:}} \\
+  $(e) > lex > (0)$ & $\Longrightarrow$ & $e_k > 0 \mbox{ and } e_j =0
+  \mbox{ for }\; j=1,\ldots , k-1$ \\[2mm]
+  \multicolumn{1}{l}{\hspace*{-.5cm}{\bf gradlex:}} \\
+  $(e) >gl> (0)$    & $\Longrightarrow$ & $\deg(e)>0  \mbox { or } (e) >lex> (0)$ \\[2mm]
+  \multicolumn{1}{l}{\hspace*{-.5cm}{\bf revgradlex:}} \\
+  $(e) >rgl> (0)$   & $\Longrightarrow$ & $\deg(e)>0  \mbox{ or }(e)  <lex< (0)$
+\end{tabular}
+\end{center}
+
+Note that the \emph{lex} ordering is identical to the standard \REDUCE
+kernel ordering, when \f{korder} is set explicitly to the sequence of
+variables.
+
+\index{Default term order!\textsc{Groebner} package}\index{\textsc{Groebner} package!Default term order}
+\emph{lex} is the default term order mode in the \textsc{Groebner} package.
+
+It is beyond the scope of this manual to discuss the functionality of
+the term order modes. See \cite{Buchberger:88}.
+
+The list of variables is declared as an optional parameter of the
+\f{torder} statement (see below). If this declaration is missing
+or if the empty list has been used, the variables are extracted from
+the expressions automatically and the \REDUCE system order defines
+their sequence; this can be influenced by setting an explicit order
+via the \f{korder} statement.
+
+The result of a Gr\"obner calculation is algebraically correct only
+with respect to the term order mode and the variable sequence
+which was in effect during the calculation. This is important if
+several calls to the \textsc{Groebner} package are done with the result of the
+first being the input of the second call. Therefore we recommend
+that you declare the variable list and the order mode explicitly.
+Once declared it remains valid until you enter a new \emph{torder}
+statement. The operator \emph{gvars} helps you extract the variables
+from a given set of polynomials, if an automatic reordering has been selected.
+
+\subsubsection{The Buchberger Algorithm}
+\index{Buchberger's Algorithm}
+The Buchberger algorithm of the package is based on {\sc
+Gebauer/M\"oller} \cite{Gebauer:88}.
+Extensions are documented in \cite{Melenk:88} and \cite{Giovini:91}.
+
+\subsection{Loading of the Package}
+The following command loads the package into
+\REDUCE (this syntax may vary according to the implementation):
+\begin{center}
+load\_package groebner;
+\end{center}
+
+The package contains various operators, and switches for control
+over the reduction process. These are discussed in the following.
+
+\subsection{The Basic Operators}
+
+\subsubsection{Term Ordering Mode}
+
+\begin{description}
+  \ttindextype[GROEBNER]{torder}{command}
+\item[{\f{torder}($vl,m,[p_1,p_2,\ldots]$);}]\mbox{}\\
+  \hypertarget{operator:TORDER}{}
+where $vl$ is a variable list (or the empty list if
+no variables are declared explicitly),
+$m$ is the name of a term ordering mode \emph{lex}, \emph{gradlex},
+\emph{revgradlex} (or another implemented mode) and
+$[p_1,p_2,\ldots]$ are additional parameters for the
+term ordering mode (not needed for the basic modes).
+
+\f{torder} sets variable set and the term ordering mode.
+The default mode is \emph{lex}. The previous description is returned
+as a list with corresponding elements. Such a list can
+alternatively be passed as sole argument to \f{torder}.
+
+If the variable list is empty or if the \f{torder} declaration
+is omitted, the automatic variable extraction is activated.
+
+\ttindextype[GROEBNER]{gvars}{operator}
+\item[\f{gvars}({\it\{exp$1$, exp$2$, $\ldots$, exp$n$\}});]\mbox{}\\
+\hypertarget{operator:GVARS}{}
+  where $\{exp1, exp2, \ldots , expn\}$ is a list of expressions or
+equations.
+
+\f{gvars} extracts from the expressions $\{exp1, exp2, \ldots , expn\}$
+the kernels, which can play the role of variables for a Gr\"obner
+calculation. This can be used e.g. in a \f{torder} declaration.
+\end{description}
+
+\subsubsection{\textsc{Groebner}: Calculation of a Gr\"obner Basis}
+\begin{description}
+\ttindextype[GROEBNER]{groebner}{operator}
+\item[\f{groebner} $\{exp1, exp2, \ldots , expm\};$]\mbox{}\\
+  \hypertarget{operator:GROEBNER}{}
+where $\{exp1, exp2, \ldots , expm\}$ is a list of
+expressions or equations.
+
+\textsc{Groebner} calculates the Gr\"obner basis of the given set of
+expressions with respect to the current \f{torder} setting.
+
+The Gr\"obner basis $\{1\}$ means that the ideal generated by the
+input polynomials is the whole polynomial ring, or equivalently, that
+the input polynomials have no zeroes in common.
+
+As a side effect, the sequence of variables is stored as a \REDUCE list
+in the shared variable
+\ttindextype[GROEBNER]{gvarslast}{shared variable}
+\hypertarget{reserved:GVARSLAST}{}
+\begin{center}
+\var{gvarslast}.
+\end{center}
+
+This is important if the variables are reordered because of optimization:
+you must set them afterwards explicitly as the current variable sequence
+if you want to use the Gr\"obner basis in the sequel, e.g. for a
+\f{preduce} call. A basis has the property ``Gr\"obner'' only with respect
+to the variable sequences which had been active during its computation.
+\end{description}
+
+\example \index{Groebner package!example}
+\begin{verbatim}
+   torder({},lex)$
+   groebner{3*x**2*y + 2*x*y + y + 9*x**2 + 5*x - 3,
+   2*x**3*y - x*y - y + 6*x**3 - 2*x**2 - 3*x + 3,
+   x**3*y + x**2*y + 3*x**3 + 2*x**2 };
+
+               2
+     {8*x - 2*y  + 5*y + 3,
+
+         3      2
+      2*y  - 3*y  - 16*y + 21}
+\end{verbatim}
+
+
+This example used the default system variable ordering, which was
+$\{x,y\}$. With the other variable ordering, a different basis results:
+
+\begin{verbatim}
+   torder({y,x},lex)$
+   groebner{3*x**2*y + 2*x*y + y + 9*x**2 + 5*x - 3,
+   2*x**3*y - x*y - y + 6*x**3 - 2*x**2 - 3*x + 3,
+   x**3*y + x**2*y + 3*x**3 + 2*x**2 };
+
+               2
+     {2*y + 2*x  - 3*x - 6,
+
+         3      2
+      2*x  - 5*x  - 5*x}
+\end{verbatim}
+
+
+Another basis yet again results with a different term ordering:
+\begin{verbatim}
+   torder({x,y},revgradlex)$
+   groebner{3*x**2*y + 2*x*y + y + 9*x**2 + 5*x - 3,
+   2*x**3*y - x*y - y + 6*x**3 - 2*x**2 - 3*x + 3,
+   x**3*y + x**2*y + 3*x**3 + 2*x**2 };
+
+    2
+{2*y  - 5*y - 8*x - 3,
+
+ y*x - y + x + 3,
+
+    2
+ 2*x  + 2*y - 3*x - 6}
+\end{verbatim}
+
+
+The operation of \textsc{Groebner} can be controlled by the following switches:
+\begin{description}
+  \ttindexswitch[GROEBNER]{groebopt}
+\item[\sw{groebopt} --]
+  \hypertarget{switch:GROEBOPT}{}
+If set \texttt{on}, the sequence of variables is optimized
+with respect to execution speed; the algorithm involved is described
+in~\cite{Boege:86}; note that the final list of variables is available in
+\ttindextype[GROEBNER]{gvarslast}{variable}
+\var{gvarslast}.
+
+An explicitly declared dependency supersedes the variable optimization. For example
+\begin{center}
+ \texttt{depend a, x, y;}
+\end{center}
+guarantees that \texttt{a} will be placed in front of \texttt{x} and \texttt{y}. So
+\sw{groebopt} can be used even in cases where elimination of variables is desired.
+
+By default \sw{groebopt} is \texttt{off}, conserving the original variable sequence.
+
+\ttindexswitch[GROEBNER]{groebfullreduction}
+\item[\sw{groebfullreduction} --]
+  \hypertarget{switch:GROEBFULLREDUCTION}{}
+If set \texttt{off}, the reduction steps during
+the \linebreak[4] \textsc{Groebner} operation are limited to the pure head
+term reduction; subsequent terms are reduced otherwise.
+
+By default \sw{groebfullreduction} is on.
+
+\ttindexswitch[GROEBNER]{gltbasis}
+\ttindextype[GROEBNER]{gltb}{global variable}
+\item[\sw{gltbasis} --]
+\hypertarget{reserved:GLTB}{}
+    \hypertarget{switch:GLTBASIS}{}
+If set on, the leading terms of the result basis are
+extracted. They are collected in a basis of monomials, which is
+available as value of the global variable with the name \var{gltb}.
+
+\item[\sw{glterms} --]
+  \ttindexswitch[GROEBNER]{glterms}
+  \ttindextype[GROEBNER]{glterms}{shared variable}
+  \hypertarget{switch:GLTERMS}{}
+      \hypertarget{reserved:GLTERMS}{}
+If $\{exp_1, \ldots , exp_m\} $ contain parameters
+(symbols which are not member of the variable list), the shared variable
+\var{glterms} contains a list of expression which during the
+calculation were assumed to be nonzero. A Gr\"obner basis
+is valid only under the assumption that all these expressions do not vanish.
+
+\end{description}
+
+The following switches control the print output of \textsc{Groebner}; by
+default all these switches are set \texttt{off} and nothing is printed.
+\begin{description}
+\ttindexswitch[GROEBNER]{groebstat}
+\item[\f{groebstat} --]
+\hypertarget{switch:GROEBSTAT}{}
+  A summary of the computation is printed
+including the computing time, the number of intermediate
+$h$--polynomials and the counters for the hits of the criteria.
+
+\ttindexswitch[GROEBNER]{trgroeb}
+\item[\f{trgroeb} --]
+  \hypertarget{switch:TRGROEB}{}
+  Includes \f{groebstat} and the printing of the
+intermediate $h$-polynomials.
+
+\ttindexswitch[GROEBNER]{trgroebs}
+\item[\f{trgroebs} --]
+    \hypertarget{switch:TRGROEBS}{}
+Includes \f{trgroeb} and the printing of
+intermediate $s$--poly\-nomials.
+
+\ttindexswitch[GROEBNER]{trgroeb1}
+\item[\f{trgroeb1} --]
+    \hypertarget{switch:TRGROEB1}{}
+The internal pairlist is printed when modified.
+\end{description}
+
+\subsubsection{\f{\textbf{Gzerodim!?}}: Test of $\dim = 0$}
+\begin{description}
+\ttindextype[GROEBNER]{gzerodim?}{operator}
+\item[\f{gzerodim!?} \emph{bas}]\mbox{}\\
+  \hypertarget{operator:GZERODIM!?}{}
+where {\it bas} is a Gr\"obner basis in the current setting.
+The result is \texttt{nil} if {\it bas} is the
+basis of an ideal of polynomials with more than finitely many common zeros.
+If the ideal is zero dimensional, i. e. the polynomials of the ideal have only
+finitely many zeros in common, the result is an integer $k$ which is the number
+of these common zeros (counted with multiplicities).
+\end{description}
+
+\subsubsection{\f{gdimension}, \f{gindependent\_sets}: compute dimension and
+independent variables}
+The following operators can be used to compute the dimension
+and the independent variable sets of an ideal which has the
+Gr\"obner basis {\it bas} with arbitrary term order:
+\begin{description}
+\ttindextype[GROEBNER]{gdimension}{operator}\ttindextype[GROEBNER]{gindependent\_sets}{operator}
+\index{Ideal dimension (\package{Groebner} package)}\index{Independent sets (\package{Groebner} package)}
+\item[\f{gdimension bas}]
+  \hypertarget{operator:GDIMENSION}{}
+\item[\f{gindependent\_sets bas}]
+  \hypertarget{operator:GINDEPENDENT_SETS}{}
+\f{gindependent\_sets} computes the maximal
+left independent variable sets of the ideal, that are
+the variable sets which play the role of free parameters in the
+current ideal basis. Each set is a list which is a subset of the
+variable list. The result is a list of these sets. For an
+ideal with dimension zero the list is empty.
+\f{gdimension} computes the dimension of the ideal,
+which is the maximum length of the independent sets.
+\end{description}
+
+\ttindexswitch[GROEBNER]{groebopt}
+The switch \sw{groebopt} plays no role in the algorithms \f{gdimension} and
+\f{gindependent\_sets}. It is set \texttt{off} during the processing even if
+it is set \texttt{on} before. Its state is saved during the processing.
+
+The ``Kredel-Weispfenning'' algorithm is used (see \cite{Kredel:88a},
+extended to general ordering in \cite{Becker:93}.
+
+\subsubsection{Conversion of a Gr\"obner Basis}
+
+\subsubsubsection{\f{glexconvert}: Conversion of an Arbitrary Gr\"obner Basis
+of a Zero Dimensional Ideal into a Lexical One}
+\begin{description}
+\ttindextype[GROEBNER]{glexconvert}{operaort}
+\item[{\f{glexconvert}$\left(\{exp,\ldots , expm\} \left[,\{var1
+        \ldots , varn\}\right]\left[,maxdeg=mx\right]\right.$}]\mbox{}\\
+  \hypertarget{operator:GLEXCONVERT}{}
+$\left.\left[,newvars=\{nv1, \ldots , nvk\}\right]\right)$ \\
+where $\{exp1, \ldots , expm\}$ is a Gr\"obner basis with
+$\{var1, \ldots , varn\}$ as variables in the current term order mode,
+$mx$ is an integer, and
+$\{nv1, \ldots , nvk\}$ is a subset of the basis variables.
+For this operator the source and target variable sets must be specified
+explicitly.
+\end{description}
+
+\f{glexconvert} converts a basis of a zero-dimensional ideal (finite number
+of isolated solutions) from arbitrary ordering into a basis under \textit{lex}
+ordering. During the call of \f{glexconvert} the original ordering of
+the input basis must be still active!
+
+\emph{newvars} defines the new variable sequence. If omitted, the
+original variable sequence is used. If only a subset of variables is
+specified here, the partial ideal basis is evaluated. For the
+calculation of a univariate polynomial, \emph{new-vars} should be a list
+with one element.
+
+\emph{maxdeg} is an upper limit for the degrees. The algorithm stops with
+an error message, if this limit is reached.
+
+A warning occurs if the ideal is not zero dimensional.
+
+\f{glexconvert} is an implementation of the FLGM algorithm by
+\linebreak[4] {\sc Faug{\`e}re}, {\sc Gianni}, {\sc Lazard} and {\sc
+Mora} \cite{Faugere:93}. Often, the calculation of a Gr\"obner basis
+with a graded ordering and subsequent conversion to {\it lex} is
+faster than a direct {\it lex} calculation. Additionally, \f{glexconvert}
+can be used to transform a {\it lex} basis into one with different
+variable sequence, and it supports the calculation of a univariate
+polynomial. If the latter exists, the algorithm is even applicable in
+the non zero-dimensional case, if such a polynomial exists.
+If the polynomial does not exist, the algorithm computes  until \f{maxdeg}
+has been reached.
+\begin{verbatim}
+   torder({{w,p,z,t,s,b},gradlex)
+
+   g  :=  groebner  { f1 := 45*p + 35*s -165*b -36,
+         35*p + 40*z + 25*t - 27*s, 15*w + 25*p*s +30*z -18*t
+        -165*b**2, -9*w + 15*p*t  + 20*z*s,
+        w*p + 2*z*t - 11*b**3, 99*w - 11*s*b +3*b**2,
+        b**2 + 33/50*b + 2673/10000};
+
+  g := {60000*w + 9500*b + 3969,
+
+      1800*p - 3100*b - 1377,
+
+      18000*z + 24500*b + 10287,
+
+      750*t - 1850*b + 81,
+
+      200*s - 500*b - 9,
+             2
+      10000*b  + 6600*b + 2673}
+
+   glexconvert(g,{w,p,z,t,s,b},maxdeg=5,newvars={w});
+
+               2
+    100000000*w  + 2780000*w + 416421
+
+   glexconvert(g,{w,p,z,t,s,b},maxdeg=5,newvars={p});
+
+          2
+    6000*p  - 2360*p + 3051
+\end{verbatim}
+
+\subsubsubsection{\f{groebner\_walk}: Conversion of a (General) Total Degree
+  Basis into a Lex One}
+\hypertarget{operator:GROEBNER_WALK}{}
+The algorithm \f{groebner\_walk} convertes from an arbitrary polynomial
+system a \emph{graduated} basis of the given variable sequence to a \emph{lex} one
+of the same sequence. The job is done by computing a sequence
+of Gr\"obner bases of correspondig monomial ideals, lifting the original
+system each time. The algorithm has been described (more generally) by
+\cite{AmrheinGloorKuechlin:96a},\cite{AmrheinGloorKuechlin:96b},\cite{AmrheinGloor:98} and \cite{Collart:97}.
+\f{groebner\_walk} should be only called if the direct calculation of a
+\emph{lex} Gr\"obner base does not work. The computation of \f{groebner\_walk}
+includes some overhead (e. g. the computation divides polynomials).
+Normally \f{torder} must be called before to define the variables and the variable
+sorting. The reordering of variables makes no sense with \f{groebner\_walk};
+so do not call \f{groebner\_walk} with \sw{groebopt} on!
+
+\begin{description}
+\ttindextype[GROEBNER]{groebner\_walk}{operator}
+\item[\f{groebner\_walk} $g$]\mbox{}\\
+where $g$ is a polynomial ideal basis computed under \emph{gradlex} or under
+\emph{weighted} with a one-element, non zero weight vector with only one
+element, repeated for each variable. The result is a corresponding
+\emph{lex} basis (if that is computable), independent of the degree of the
+ideal (even for non zero degree ideals).
+The variabe \var{gvarslast} is not set.\ttindextype{GROEBNER}{gvarslast}{variable}
+\end{description}
+
+\subsubsection{\f{groebnerf}: Factorizing Gr\"obner Bases}
+
+\hypertarget{operator:GROEBNERF}{}
+\subsubsubsection{Background}
+If Gr\"obner bases are computed in order to solve systems of
+equations or to find the common roots of systems of polynomials,
+the factorizing version of the Buchberger algorithm can be used.
+The theoretical background is simple: if a polynomial $p$ can be
+represented as a product of two (or more) polynomials, e.g. $h= f*g$,
+then $h$ vanishes if and only if one of the factors vanishes. So if
+during the calculation of a Gr\"obner basis $h$ of the above form is
+detected, the whole problem can be split into two (or more)
+disjoint branches. Each of the branches is simpler than the complete
+problem; this saves computing time and space. The result of this
+type of computation is a list of (partial) Gr\"obner bases; the
+solution set of the original problem is the union of the solutions of
+the partial problems, ignoring the multiplicity of an individual
+solution. If a branch results in a basis $\{1\}$, then there is no
+common zero, i.e. no additional solution for the original problem,
+contributed by this branch.
+
+\subsubsubsection{\f{groebnerf} Call}
+
+\ttindex{groebnerf}
+The syntax of \f{groebnerf} is the same as for \f{groebner}.
+\[ \f{groebnerf}(\{exp1, exp2, \ldots , expm\}
+         [,\{\},\{nz1, \ldots nzk\}); \]
+where $\{exp1, exp2, \ldots , expm\} $ is a given list of expressions or
+equations, and $\{nz1, \ldots nzk\}$ is
+an optional list of polynomials known to be non-zero.
+
+\f{groebnerf} tries to separate polynomials into individual factors and
+to branch the computation in a recursive manner (factorization tree).
+The result is a list of partial Gr\"obner bases. If no factorization can
+be found or if all branches but one lead to the trivial basis $\{1\}$,
+the result has only one basis; nevertheless it is a list of lists of
+polynomials. If no solution is found, the result will be $\{\{1\}\}$.
+Multiplicities (one factor with a higher power, the same partial basis
+twice) are deleted as early as possible in order to speed up the
+calculation. The factorizing is controlled by some switches.
+
+As a side effect, the sequence of variables is stored as a \REDUCE list in
+the shared variable
+\begin{center}
+\var{gvarslast} .
+\end{center}
+If \sw{gltbasis} is on, a corresponding list of leading term bases is
+also produced and is available in the variable \var{gltb}.
+
+The third parameter of \f{groebnerf} allows one to declare some polynomials
+nonzero. If any of these is found in a branch of the calculation
+the branch is cancelled. This can be used to save a substantial amount
+of computing time. The second parameter must be included as an
+empty list if the third parameter is to be used.
+
+\begin{verbatim}
+   torder({x,y},lex)$
+   groebnerf { 3*x**2*y + 2*x*y + y + 9*x**2 + 5*x = 3,
+               2*x**3*y - x*y - y + 6*x**3 - 2*x**2 - 3*x = -3,
+                x**3*y + x**2*y + 3*x**3 + 2*x**2 };
+
+
+       {{y - 3,x},
+
+                      2
+    {2*y + 2*x - 1,2*x  - 5*x - 5}}
+\end{verbatim}
+It is obvious here that the solutions of the equations can be read
+off immediately.
+
+All switches from \f{groebner} are valid for \f{groebnerf} as well:
+\ttindexswitch[GROEBNER]{groebopt}
+\ttindexswitch[GROEBNER]{gltbasis}
+\ttindexswitch[GROEBNER]{groebfullreduction}
+\ttindexswitch[GROEBNER]{groebstat}
+\ttindexswitch[GROEBNER]{trgroeb}
+\ttindexswitch[GROEBNER]{trgroebs}
+\ttindexswitch[GROEBNER]{trgroeb1}
+\begin{center}
+\begin{tabular}{l}
+\sw{groebopt} \\
+\sw{gltbasis} \\
+\sw{groebfullreduction} \\
+\sw{groebstat} \\
+\sw{trgroeb} \\
+\sw{trgroebs} \\
+\sw{rgroeb1}
+\end{tabular}
+\end{center}
+
+\subsubsubsection{Additional switches for \f{groebnerf}:}
+\begin{description}
+
+\ttindexswitch[GROEBNER]{trgroebr}
+\item[\f{trgroebr} --]
+\hypertarget{switch:TRGROEBR}{}
+  All intermediate partial basis are printed when detected.
+
+By default \sw{trgroebr} is off.
+\end{description}
+\var{groebmonfac} \var{groebresmax} \var{groebrestriction} \\
+\hspace*{.5cm} These variables are described in the following
+paragraphs.
+
+\subsubsubsection{Suppression of Monomial Factors}
+The factorization in \f{groebnerf} is controlled by the following
+switches and variables.  The variable \var{groebmonfac} is connected to
+the handling of ``monomial factors''.  A monomial factor is a product
+of variable powers occurring as a factor, e.g. $ x**2*y$  in  $x**3*y -
+2*x**2*y**2$.  A monomial factor represents a solution of the type
+``$ x = 0$  or  $y = 0$'' with a certain multiplicity.  With
+\f{groebnerf}
+the multiplicity of monomial factors is lowered to the value of the
+shared variable
+\ttindextype[GROEBNER]{groebmonfac}{shared variable}
+\hypertarget{reserved:GROEBMONFAC}{}
+\begin{center}
+ \f{groebmonfac}
+\end{center}
+which by default is 1 (= monomial factors remain present, but their
+multiplicity is brought down). With
+\begin{center}
+\var{groebmonfac} := 0
+\end{center}
+the monomial factors are suppressed completely.
+
+\subsubsubsection{Limitation on the Number of Results}
+The shared variable
+\ttindextype[GROEBNER]{groebresmax}{shared variable}
+\hypertarget{reserved:GROEBRESMAX}{}
+\begin{center}
+\var{groebresmax}
+\end{center}
+controls the number of partial results. Its default value is 300. If
+\var{groebresmax} partial results are calculated, the calculation is
+terminated. \var{groebresmax} counts all branches, including those which
+are terminated (have been computed already), give no contribution to
+the result (partial basis 1), or which are unified in the result with
+other (partial) bases. So the resulting number may be much smaller.
+When the limit of \var{groeresmax} is reached, a warning
+
+\texttt{warning: GROEBRESMAX limit reached}
+
+is issued; this warning in any case has to be taken as a serious one.
+For ``normal'' calculations the \var{groebresmax} limit is not reached.
+\emph{var} is a shared variable (with an integer value); it can be
+set in the algebraic mode to a different (positive integer) value.
+
+\subsubsubsection{Restriction of the Solution Space}
+In some applications only a subset of the complete solution set
+of a given set of equations is relevant, e.g. only
+nonnegative values or positive definite values for the variables.
+A significant amount of computing time can be saved if
+nonrelevant computation branches can be terminated early.
+
+Positivity: If a polynomial has no (strictly) positive zero, then
+every system containing it has no nonnegative or strictly positive
+solution. Therefore, the Buchberger algorithm tests the coefficients of
+the polynomials for equal sign if requested. For example, in $13*x +
+15*y*z $ can be zero with real nonnegative values for $x, y$ and $z$
+only if $x=0$ and $y=0$ or $ z=0$; this is a sort of ``factorization by
+restriction''. A polynomial $13*x + 15*y*z + 20$ never can vanish
+with nonnegative real variable values.
+
+Zero point:  If any polynomial in an ideal has an absolute term, the ideal
+cannot have the origin point as a common solution.
+
+By setting the shared variable
+\ttindextype[GROEBNER]{groebrestriction}{shared variable}
+\hypertarget{reserved:GROEBRESTRICTION}{}
+\begin{center} \var{groebrestriction} \end{center}
+\f{groebnerf} is informed of the type of restriction the user wants to
+impose on the solutions:
+\begin{center}
+\begin{tabular}{l}
+\texttt{groebrestiction:=nonnegative;} \\
+\hspace*{+.5cm} only nonnegative real solutions are of
+interest\vspace*{4mm} \\
+\texttt{groebrestriction:=positive;} \\
+\hspace*{+.5cm}only nonnegative and nonzero solutions are of
+interest\vspace*{4mm} \\
+\texttt{groebrestriction:=zeropoint;} \\
+\hspace*{+.5cm}only solution sets which contain the point
+$\{0,0,\ldots,0\}$ are or interest.
+\end{tabular}
+\end{center}
+
+If \f{groebnerf} detects a polynomial which formally conflicts with the
+restriction, it either splits the calculation into separate branches, or,
+if a violation of the restriction is determined, it cancels the actual
+calculation branch.
+
+\subsubsection{\f{greduce}, \f{preduce}: Reduction of Polynomials}
+
+\subsubsubsection{Background} \label{groebner:background}
+Reduction of a polynomial ``$p$'' modulo a given sets of polynomials
+``$b$'' is done by the reduction algorithm incorporated in the
+Buchberger algorithm. Informally it can be described for
+polynomials over a field as follows:
+\begin{center}
+\begin{tabular}{l}
+~~~~~~~~~~loop1:~~\% head term elimination \\
+if there is one polynomial $b$ in $B$ such that the leading \\
+~~~~~~~~~~term of $p$ is a multiple of the leading term of $P$ do \\
+~~~~~~~~~~$p := p - lt(p)/lt(b) * b$  (the leading term vanishes) \\
+do this loop as long as possible; \\
+~~~~~~~~~~loop2:~~\% elimination of subsequent terms \\
+for each term $s$ in $p$ do \\
+~~~~~~~~~~if there is one polynomial $b$ in $B$ such that $s$ is a \\
+~~~~~~~~~~multiple of the leading term of $p$ do \\
+~~~~~~~~~~$p := p - s/lt(b) * b$ (the term $s$ vanishes) \\
+do this loop as long as possible;
+\end{tabular}
+\end{center}
+
+If the coefficients are taken from a ring without zero divisors we
+cannot divide by each possible number like in the field case. But
+using that in the field case,  $c*p $ is reduced to  $c*q $, if $ p $
+is reduced to $ q $, for arbitrary numbers $ c $,  the reduction for
+the ring case uses the least $ c $ which makes the (field) reduction
+for $ c*p $ integer. The result of this reduction is returned as
+(ring) reduction of $ p $ eventually after removing the content, i.e.
+the greatest common divisor of the coefficients. The result of this
+type of reduction is also called a pseudo reduction of $ p $.
+
+\subsubsubsection{Reduction via Gr\"obner Basis Calculation}
+\ttindextype[GROEBNER]{greduce}{operator}
+\hypertarget{operator:GREDUCE}{}
+\[
+\f{greduce}(exp, \{exp1, exp2, \ldots , expm\}]);
+\]
+where {\it exp} is an expression, and $\{exp1, exp2,\ldots , expm\}$ is
+a list of any number of expressions or equations.
+
+\f{greduce} first converts the list of expressions $\{exp1, \ldots ,
+expn\}$ to a Gr\"obner basis, and then reduces the given expression
+modulo that basis.  An error results if the list of expressions is
+inconsistent. The returned value is an expression representing the
+reduced polynomial. As a side effect, \f{greduce} sets the variable
+\var{gvarslast} in the same manner as \f{groebner} does.
+
+\subsubsubsection{Reduction with Respect to Arbitrary Polynomials}
+\ttindextype[GROEBNER]{preduce}{operator}
+\hypertarget{operator:PREDUCE}{}
+\[
+ \f{preduce}(exp, \{exp1, exp2,\ldots , expm\});
+\]
+where \emph{expm} is an expression, and $\{exp1, exp2, \ldots ,
+expm\}$ is a list of any number of expressions or equations.
+
+\f{preduce} reduces the given expression modulo the set $\{exp1,
+\ldots , expm\}$. If this set is a Gr\"obner basis, the obtained reduced
+expression is uniquely determined. If not, then it depends on the
+subsequence of the single reduction steps
+(see~\ref{groebner:background}). \f{preduce} does not check whether
+$\{exp1, exp2, \ldots , expm\}$ is a Gr\"obner basis in the actual
+order. Therefore, if the expressions are a Gr\"obner basis calculated
+earlier with a variable sequence given explicitly or modified by
+optimization, the proper variable sequence and term order must
+be activated first.
+
+\example (\f{preduce} called with a Gr\"obner basis):
+\begin{verbatim}
+  torder({x,y},lex);
+  gb:=groebner{3*x**2*y + 2*x*y + y + 9*x**2 + 5*x - 3,
+               2*x**3*y - x*y - y + 6*x**3 - 2*x**2 - 3*x + 3,
+               x**3*y + x**2*y + 3*x**3 + 2*x**2}$
+  preduce (5*y**2 + 2*x**2*y + 5/2*x*y + 3/2*y
+<             + 8*x**2 + 3/2*x - 9/2, gb);
+
+      2
+     y
+\end{verbatim}
+
+\subsubsubsection{\f{greduce\_orders}: Reduction with several term orders}
+The shortest polynomial with different polynomial term orders is computed
+with the operator \f{greduce\_orders}:
+
+\begin{description}
+\ttindextype[GROEBNER]{greduce\_orders}{operator}
+\item[{\f{greduce\_orders}($exp$, \{$exp1$, $exp2$, \ldots , $expm$\}
+    [,\{$v_1,v_2,\ldots,v_n$\}]);}]\mbox{}\\
+  \hypertarget{operator:GREDUCE_ORDERS}{}
+where {\it exp} is an expression and $\{exp1, exp2,\ldots , expm\}$ is
+a list of any number of expressions or equations. The list of variables
+$v_1,v_2 \ldots v_n$ may be omitted; if set, the variables must be a list.
+\end{description}
+
+\ttindextype[GROEBNER]{gorders}{shared variable}
+\hypertarget{reserved:GORDERS}{}
+The expression {\it exp} is reduced by \f{greduce} with the orders
+in the shared variable \var{gorders}, which must be a list of term
+orders (if set). By default it is set to
+
+\begin{center}
+\{\emph{revgradlex}, \emph{gradlex}, \emph{lex}\}
+\end{center}
+
+The shortest polynomial is the result.
+The order with the shortest polynomial is set to the shared variable
+\var{gorder}. A Gr\"obner basis of the system \{$exp1$, $exp2$, \ldots ,
+$expm$\} is computed for each element of \emph{orders}.
+With the default setting \var{gorders} in most cases will be set
+to {\it revgradlex}.
+If the variable set is given, these variables are taken; otherwise all
+variables of the system \{$exp1$, $exp2$, \ldots , $expm$\} are
+extracted.
+
+\ttindextype[GROEBNER]{greduce\_result}{shared variable}
+\hypertarget{reserved:GREDUCE_RESULT}{}
+The Gr\"obner basis computations can take some time; if interrupted, the
+intermediate result of the reduction is set to the shared variable
+\f{greduce\_result}, if one is done already. However, this is not
+nesessarily the minimal form.
+
+If the variable \var{gorders} should be set to orders with a parameter,
+the term oder has to be replaced by a list; the first element is the
+term oder selected, followed by its parameter(s), e.g.
+
+\begin{center}
+\emph{orders} := \{\{\emph{gradlexgradlex}, 2\}, \{\emph{lexgradlex}, 2\}\}
+\end{center}
+
+\subsubsubsection{Reduction Tree}
+In some case not only are the results produced by \f{greduce} and
+\f{preduce} of interest, but the reduction process is of some value
+too. If the switch
+\ttindexswitch[GROEBNER]{groebprot}
+\hypertarget{switch:GROEBPROT}{}
+\begin{center}
+\f{groebprot}
+\end{center}
+is set on, \f{groebner}, \f{greduce} and \f{preduce} produce as a side effect
+a trace of their work as a \REDUCE list of equations in the shared variable
+\ttindextype[GROEBNER]{groebprotfile}{shared variable}
+\hypertarget{reserved:GROEBPROTFILE}{}
+\begin{center}
+\var{groebprotfile}.
+\end{center}
+Its value is a list of equations with a variable ``candidate'' playing
+the role of the object to be reduced. The polynomials are cited as
+``\emph{poly1}'', ``\emph{poly2}'', \ldots\;. If read as assignments, these equations
+form a program which leads from the reduction input to its result.
+Note that, due to the pseudo reduction with a ring as the coefficient
+domain, the input coefficients may be changed by global factors.
+
+\example \index{Groebner package!example}
+
+\begin{alltt}
+  on groebprot\$ \\
+  preduce(5*y**2 + 2*x**2*y + 5/2*x*y + 3/2*y + 8*x**2 \\
+\hspace*{+1cm} + 3/2*x - 9/2, gb);\\[\baselineskip]
+
+      2
+     y
+
+groebprotfile;
+
+                  2         2                     2
+    {candidate=4*x *y + 16*x  + 5*x*y + 3*x + 10*y  + 3*y - 9,
+
+              2
+     poly1=8*x - 2*y  + 5*y + 3,
+
+              3      2
+     poly2=2*y  - 3*y  - 16*y + 21,
+     candidate=2*candidate,
+     candidate= - x*y*poly1 + candidate,
+     candidate= - 4*x*poly1 + candidate,
+     candidate=4*candidate,
+
+                   3
+     candidate= - y *poly1 + candidate,
+     candidate=2*candidate,
+
+                     2
+     candidate= - 3*y *poly1 + candidate,
+     candidate=13*y*poly1 + candidate,
+     candidate=candidate + 6*poly1,
+
+                     2
+     candidate= - 2*y *poly2 + candidate,
+     candidate= - y*poly2 + candidate,
+     candidate=candidate + 6*poly2}
+\end{alltt}
+This means
+\[
+16 (5 y^2 + 2 x^2 y + \frac{5}{2} x y + \frac{3}{2} y
++ 8 x^2+ \frac{3}{2} x - \frac{9}{2})=
+\]
+\[
+(-8 x y -32 x -2 y^3 -3 y^2 + 13 y + 6)\,\mbox{poly1}
+\]
+\[
+\mbox{} + (-2 y^2 -2 y + 6)\,\mbox{poly2} + y^2.
+\]
+
+\subsubsection{Tracing with \f{groebnert} and \f{preducet}}
+Given a set of polynomials $\{f_1,\ldots ,f_k\}$ and their Gr\"obner
+basis $\{g_1,\ldots ,g_l\}$, it is well known that there are matrices of
+polynomials $C_{ij}$ and $D_{ji}$ such that
+\[
+f_i = \displaystyle{\sum\limits_j} C_{ij} g_j \;\mbox{  and  } g_j =
+\displaystyle{\sum\limits_i} D_{ji} f_i
+\]
+and these relations are needed explicitly sometimes.
+In \textsc{Buchberger} \cite{Buchberger:85}, such cases are described in the
+context of linear polynomial equations. The standard technique for
+computing the above formulae is to perform
+Gr\"obner reductions, keeping track of the
+computation in terms of the input data. In the current package such
+calculations are performed with (an internally hidden) cofactor
+technique: the user has to assign unique names to the input
+expressions and the  arithmetic combinations are done with the
+expressions and with their names simultaneously. So the result is
+accompanied by an expression which relates it algebraically to the
+input values.
+
+\ttindextype[GROEBNER]{groebnert}{operator} \ttindextype[GROEBNER]{preducet}{operator}
+\hypertarget{operator:GROEBNERT}{}
+\hypertarget{operator:PREDUCET}{}
+There are two complementary operators with this feature: \f{groebnert}
+and \f{preducet}; functionally they correspond to \f{groebner} and \f{preduce}.
+However, the sets of expressions here \emph{\textbf{must be}} equations
+with unique single identifiers on their left side and the {\it lhs} are
+interpreted as names of the expressions. Their results are
+sets of equations (\f{groebnert}) or equations (\f{preducet}), where
+a {\it lhs} is the computed value, while the {\it rhs} is its equivalent
+in terms of the input names.
+
+\example \index{Groebner package!example}
+
+We calculate the Gr\"obner basis for an ellipse (named ``$p1$'' ) and a
+line (named ``$p2$'' ); $p2$ is member of the basis immediately and so
+the corresponding first result element is of a very simple form; the
+second member is a combination of $p1$ and $p2$ as shown on the
+{\it rhs} of this equation:
+
+\begin{verbatim}
+gb1:=groebnert {p1=2*x**2+4*y**2-100,p2=2*x-y+1};
+
+gb1 := {2*x - y + 1=p2,
+           2
+        9*y  - 2*y - 199= - 2*x*p2 - y*p2 + 2*p1 + p2}
+\end{verbatim}
+
+\example \index{Groebner package!example}
+
+We want to reduce the polynomial \texttt{x**2} \emph{wrt}
+the above Gr\"obner basis and need knowledge about the reduction
+formula. We therefore extract the basis polynomials from $gb1$,
+assign unique names to them (here $g1$, $g2$) and call \f{preducet}.
+The polynomial to be reduced here is introduced with the name $Q$,
+which then appears on the {\it rhs} of the result. If the name for the
+polynomial is omitted, its formal value is used on the right side too.
+
+\begin{verbatim}
+  gb2 := for k := 1:length gb1 collect
+        mkid(g,k) = lhs part(gb1,k)$
+  preducet (q=x**2,gb2);
+
+ - 16*y + 208= - 18*x*g1 - 9*y*g1 + 36*q + 9*g1 - g2
+\end{verbatim}
+
+This output means
+\[
+x^2 = (\frac{1}{2} x + \frac{1}{4} y - \frac{1}{4}) g1
+ + \frac{1}{36} g2 + (-\frac{4}{9} y + \frac{52}{9}).
+\]
+
+
+\example \index{Groebner package!example}
+
+If we reduce a polynomial which is member of the ideal, we
+consequently get a result with {\it lhs} zero:
+\begin{verbatim}
+   preducet(q=2*x**2+4*y**2-100,gb2);
+
+   0= - 2*x*g1 - y*g1 + 2*q + g1 - g2
+\end{verbatim}
+
+This means
+\[ q = ( x + \frac{1}{2} y - \frac{1}{2}) g1 + \frac{1}{2} g2.
+\]
+
+With these operators the matrices $C_{ij}$ and $D_{ji}$ are available
+implicitly, $D_{ji}$ as side effect of \f{groebnert}, $c_{ij}$ by \emph{calls}
+of \f{preducet} of $f_i$ {\it wrt} $\{g_j\}$. The latter by definition will
+have the {\it lhs} zero and a {\it rhs} with linear $f_i$.
+
+If $\{1\}$ is the Gr\"obner basis, the \f{groebnert} calculation gives
+a ``proof'', showing,  how  $1$ can be computed as combination of the
+input polynomials.
+
+\paragraph{Remark:} Compared to the non-tracing algorithms, these
+operators are much more time consuming. So they are applicable
+only on small sized problems.
+
+\subsubsection{Gr\"obner Bases for Modules}
+
+Given a polynomial ring, e.g. $r=z[x_1 \cdots x_k]$ and
+an integer $n>1$: the vectors with $n$ elements of $r$
+form a \emph{module} under vector addition (= componentwise addition)
+and multiplication with elements of $r$. For a submodule
+given by a finite basis a Gr\"obner basis
+can be computed, and the facilities of the \textsc{Groebner} package
+can be used except the operators \f{groebnerf} and \f{groesolve}.
+
+The vectors are encoded using auxiliary variables which represent
+the unit vectors in the module. E.g. using ${v_1,v_2,v_3}$ the
+module element $[x_1^2,0,x_1-x_2]$ is represented as
+$x_1^2 v_1 + x_1 v_3 - x_2 v_3$. The use of ${v_1,v_2,v_3}$
+as unit vectors is set up by assigning the set of auxiliary variables
+to the shared variable \hypertarget{reserved:GMODULE}{\f{gmodule}}\ttindextype[GROEBNER]{gmodule}{shared variable}, e.g.
+\begin{verbatim}
+   gmodule := {v1,v2,v3};
+\end{verbatim}
+After this declaration all monomials built from these variables
+are considered as an algebraically independent basis of a vector
+space. However, you had best use them only linearly. Once \emph{gmodule}
+has been set, the auxiliary variables automatically will be
+added to the end of each variable list (if they are not yet
+member there).
+Example:
+\begin{verbatim}
+   torder({x,y,v1,v2,v3},lex)$
+   gmodule := {v1,v2,v3}$
+   g:=groebner{x^2*v1 + y*v2,x*y*v1 - v3,2y*v1 + y*v3};
+
+       2
+g := {x *v1 + y*v2,
+
+              2
+      x*v3 + y *v2,
+
+       3
+      y *v2 - 2*v3,
+
+      2*y*v1 + y*v3}
+
+   preduce((x+y)^3*v1,g);
+
+             1   3         2
+ - x*y*v2 - ---*y *v3 - 3*y *v2 + 3*y*v3
+             2
+\end{verbatim}
+
+In many cases a total degree oriented term order will be adequate
+for computations in modules, e.g. for all cases where the
+submodule membership is investigated. However, arranging
+the auxiliary variables in an elimination oriented term order
+can give interesting results. E.g.
+\begin{verbatim}
+   p1:=(x-1)*(x^2-x+3)$  p2:=(x-1)*(x^2+x-5)$
+   gmodule := {v1,v2,v3};
+   torder({v1,x,v2,v3},lex)$
+   gb:=groebner {p1*v1+v2,p2*v1+v3};
+
+gb := {30*v1*x - 30*v1 + x*v2 - x*v3 + 5*v2 - 3*v3,
+
+        2       2
+       x *v2 - x *v3 + x*v2 + x*v3 - 5*v2 - 3*v3}
+
+   g:=coeffn(first gb,v1,1);
+
+g := 30*(x - 1)
+
+   c1:=coeffn(first gb,v2,1);
+
+c1 := x + 5
+
+   c2:=coeffn(first gb,v3,1);
+
+c2 :=  - x - 3
+
+   c1*p1 + c2*p2;
+
+30*(x - 1)
+\end{verbatim}
+Here two polynomials
+are entered as vectors $[p_1,1,0]$ and $[p_2,0,1]$. Using a term
+ordering such that the first dimension ranges highest and the
+other components lowest, a classical cofactor computation is
+executed just as in the extended Euclidean algorithm.
+Consequently the leading polynomial in the resulting
+basis shows the greatest common divisor of $p_1$ and $p_2$,
+found as a coefficient of $v_1$ while the coefficients
+of $v_2$ and $v_3$ are the cofactors $c_1$ and $c_2$ of the polynomials
+$p_1$ and $p_2$ with the relation $gcd(p_1,p_2) = c_1p_1 + c_2p_2$.
+
+\subsubsection{Additional Orderings}
+Besides the basic orderings, there are ordering options that are used for
+special purposes.
+
+\subsubsubsection{Separating the Variables into Groups }
+\index{Grouped ordering}\index{Groebner package!ordering!grouped}
+It is often desirable to separate variables
+and formal parameters in a system of polynomials.
+This can be done with a {\it lex} Gr\"obner
+basis.  That however may be hard to compute as it does more
+separation than necessary. The following orderings group the
+variables into two (or more) sets, where inside each set a classical
+ordering acts, while the sets are handled via their total degrees,
+which are compared in elimination style. So the Gr\"obner basis will
+eliminate the members of the first set, if algebraically possible.
+{\it torder} here gets an additional parameter which describe the
+grouping \ttindex{torder}
+\begin{center}{
+\begin{tabular}{l}
+\emph{torder} (\emph{vl}, \emph{gradlexgradlex}, $n$) \\
+\emph{torder} (\emph{vl}, \emph{gradlexrevgradlex},$n$) \\
+\emph{torder} (\emph{vl}, \emph{lexgradlex}, $n$) \\
+\emph{torder} (\emph{vl}, \emph{lexrevgradlex}, $n$)
+\end{tabular}}
+\end{center}
+Here the integer $n$ is the number of variables in the first group
+and the names combine the local ordering for the first and second
+group, e.g.
+
+\begin{center}
+\begin{tabular}{@{~}lllll}
+\multicolumn{4}{@{~}l}{\textit{lexgradlex}, 3 for $\{x_1,x_2,x_3,x_4,x_5\}$:} \\
+\multicolumn{4}{@{~}l}{$x_1^{i_1}\ldots x_5^{i_5} \gg x_1^{j_1}\ldots x_5^{j_5}$} \\
+if & & & $(i_1,i_2,i_3) \gg_{lex}(j_1,j_2,j_3)$ \\
+& or & & $(i_1,i_2,i_3) = (j_1,j_2,j_3)$ \\
+& & and & $(i_4,i_5) \gg_{gradlex}(j_4,j_5)$
+\end{tabular}
+\end{center}
+
+Note that in the second place there is no {\it lex} ordering available;
+that would not make sense.
+
+\subsubsubsection{Weighted Ordering}
+\ttindextype[GROEBNER]{torder}{operator} \index{Weighted ordering}\index{Groebner package!ordering!weighted}
+The statement
+\begin{center}
+\f{torder}(\emph{vl}, weighted, $\{n_1,n_2,n_3  \ldots\}$);
+\end{center}
+establishes a graduated ordering, where the exponents are first
+multiplied by the given weights. If there are less weight values than
+variables, the weight 1 is added automatically. If the weighted
+degree calculation is not decidable, a \emph{lex} comparison follows.
+
+\subsubsubsection{Graded Ordering}
+\ttindextype[GROEBNER]{torder}{operator} \index{Graded ordering}\index{Groebner package!ordering!graded}
+The statement
+\begin{center}
+\f{torder}(\emph{vl}, graded, $\{n_1,n_2,n_3 \ldots\}$, $order_2$);
+\end{center}
+establishes a graduated ordering, where the exponents are first
+multiplied by the given weights. If there are less weight values than
+variables, the weight 1 is added automatically. If the weighted
+degree calculation is not decidable, the term order $order_2$ specified
+in the following argument(s) is used.  The ordering \emph{graded} is designed
+primarily for use with the operator \f{dd\_groebner}.
+
+\subsubsubsection{Matrix Ordering}
+\ttindex{torder} \index{Matrix ordering}\index{Groebner package!ordering!matrix}
+The statement
+\begin{center}
+\f{torder}(\emph{vl}, matrix, $m$);
+\end{center}
+where $m$ is a matrix with integer elements and row length which
+corresponds to the variable number. The exponents of each monomial
+form a vector; two monomials are compared by multiplying their
+exponent vectors first with $m$ and comparing the resulting vector
+lexicographically. E.g. the unit matrix establishes the classical
+\emph{lex} term order mode, a matrix with a first row of ones followed
+by the rows of a unit matrix corresponds to the \emph{gradlex} ordering.
+
+The matrix $m$ must have at least as many rows as columns; a non--square
+matrix contains redundant rows. The matrix must have full rank, and
+the top non--zero element of each column must be positive.
+
+The generality of the matrix based term order has its price: the
+computing time spent in the term sorting is significantly higher
+than with the specialized term orders. To overcome this problem,
+you can compile a matrix term order ; the
+compilation reduces the computing time overhead significantly.
+If you set the switch \sw{comp}\index{Groebner package!switch \texttt{comp}} on,
+any new order matrix is compiled
+when any operator of the \textsc{Groebner} package accesses it for the
+first time. Alternatively you can compile a matrix explicitly
+\ttindextype[GROEBNER]{torder\_compile}{operator}
+\hypertarget{operator:TORDER_COMPILE}{}
+\begin{verbatim}
+    torder_compile(<n>,<m>);
+\end{verbatim}
+where $<n>$ is a name (an identifier) and $<m>$ is a term order matrix.
+\f{torder\_compile} transforms the matrix into a LISP program, which
+is compiled by the LISP compiler when \sw{comp} is on or when you
+generate a fast loadable module. Later you can activate the new term
+order by using the name $<n>$ in a \f{torder} statement as term ordering
+mode.
+
+\subsubsection{Gr\"obner Bases for Graded Homogeneous Systems}
+
+For a homogeneous system of polynomials under a term order
+{\it graded}, {\it gradlex}, {\it revgradlex} or {\it weighted}
+a Gr\"obner Base can be computed with limiting the grade
+of the intermediate $s$--polynomials:
+\begin{description}
+\ttindextype[GROEBNER]{dd\_groebner}{operator}
+\item[\f{dd\_groebner}($d1,d2,\{p_1,p_2,\ldots\}$);]
+  \hypertarget{operator:DD_GROEBNER}{}
+\end{description}
+where $d1$ is a non--negative integer and $d2$ is an integer
+$>$ $d1$ or ``infinity". A pair of polynomials is considered
+only if the grade of the lcm of their head terms is between
+$d1$ and $d2$. See \cite{Becker:93} for the mathematical background.
+For the term orders {\it graded} or {\it weighted} the (first) weight
+vector is used for the grade computation. Otherwise the total
+degree of a term is used.
+
+\subsection{Ideal Decomposition \& Equation System Solving}
+Based on the elementary Gr\"obner operations, the \textsc{Groebner} package offers
+additional operators, which allow the decomposition of an ideal or of a
+system of equations down to the individual solutions.
+
+\subsubsection{Solutions Based on Lex Type Gr\"obner Bases}
+
+\subsubsubsection{groesolve: Solution of a Set of Polynomial Equations}
+\ttindextype[GROEBNER]{groesolve}{operator} \ttindex{groebnerf}
+\hypertarget{operator:GROESOLVE}{}
+The \f{groesolve} operator incorporates a macro algorithm;
+lexical Gr\"obner bases are computed by \f{groebnerf} and decomposed
+into simpler ones by ideal decomposition techniques; if algebraically
+possible, the problem is reduced to univariate polynomials which are
+solved by \f{solve}; if \sw{rounded} is on, numerical approximations are
+computed for the roots of the univariate polynomials.
+\[
+ groesolve(\{exp1, exp2, \ldots , expm\}[,\{var1, var2, \ldots ,
+varn\}]); \]
+where $\{exp1, exp2,\ldots , expm\}$ is a list of any number of
+expressions or equations, $\{var1, var2, \ldots , varn\}$ is an
+optional list of variables.
+
+The result is a set of subsets. The subsets contain the solutions of the
+polynomial equations. If there are only finitely many solutions,
+then each subset is a set of expressions of triangular type
+$\{exp1, exp2,\ldots , expn\},$ where $exp1$ depends only on
+$var1,$ $exp2$ depends only on $var1$ and $var2$ etc. until $expn$ which
+depends on $var1,\ldots,varn.$ This allows a successive determination of
+the solution components. If there are infinitely many solutions,
+some subsets consist in less than $n$ expressions. By considering some
+of the variables as ``free parameters'',  these subsets are usually
+again of triangular type.
+
+\example (Intersubsections of a line with a circle):
+\index{Groebner package!example}
+
+\[ groesolve(\{x**2 - y**2 - a, p*x+q*y+s\},\{x,y\}); \]
+
+\begin{verbatim}
+                   2      2    2             2    2
+   {{x=(sqrt( - a*p  + a*q  + s )*q - p*s)/(p  - q ),
+                      2      2    2             2    2
+     y= - (sqrt( - a*p  + a*q  + s )*p - q*s)/(p  - q )},
+                      2      2    2             2    2
+    {x= - (sqrt( - a*p  + a*q  + s )*q + p*s)/(p  - q ),
+                   2      2    2             2    2
+     y=(sqrt( - a*p  + a*q  + s )*p + q*s)/(p  - q )}}
+\end{verbatim}
+
+If the system is zero--dimensional (has a number of isolated solutions),
+the algorithm described in \cite{Hillebrand:99} is used, if the decomposition
+leaves a polynomial with mixed leading term. Hillebrand has written the
+article and M\"oller was the tutor of this job.
+
+The reordering of the \f{groesolve} variables is controlled by the
+\REDUCE switch \sw{varopt}. If \sw{varopt} is \texttt{on} (which is the default
+of \sw{varopt}), the variable sequence is optimized (the variables are reordered).
+If \sw{varopt} is \texttt{off}, the given variable sequence is taken (if no variables
+are given, the order of the \REDUCE system is taken instead). In general, the
+reordering of the variables makes the Gr\"obner basis computation
+significantly faster.
+A variable dependency, declare by one (or several) \texttt{depend} statements,
+is regarded (if \sw{varopt} is \texttt{on}). The switch \sw{groebopt} has no meaning
+for \f{groesolve}; it is stored during its processing.
+
+\subsubsubsection{\emph{groepostproc}: Postprocessing of a Gr\"obner Basis}
+\ttindextype[GROEBNER]{groepostproc}{operator}
+\hypertarget{operator:GROEPOSTPROC}{}
+In many cases, it is difficult to do the general Gr\"obner processing.
+If a Gr\"obner basis with a {\it lex} ordering is calculated already (e.g.,
+by very individual parameter settings), the solutions can be derived
+from it by a call to \f{groepostproc}. \f{groesolve} is functionally
+equivalent to a call to \f{groebnerf} and subsequent calls to
+\f{groepostproc} for each partial basis.
+\[
+ groepostproc(\{exp1, exp2, \ldots , expm\}[,\{var1, var2, \ldots ,
+varn\}]);
+\]
+where $\{exp1, exp2, \ldots , expm\}$ is a list of any number of
+expressions, \linebreak[4] $\{var1, var2, \ldots, varn\}$ is an
+optional list of variables. The expressions must be a {\it lex} Gr\"obner
+basis with the given variables; the ordering must be still active.
+
+The result is the same as with \f{groesolve}.
+
+\begin{verbatim}
+groepostproc({x3**2 + x3 + x2 - 1,
+              x2*x3 + x1*x3 + x3 + x1*x2 + x1 + 2,
+              x2**2 + 2*x2 - 1,
+              x1**2 - 2},{x3,x2,x1});
+
+{{x3= - sqrt(2),
+
+  x2=sqrt(2) - 1,
+
+  x1=sqrt(2)},
+
+ {x3=sqrt(2),
+
+  x2= - (sqrt(2) + 1),
+
+  x1= - sqrt(2)},
+
+      sqrt(4*sqrt(2) + 9) - 1
+ {x3=-------------------------,
+                 2
+
+  x2= - (sqrt(2) + 1),
+
+  x1=sqrt(2)},
+
+       - (sqrt(4*sqrt(2) + 9) + 1)
+ {x3=------------------------------,
+                   2
+
+  x2= - (sqrt(2) + 1),
+
+  x1=sqrt(2)},
+
+      sqrt( - 4*sqrt(2) + 9) - 1
+ {x3=----------------------------,
+                  2
+
+  x2=sqrt(2) - 1,
+
+  x1= - sqrt(2)},
+
+       - (sqrt( - 4*sqrt(2) + 9) + 1)
+ {x3=---------------------------------,
+                     2
+
+  x2=sqrt(2) - 1,
+
+  x1= - sqrt(2)}}
+\end{verbatim}
+
+\subsubsubsection{Idealquotient: Quotient of an Ideal and an Expression}
+\ttindextype[GROEBNER]{idealquotient}{operator} \index{Ideal quotient}
+\hypertarget{operator:IDEALQUOTIENT}{}
+Let $i$ be an ideal and $f$ be a polynomial in the same
+variables. Then the algebraic quotient is defined by
+\[
+i:f = \{ p \;| \; p * f \;\mbox{    member of }\; i\}\;.
+\]
+The ideal quotient $i:f$ contains $i$ and is obviously part of the
+whole polynomial ring, i.e. contained in $\{1\}$. The case $i:f =
+\{1\}$ is equivalent to $f$ being a member of  $i$. The other extremal
+case, $i:f=i$, occurs, when $f$ does not vanish at any general zero of $i$.
+The explanation of the notion ``general zero'' introduced by van der
+Waerden, however, is beyond the aim of this manual. The operation
+of \f{groesolve}/\f{groepostproc} is based on nested ideal quotient
+calculations.
+
+If $i$ is given by a basis and $f$ is given as an expression, the
+quotient can be calculated by
+\[
+idealquotient (\{exp1, \ldots , expm\}, exp); \]
+where $\{exp1, exp2, \ldots , expm\}$ is a list of any number of
+expressions or equations, {\it exp} is a single expression or equation.
+
+\f{idealquotient} calculates the algebraic quotient of the ideal $i$
+with the basis  $\{exp1, exp2, \ldots , expm\}$ and {\it exp} with
+respect to  the variables given or extracted.  $\{exp1, exp2, \ldots ,
+expm\}$ is not necessarily a Gr\"obner basis.
+The result is the Gr\"obner basis of the quotient.
+
+\subsubsubsection{Saturation: Saturation of an Ideal and an Expression}
+\ttindextype[GROEBNER]{saturation}{operator}
+\hypertarget{operator:SATURATION}{}
+The \f{saturation} operator computes the quotient on an ideal and an arbitrary power
+of an expression $exp**n$ with arbitrary $n$. The call is
+\[ saturation (\{exp1, \ldots , expm\}, exp); \]
+where $\{exp1, exp2, \ldots , expm\}$ is a list of any number of
+expressions or equations, {\it exp} is a single expression or equation.
+
+\emph{saturation} calls \emph{idealquotient} several times, until the result is
+stable, and returns it.
+
+\subsubsection{Operators for Gr\"obner Bases in all Term Orderings}
+\index{Hilbert polynomial}
+In some cases where no Gr\"obner
+basis with lexical ordering can be calculated, a calculation with a total
+degree ordering is still possible. Then the Hilbert polynomial gives
+information about the dimension of the solutions space and for finite
+sets of solutions univariate polynomials can be calculated. The solutions
+of the equation system then is contained in the cross product of all
+solutions of all univariate polynomials.
+
+\subsubsubsection{Hilbertpolynomial: Hilbert Polynomial of an Ideal}
+\index{Hilbert Polynomial}
+This algorithm was contributed by \textsc{Joachim Hollman}, Royal
+Institute of Technology, Stockholm (private communication).
+\ttindextype[GROEBNER]{hilbertpolynomial}{operator}
+\hypertarget{operator:HILBERTPOLYNOMIAL}{}
+\begin{syntax}
+  \f{hilbertpolynomial (}\meta{exp1:expression}\texttt{,}\ldots\texttt{,}\meta{expm:expression}\texttt{)}
+\end{syntax}
+where $\{exp1, \ldots , expm\}$ is a list of any number of expressions
+or equations.
+
+\f{hilertpolynomial} calculates the Hilbert polynomial of the ideal
+with basis $\{exp1, \ldots , expm\}$ with respect to the
+variables given or extracted provided the given term ordering is
+compatible with the degree, such as the \emph{gradlex}- or \emph{revgradlex}-ordering.
+The term ordering of the basis
+must be active and $\{exp1, \ldots, expm\}$ should be a
+Gr\"obner basis with respect to this ordering. The Hilbert polynomial
+gives information about the cardinality of solutions of the system
+$\{exp1, \ldots , expm\}$: if the Hilbert polynomial is an
+integer, the system has only a discrete set of solutions and the
+polynomial is identical with the number of solutions counted with
+their multiplicities. Otherwise the degree of the Hilbert
+polynomial is the dimension of the solution space.
+
+If the Hilbert polynomial is not a constant, it is constructed with the
+variable ``x'' regardless of whether $x$ is member of
+$\{var1, \ldots , varn\}$ or not. The value of this polynomial at
+sufficiently large numbers  ``x'' is the difference
+of the dimension of the linear vector space of all polynomials of degree
+$ \leq x $ minus the dimension of the subspace of all polynomials of
+degree $\leq x $ which belong also to the ideal.
+
+$x$ must be an undefined variable or the value of $x$ must be an undefined
+variable; otherwise a warning is given and a new (generated) variable
+is taken instead.
+
+\paragraph{Remark:} The number of zeros in an ideal and the
+Hilbert polynomial depend only on the leading terms of the
+Gr\"obner basis. So if a subsequent Hilbert calculation is planned, the
+Gr\"obner calculation should be performed with \texttt{on gltbasis} and
+the value of \var{gltb} (or its elements in a \f{groebnerf} context) should be
+given to \f{hilbertpolynomial}. In this manner, a lot of computing time can be
+saved in the case of long calculations.
+
+\subsection{Calculations ``by Hand''}
+The following operators support explicit calculations with
+polynomials in a distributive representation at the \REDUCE top level.
+So they allow one to do Gr\"obner type evaluations stepwise by
+separate calls. Note that the normal \REDUCE arithmetic can be used
+for arithmetic combinations of monomials and polynomials.
+
+\subsubsection{Representing Polynomials in Distributive Form}
+\ttindextype[GROEBNER]{gsort}{operator}
+\hypertarget{operator:GSORT}{}
+\begin{syntax}
+  \f{gsort }\meta{p}
+\end{syntax}
+where \meta{p} is a polynomial or a list of polynomials.
+
+If \meta{p} is a single polynomial, the result is a reordered version of \meta{p}
+in the distributive representation according to the variables and the
+current term order mode; if \meta{p} is a list, its members are converted
+into distributive representation and the result is the list sorted by
+the term ordering of the leading terms; zero polynomials are
+eliminated from the result.
+
+\begin{verbatim}
+     torder({alpha,beta,gamma},lex);
+
+     dip := gsort(gamma*(alpha-1)**2*(beta+1)**2);
+
+
+                2     2                2
+    dip := alpha *beta *gamma + 2*alpha *beta*gamma
+
+           2                     2
+    + alpha *gamma - 2*alpha*beta *gamma - 4*alpha*beta*gamma
+
+                           2
+     - 2*alpha*gamma + beta *gamma + 2*beta*gamma + gamma
+\end{verbatim}
+
+\subsubsection{Splitting of a Polynomial into Leading Term and Reductum}
+\ttindextype[GROEBNER]{gsplit}{operator}
+\hypertarget{operator:GSPLIT}{}
+\begin{syntax}
+  \f{gsplit }\meta{p}
+\end{syntax}
+where \meta{p} is a polynomial.
+
+\f{gsplit} converts the polynomial \meta{p} into distributive representation
+and splits it into leading monomial and reductum. The result is a list
+with two elements, the leading monomial and the reductum.
+
+\begin{verbatim}
+   gslit dip;
+
+          2     2
+    {alpha *beta *gamma,
+
+            2                   2                     2
+     2*alpha *beta*gamma + alpha *gamma - 2*alpha*beta *gamma
+
+                         2
+     - 4*alpha*beta*gamma - 2*alpha*gamma + beta *gamma
+
+
+     + 2*beta*gamma + gamma}
+\end{verbatim}
+
+\subsubsection{Calculation of Buchberger's S-polynomial}
+\ttindextype[GROEBNER]{gspoly}{operator}
+\hypertarget{operator:GSPOLY}{}
+\begin{syntax}
+  \f{gspoly (}\meta{p1}\texttt{,}\meta{p2}\texttt{)}
+\end{syntax}
+where \meta{p1} and \meta{p2} are polynomials.
+
+\f{gspoly} calculates the $s$-polynomial from \meta{p1} and \meta{p2}.
+
+Example for a complete calculation (taken from \textsc{Davenport et al.}
+\cite{Davenport:88a}):
+\begin{verbatim}
+   torder({x,y,z},lex)$
+   g1  :=  x**3*y*z - x*z**2;
+   g2  :=  x*y**2*z - x*y*z;
+   g3  :=  x**2*y**2 - z;$
+
+   % first S-polynomial
+
+   g4  :=  gspoly(g2,g3);$
+
+           2        2
+    g4 := x *y*z - z
+
+    % next S-polynomial
+
+    p :=  gspoly(g2,g4); $
+
+          2          2
+    p := x *y*z - y*z
+
+    % and reducing, here only by g4
+
+    g5  :=  preduce(p,{g4});
+
+                2    2
+    g5 :=  - y*z  + z
+
+    % last S-polynomial}
+
+    g6  :=  gspoly(g4,g5);
+
+           2  2    3
+    g6 := x *z  - z
+
+    % and the final basis sorted descending
+
+    gsort{g2,g3,g4,g5,g6};
+
+      2  2
+    {x *y  - z,
+
+      2        2
+     x *y*z - z ,
+
+      2  2    3
+     x *z  - z ,
+
+        2
+     x*y *z - x*y*z,
+
+           2    2
+      - y*z  + z }
+\end{verbatim}

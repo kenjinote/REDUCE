@@ -1,0 +1,252 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+export DH_VERBOSE=1
+
+ifdef BUILDTOPDIR
+TOPDIR=$(BUILDTOPDIR)
+else
+TOPDIR=../..
+endif
+
+SYSTEMNAME=$(shell $(TOPDIR)/config.guess)
+
+OSVER=$(shell $(TOPDIR)/scripts/findos.sh)
+PSLVER=$(shell $(TOPDIR)/scripts/pslver.sh)
+KNOWNPSLVER=AMD64 AMD64_ext amd64 linux
+
+BUILDPSL=$(filter $(PSLVER),$(KNOWNPSLVER))
+
+BUILDDIR=$(shell $(TOPDIR)/scripts/findhost.sh $(SYSTEMNAME))
+
+CSLBUILDDIR=$(TOPDIR)/cslbuild/$(BUILDDIR)
+PSLBUILDDIR=$(TOPDIR)/pslbuild/$(BUILDDIR)
+
+DOCSRCDIR=$(TOPDIR)/doc/manual
+DOCMISCDIR=$(TOPDIR)/doc/misc
+
+DOCBASENAME=manual
+EXTRADOCIMAGEBASENAMES= #bild gnuplotex turtleeg #cmsy10
+
+GENERICTOPDIR=$(TOPDIR)/generic
+
+REDFRONTSRCDIR=$(GENERICTOPDIR)/newfront
+REDFRONTBUILDDIR=$(GENERICTOPDIR)/newfront/build
+LIBEDITSRCDIR=$(TOPDIR)/libraries/libedit-20140620-3.1
+LIBEDITBUILDDIR=$(GENERICTOPDIR)/newfront/libedit
+
+INSTALLDIR:=debian/tmp
+SHAREDIR=$(INSTALLDIR)/usr/share/reduce
+REDFRONTSHAREDIR=$(INSTALLDIR)/usr/share/reduce-addons/redfront
+LIBDIR=$(INSTALLDIR)/usr/lib/reduce
+TTFONTDIR=$(INSTALLDIR)/usr/share/fonts/truetype/reduce
+TYPE1FONTDIR=$(INSTALLDIR)/usr/share/fonts/X11/Type1
+FONTDIR=$(INSTALLDIR)/usr/share/reduce/fonts
+DOCDIR=$(INSTALLDIR)/usr/share/doc/reduce
+ADDONDOCDIR=$(INSTALLDIR)/usr/share/doc/reduce-addons
+BINDIR=$(INSTALLDIR)/usr/bin
+MANDIR=$(INSTALLDIR)/usr/share/man
+EMACSSITELISPDIR=$(INSTALLDIR)/usr/share/emacs/site-lisp/reduce
+EMACSSITESTARTDIR=$(INSTALLDIR)/etc/emacs/site-start.d
+ICONDIR=$(INSTALLDIR)/usr/share/icons/hicolor/32x32/apps
+DESKTOPDIR=$(INSTALLDIR)/usr/share/applications
+RSYNC_CMD=rsync -a --cvs-exclude --delete --delete-excluded
+
+
+%:
+	dh $@ 
+
+distclean:
+	dh_distclean
+	-make -C $(DOCMISCDIR) clean
+	-make -C $(DOCSRCDIR) clean
+	-if test -d $(CSLBUILDDIR) ; then make -C $(CSLBUILDDIR) distclean ; fi
+ifneq ($(BUILDPSL),)
+	-if test -d $(PSLBUILDDIR) ; then make -C $(PSLBUILDDIR) distclean ; fi
+endif
+	rm -rf $(GENERICTOPDIR)/newfront/build
+	rm -rf $(GENERICTOPDIR)/newfront/libedit
+	rm -rf $(GENERICTOPDIR)/newfront/lib
+	rm -rf $(GENERICTOPDIR)/newfront/include
+
+clean: 
+	dh_clean
+#	cd $(TOPDIR) ; make clean
+	-make -C $(DOCMISCDIR) clean
+	-make -C $(DOCSRCDIR) clean
+	-if test -d $(CSLBUILDDIR) ; then make -C $(CSLBUILDDIR) clean ; fi
+ifneq ($(BUILDPSL),)   
+	-if test -d $(PSLBUILDDIR) ; then make -C $(PSLBUILDDIR) clean ; fi
+endif
+	rm -rf $(GENERICTOPDIR)/newfront/build
+	rm -rf $(GENERICTOPDIR)/newfront/libedit
+	rm -rf $(GENERICTOPDIR)/newfront/lib
+	rm -rf $(GENERICTOPDIR)/newfront/include
+
+#override_dh_auto_configure:
+configure: configure-stamp
+configure-stamp:
+	dh_testdir
+	cd $(TOPDIR) ; ./configure --prefix=/usr --with-csl
+ifneq ($(BUILDPSL),)
+	cd $(TOPDIR) ; ./configure --with-psl
+endif
+	mkdir -p $(REDFRONTBUILDDIR)
+	cd $(REDFRONTSRCDIR) ; autoreconf -f -i -v
+	cd $(REDFRONTBUILDDIR) ; ../configure
+	mkdir -p $(LIBEDITBUILDDIR)
+	cd $(LIBEDITBUILDDIR) ; autoreconf -f -i -v; $(LIBEDITSRCDIR)/configure --prefix=$(REDFRONTSRCDIR) --enable-widec
+	touch configure-stamp
+
+
+build:	configure-stamp build-stamp
+build-stamp:
+	dh_testdir
+#	cd $(TOPDIR) ; make
+	cd $(CSLBUILDDIR) ; make bootstrapreduce.img ; make csl.img ; make
+ifneq ($(BUILDPSL),)
+	cd $(PSLBUILDDIR) ; make
+endif
+	cd $(DOCMISCDIR) ; make
+	cd $(DOCSRCDIR) ; make
+	cd $(LIBEDITBUILDDIR) ; make install
+	cd $(REDFRONTBUILDDIR) ; make
+	touch build-stamp
+
+
+install: install-stamp
+install-stamp: build-stamp
+# create target directories
+	mkdir -p $(SHAREDIR)/scripts $(LIBDIR)/pslbuild/psl $(LIBDIR)/pslbuild/red $(LIBDIR)/cslbuild/csl $(SHAREDIR)/packages $(BINDIR) $(DOCDIR) $(MANDIR)/man1
+	mkdir -p $(REDFRONTSHAREDIR)/redfront $(EMACSSITELISPDIR) $(EMACSSITESTARTDIR) $(ADDONDOCDIR)
+# copy documentation files
+	cp $(TOPDIR)/doc/misc/primer.tex $(TOPDIR)/doc/misc/primer.pdf $(TOPDIR)/doc/misc/sl.tex $(TOPDIR)/doc/misc/sl.bib $(TOPDIR)/doc/misc/sl.pdf $(TOPDIR)/doc/misc/reduce.sty \
+           $(TOPDIR)/doc/primers/insidereduce.tex $(TOPDIR)/doc/primers/insidereduce.pdf \
+           $(TOPDIR)/csl/reduce.doc/BINARY-LICENSE.txt $(TOPDIR)/csl/reduce.doc/BSD-LICENSE.txt $(TOPDIR)/csl/reduce.doc/LGPL-2.1.txt $(TOPDIR)/doc/manual/header.png $(DOCDIR)
+	cp $(DOCSRCDIR)/*.tex $(DOCDIR)
+	cp $(DOCSRCDIR)/$(DOCBASENAME).pdf $(DOCSRCDIR)/$(DOCBASENAME)*.html $(DOCSRCDIR)/$(DOCBASENAME)*.png $(DOCSRCDIR)/$(DOCBASENAME).css $(DOCDIR)
+	for n in $(EXTRADOCIMAGEBASENAMES); do cp $(DOCSRCDIR)/${n}*.png $(DOCDIR) ; done
+	cp $(DOCDIR)/$(DOCBASENAME).html $(DOCDIR)/index.html
+	chmod -x $(DOCDIR)/*
+	cp $(GENERICTOPDIR)/breduce/breduce.tex $(GENERICTOPDIR)/breduce/breduce.bbl $(GENERICTOPDIR)/breduce/breduce.pdf $(ADDONDOCDIR)
+# copy man files
+	cp debian/redcsl.1 debian/redpsl.1 $(MANDIR)/man1
+	cp $(REDFRONTSRCDIR)/redfront.1 $(MANDIR)/man1
+	ln -s redfront.1 $(MANDIR)/man1/rfcsl.1
+	ln -s redfront.1 $(MANDIR)/man1/rfpsl.1
+	cp $(GENERICTOPDIR)/breduce/breduce.1 $(MANDIR)/man1
+# copy CSL files
+	cp -r $(CSLBUILDDIR)/csl/reduce.img \
+		$(CSLBUILDDIR)/csl/reduce \
+		$(CSLBUILDDIR)/csl/reduce.resources \
+		$(CSLBUILDDIR)/csl/bootstrapreduce.img \
+		$(CSLBUILDDIR)/csl/bootstrapreduce \
+		$(CSLBUILDDIR)/csl/csl.img \
+		$(CSLBUILDDIR)/csl/csl \
+		$(LIBDIR)/cslbuild/csl
+#	$(RSYNC_CMD) --no-perms $(CSLBUILDDIR)/csl/reduce.doc/ $(DOCDIR)/
+	mkdir -p $(FONTDIR)
+	$(RSYNC_CMD) --chmod=Fa-x --exclude "/src/***" $(CSLBUILDDIR)/csl/reduce.fonts/ $(FONTDIR)
+#	chmod -x $(FONTDIR)/*.ttf $(FONTDIR)/*.pfa $(FONTDIR)/*.pfb
+ifneq ($(BUILDPSL),)                                                          # copy PSL files
+	$(RSYNC_CMD) --exclude "kernel/***" --exclude "xport.*" $(PSLBUILDDIR)/psl/ $(LIBDIR)/pslbuild/psl/
+	chmod -x $(LIBDIR)/pslbuild/psl/*.b
+	$(RSYNC_CMD) $(PSLBUILDDIR)/red/ $(LIBDIR)/pslbuild/red/
+	chmod -x $(LIBDIR)/pslbuild/red/*
+	$(TOPDIR)/psl/saveimage.sh $(PSLBUILDDIR) $(abspath $(LIBDIR)/pslbuild/red) /usr/lib/reduce/pslbuild
+endif
+# copy common files
+	$(RSYNC_CMD) --no-perms --chmod=Fa-x --exclude "/regressions/***" $(TOPDIR)/packages/ $(SHAREDIR)/packages/
+#	chmod a+x $(TOPDIR)/packages/gcref/gcref $(TOPDIR)/packages/redlog/regressions/make.sh
+	for file in $(shell cat debian/reduce.scripts) ; do chmod a+x $(SHAREDIR)/$${file} ; done
+	ln -f -s ../../../../share/reduce/fonts $(LIBDIR)/cslbuild/csl/reduce.fonts
+	ln -f -s ../../../../share/doc/reduce $(LIBDIR)/cslbuild/csl/reduce.doc
+	ln -f -s ../../lib/reduce/pslbuild $(SHAREDIR)/pslbuild
+	ln -f -s ../../lib/reduce/cslbuild $(SHAREDIR)/cslbuild
+# copy font files for CSL
+	mkdir -p $(TTFONTDIR) $(TYPE1FONTDIR)
+	cp $(CSLBUILDDIR)/csl/reduce.fonts/*.ttf $(TTFONTDIR)
+	cp $(CSLBUILDDIR)/csl/reduce.fonts/*.pfb $(TYPE1FONTDIR)
+	chmod -x $(TTFONTDIR)/* $(TYPE1FONTDIR)/*
+# copy shell scripts for running REDUCE
+	cp -a debian/runpsl.sh $(BINDIR)/redpsl
+	cp -a debian/runcsl.sh $(BINDIR)/redcsl
+	cp -a debian/runbootstrapreduce.sh $(BINDIR)/bootstrapreduce
+	cp -a debian/runcsllisp.sh $(BINDIR)/csl
+# copy rest
+	cp $(REDFRONTBUILDDIR)/rfcsl $(BINDIR)
+	cp $(REDFRONTBUILDDIR)/rfpsl $(BINDIR)
+	cp $(GENERICTOPDIR)/breduce/breduce $(BINDIR)
+	cp $(GENERICTOPDIR)/emacs/reduce-mode.el $(EMACSSITELISPDIR)
+	cp debian/50reduce-emacs.el $(EMACSSITESTARTDIR)
+	chmod a-x $(EMACSSITELISPDIR)/reduce-mode.el $(EMACSSITESTARTDIR)/50reduce-emacs.el
+	mkdir -p $(ICONDIR)
+	cp debian/reduce.png $(ICONDIR)/reduce.png
+	chmod a-x $(ICONDIR)/reduce.png
+	mkdir -p $(DESKTOPDIR)
+	cp debian/redcsl.desktop $(DESKTOPDIR)/redcsl.desktop
+	cp debian/redpsl.desktop $(DESKTOPDIR)/redpsl.desktop
+	chmod a-x $(DESKTOPDIR)/*.desktop
+
+# run dh_install to copy the files into the package build dirs
+	dh_install
+
+	touch install-stamp
+
+
+# Build architecture-independent files here.
+binary-indep: install
+	dh_testdir -i
+	dh_testroot -i
+	dh_installdocs -i
+	dh_installexamples -i
+	dh_installmenu -i
+	dh_installemacsen -i
+	dh_installcron -i
+	dh_installman -i
+#	dh_desktop -i
+	dh_installinfo -i
+	dh_installchangelogs  -i
+	dh_lintian -i
+	dh_link -i
+	dh_strip -i $(NO_DEBS)
+	dh_compress -i 
+	dh_fixperms -i
+	dh_installdeb -i
+	dh_shlibdeps -i
+	dh_gencontrol -i
+	dh_md5sums -i
+	dh_builddeb -i
+
+# Build architecture-dependent files here.
+binary-arch: install
+	dh_testdir -a
+	dh_testroot -a
+	dh_installdocs -a
+	dh_installexamples -a
+	dh_installmenu -a
+	dh_installemacsen -a
+	dh_installcron -a
+	dh_installman -a
+#	dh_desktop -a
+	dh_installinfo -a
+	dh_installchangelogs  -a
+	dh_lintian -a
+	dh_link -a
+	dh_strip -a $(NO_STRIP) $(NO_DEBS)
+	dh_compress -a
+	dh_fixperms -a
+	dh_installdeb -a
+	dh_shlibdeps -a
+	dh_gencontrol -a
+	dh_md5sums -a
+	dh_builddeb -a
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install

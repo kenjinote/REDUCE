@@ -1,0 +1,168 @@
+# Makefile for Reduce
+
+###########################################################################
+###########################################################################
+## This version starts off as EXPERIMENTAL. If (and when!) it works it   ##
+## will arrange for parallel builds of hosts that have multi-core CPUS.  ##
+## 
+###########################################################################
+###########################################################################
+
+# There are two things that this Makefile is trying to do.
+#
+# Firstly there are multiple variant build directories (within cslbuild
+# and pslbuild). When I go "make target" I generally want that target
+# re-built in each relevant directory.
+# However there need to be some targets which only get run in one of
+# the variants.
+#
+# Secondly I want the builds all to run in parallel, even across the
+# multiple directories. By default if you invoke "make" it will use as
+# much parallelism as you have available "cpus". If you explicitly indicate
+# a level of parallelism by invoking as say "make -j 3" then it should hold
+# to the setting you specified, so "make -j 1" reverts to sequential builds
+# everywhere.
+#
+# A messy issue is that of the phrase "relevent directory" above. Here I am
+# supporting both a CSL and a PSL Lisp and for instance "bootstrapreduce.exe"
+# and "c-code" are only relevant in the CSL world, while "all" applies
+# everywhere.
+
+csltargets := \
+	csl.exe csl.com csl.img \
+	bootstrapreduce bootstrapreduce.exe \
+	bootstrapreduce.com bootstrapreduce.img \
+	reduce reduce.exe reduce.com reduce.img \
+	flatcsl flatcsl.exe flatcsl.com flatcsl.img \
+	fwindemo fwindemo.exe fwindemo.com \
+	foxdemo foxdemo.exe foxdemo.com \
+	termdemo termdemo.exe termdemo.com \
+	fontdemo fontdemo.exe fontdemo.com \
+	showmathdemo showmathdemo.exe showmathdemo.com \
+	wxdemo wxdemo.exe wxdemo.com \
+	wxfontdemo wxfontdemo.exe wxfontdemo.com \
+	wxfontdemo1 wxfontdemo1.exe wxfontdemo1.com \
+	wxdvi wxdvi.exe wxdvi.com \
+	wxshowmath wxshowmath.exe wxshowmath.com \
+	wxshowmathdemo wxshowmathdemo.exe wxshowmathdemo.com \
+	wxpsl wxpsl.exe wxpsl.com \
+	bootstraprecompile recompile \
+	testslow testall testslow1 test1 count1 \
+	checkall cleanlog showhost
+
+# Some of the CSL targets want to be run in just ONE of the build
+# directories.
+
+csltargets1 := \
+	profile profile-install c-code just-c-code \
+	standard-c-code partial-c-code full-c-code \
+	j-code smacros countall
+
+csldirs := $(wildcard cslbuild/*-*-*/csl)
+
+csldirs1 := $(firstword $(csldirs))
+
+# The list of psltargets is extracted from psl/Makefile.am, and if new
+# targets are introduced there then this list will need updating
+
+psltargets := \
+	force red/bootstrap.img \
+	red/mma.awk red.qepcad.awk tryboot \
+	deps/core-packages.psl-make deps/core-packages.psl-depend \
+	deps/noncore-packages.psl-make deps/noncore-packages.psl-depend \
+	red/reduce.img install-exex-local uninstall-local
+
+psldirs := $(wildcard pslbuild/*-*-*)
+
+bothtargets = __all install uninstall
+
+bothdirs := $(csldirs) $(psldirs)
+
+# Find the number of available cpus and insert "-j N" if you are a top-level
+# invocation of "make". If the user specified "-j N" or "--jobs=N" then
+# their setting takes precedence and specifically "-j1" can be used to
+# force a sequential build.
+
+ifeq "0" "$(MAKELEVEL)"
+MAKEFLAGS := -j$(shell nproc || sysctl -n hw.ncpu || printf "1") $(MAKEFLAGS)
+endif
+
+.PHONY:	all $(bothtargets) clean $(csltargets) $(csltargets1) $(psltargets)
+
+all $(bothtargets):
+	@c="$(bothdirs)" && t=$@ && ( printf "# Faked up Makefile\n" && \
+	i=1 && \
+	printf ".PHONY:\t" && \
+	for d in $$c; \
+	do printf " __$$i"; \
+	   i=$$(($$i+1)); \
+	done && \
+	printf "\n\n" && \
+	i=1 && \
+	printf "all:\t" && \
+	for d in $$c; \
+	do printf " __$$i"; \
+	   i=$$(($$i+1)); \
+	done && \
+	printf "\n\n" && \
+	i=1 && \
+	for d in $$c; \
+	do printf "__$$i:\n\t$(MAKE) -C $$d $$t\n\n"; \
+	   i=$$(($$i+1)); \
+	done ) | $(MAKE) -f -
+
+clean:
+	for d in `find cslbuild -name Makefile` `find pslbuild -name Makefile`; \
+	do $(MAKE) -C `dirname $$d` clean; \
+	   $(MAKE) -C `dirname $d` uninstall; \
+	done
+	rm -rf cslbuild/generated-c/*.img cslbuild/generated-c/u*
+
+$(csltargets):
+	@c="$(csldirs)" && t=$@ && ( printf "# Faked up Makefile\n" && \
+	i=1 && \
+	printf ".PHONY:\t" && \
+	for d in $$c; \
+	do printf " __$$i"; \
+	   i=$$(($$i+1)); \
+	done && \
+	printf "\n\n" && \
+	i=1 && \
+	printf "all:\t" && \
+	for d in $$c; \
+	do printf " __$$i"; \
+	   i=$$(($$i+1)); \
+	done && \
+	printf "\n\n" && \
+	i=1 && \
+	for d in $$c; \
+	do printf "__$$i:\n\t$(MAKE) -C $$d $$t\n\n"; \
+	   i=$$(($$i+1)); \
+	done ) | $(MAKE) -f -
+
+$(csltargets1):
+	$(MAKE) -C $(csldirs1) $@; \
+
+$(psltargets):
+	@c="$(psldirs)" && t=$@ && ( printf "# Faked up Makefile\n" && \
+	i=1 && \
+	printf ".PHONY:\t" && \
+	for d in $$c; \
+	do printf " __$$i"; \
+	   i=$$(($$i+1)); \
+	done && \
+	printf "\n\n" && \
+	i=1 && \
+	printf "all:\t" && \
+	for d in $$c; \
+	do printf " __$$i"; \
+	   i=$$(($$i+1)); \
+	done && \
+	printf "\n\n" && \
+	i=1 && \
+	for d in $$c; \
+	do printf "__$$i:\n\t$(MAKE) -C $$d $$t\n\n"; \
+	   i=$$(($$i+1)); \
+	done ) | $(MAKE) -f -
+
+# end of Makefile

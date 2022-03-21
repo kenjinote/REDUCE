@@ -1,0 +1,537 @@
+
+\chapter{Solving numerical problems}
+
+\indexpackage{NUMERIC}
+
+\index{Melenk, Herbert}\index{People!Melenk, Herbert}
+
+The \package{NUMERIC} package implements some numerical (approximative)
+algorithms for \REDUCE, based on the \REDUCE\ rounded mode
+arithmetic.\footnote{This code was written by Herbert Melenk.}
+These algorithms are implemented for standard cases:
+
+\index{Newton's method}
+\index{Chebyshev fit}
+\index{Minimum}\index{Quadrature}
+This package implements basic algorithms of numerical analysis.
+These include:
+\begin{itemize}
+\item solution of algebraic equations by Newton's method
+\begin{verbatim}
+    num_solve({sin x=cos y, x + y = 1},{x=1,y=2})
+\end{verbatim}
+\item solution of ordinary differential equations
+\begin{verbatim}
+    num_odesolve(df(y,x)=y,y=1,x=(0 .. 1), iterations=5)
+\end{verbatim}
+\item bounds of a function over an interval
+\begin{verbatim}
+    bounds(sin x+x,x=(1 .. 2));
+\end{verbatim}
+\item minimizing a function (Fletcher Reeves steepest descent)
+\begin{verbatim}
+    num_min(sin(x)+x/5, x);
+\end{verbatim}
+\item Chebyshev curve fitting
+\begin{verbatim}
+    chebyshev_fit(sin x/x,x=(1 .. 3),5);
+\end{verbatim}
+\item numerical quadrature
+\begin{verbatim}
+    num_int(sin x,x=(0 .. pi));
+\end{verbatim}
+\end{itemize}
+They should not be called for ill-conditioned problems;
+please use standard mathematical libraries for
+these.
+
+
+\section{Syntax}
+
+\subsection{Intervals, Starting Points}
+\ttindextype{.. (interval)}{operator}
+
+Intervals are generally coded as lower bound and
+upper bound connected by the operator `\texttt{..}', usually
+associated to a variable in an
+equation. E.g.
+\begin{verbatim}
+     x= (2.5 .. 3.5)
+\end{verbatim}
+means that the variable x is taken in the range from 2.5 up to
+3.5. Note, that the bounds can be algebraic
+expressions, which, however, must evaluate to numeric results.
+In cases where an interval is returned as the result, the lower
+and upper bounds can be extracted by the \texttt{part} operator
+as the first and second part respectively.
+A starting point is specified by an equation with a numeric
+righthand side, e.g.
+\begin{verbatim}
+     x=3.0
+\end{verbatim}
+If for multivariate applications several coordinates must be
+specified by intervals or as a starting point, these
+specifications can be collected in one parameter (which is then
+a list) or they can be given as separate parameters
+alternatively. The list form is more appropriate when the
+parameters are built from other \REDUCE{} calculations in an
+automatic style, while the flat form is more convenient
+for direct interactive input.
+
+\subsection{Accuracy Control}
+
+The keyword parameters \texttt{accuracy=}\meta{a} and \texttt{iterations=}\meta{i}, where
+\meta{a} and \meta{i} must be positive integer numbers, control the
+iterative algorithms: the iteration is continued until
+the local error is below $10^{-a}$; if that is impossible
+within \meta{i} steps, the iteration is terminated with an
+error message. The values reached so far are then returned
+as the result.
+
+\subsection{Tracing}
+\ttindexswitch[NUMERIC]{trnumeric}
+Normally the algorithms produce only a minimum of printed
+output during their operation. In cases of an unsuccessful
+or unexpected long operation a trace of the iteration can be
+printed by setting
+\begin{verbatim}
+    on trnumeric;
+\end{verbatim}
+
+
+\section{Minima}
+\ttindextype[NUMERIC]{NUM\_MIN}{operator}
+\hypertarget{operator:NUM_MIN}{}
+
+The Fletcher Reeves version of the \emph{steepest descent}
+algorithms is used to find the minimum of a
+function of one or more variables. The
+function must have continuous partial derivatives with respect to all
+variables. The starting point of the search can be
+specified; if not, random values are taken instead.
+The steepest descent algorithms in general find only local
+minima.
+
+Syntax:
+\begin{syntaxtable}
+  \f{num\_min} (\meta{exp}, \meta{$var_1$}\optional{=$val_1$} [,$var_2$[=$val_2$] \ldots]
+             [,accuracy=a][,iterations=i]) \\
+\intertext{or}\\
+  \f{num\_min} (\meta{exp}, \{\meta{$var_1$}\optional{=$val_1$} [,$var_2$[=$val_2$] \ldots]\}
+             [,accuracy=a][,iterations=i]) 
+\end{syntaxtable}
+where \meta{exp} is a function expression, \meta{$var_{1}$}, \meta{$var_{2}$}, \ldots\ are
+the variables in \meta{exp} and \meta{$val_{1}$}, \meta{$val_{2}$}, \ldots\  are
+the (optional) start values.
+
+\f{num\_min} tries to find the next local minimum along the descending
+path starting at the given point. The result is a list
+with the minimum function value as first element followed by a list
+of equations, where the variables are equated to the coordinates
+of the result point.
+
+Examples:
+\begin{verbatim}
+   num_min(sin(x)+x/5, x);
+
+   { - 0.0775896851944,{x=4.51103102502}}
+
+   num_min(sin(x)+x/5, x=0);
+
+   { - 1.33422674662,{x= - 1.77215826714}}
+
+   % Rosenbrock function (well known as hard to minimize).
+   fktn := 100*(x1**2-x2)**2 + (1-x1)**2;
+   num_min(fktn, x1=-1.2, x2=1, iterations=200);
+
+   {0.000000218702254529,{x1=0.999532844959,x2=0.99906807243}}
+
+\end{verbatim}
+
+\section{Roots of Functions / Solutions of Equations}
+\ttindextype[NUMERIC]{num\_solve}{operator}
+\hypertarget{operator:NUM_SOLVE}{}
+
+An adaptively damped Newton iteration is used to find
+an approximative zero of a function, a function vector or the solution
+of an equation or an equation system. Equations are
+internally converted to a difference of lhs and rhs such
+that the Newton method (=zero detection) can be applied. The expressions
+must have continuous derivatives for all variables.
+A starting point for the iteration can be given. If not given,
+random values are taken instead. If the number of
+forms is not equal to the number of variables, the
+Newton method cannot be applied. Then the minimum
+of the sum of absolute squares is located instead.
+
+With \texttt{on} \sw{complex} solutions with imaginary parts can be
+found, if either the expression(s) or the starting point
+contain a nonzero imaginary part.
+
+Syntax:
+
+\begin{description}
+\item[\texttt{num\_solve}] \texttt{(}\meta{exp$_1$}\texttt{,}\meta{var$_1$}[=val$_1$][,accuracy=a][,iterations=i])
+
+or
+
+\item[num\_solve]  $(\{exp_1,\ldots,exp_n\},
+   var_1[=val_1],\ldots,var_n[=val_n]$
+\item[\ \ \ \ \ \ \ \ ]$[,accuracy=a][,iterations=i])$
+
+or
+
+\item[num\_solve]  $(\{exp_1,\ldots,exp_n\},
+   \{var_1[=val_1],\ldots,var_n[=val_n]\}$
+\item[\ \ \ \ \ \ \ \ ]$[,accuracy=a][,iterations=i])$
+
+where $exp_1, \ldots,exp_n$ are function expressions,
+
+      $var_1, \ldots, var_n$ are the variables,
+
+      $val_1, \ldots, val_n$ are optional start values.
+
+\texttt{num\_solve} tries to find a zero/solution of the expression(s).
+Result is a list of equations, where the variables are
+equated to the coordinates of the result point.
+
+\hypertarget{reserved:JACOBIAN}{}
+The Jacobian matrix is stored as a side effect in the shared
+variable \texttt{jacobian}\ttindextype[NUMERIC]{jacobian}{shared variable}.
+
+\end{description}
+
+Example:
+\begin{verbatim}
+    num_solve({sin x=cos y, x + y = 1},{x=1,y=1});
+
+    {x= - 1.85619449019,y=2.85619449019}
+
+    jacobian;
+
+    [cos(x)  sin(y)]
+    [              ]
+    [  1       1   ]
+\end{verbatim}
+
+\section{Integrals}
+\ttindextype[NUMERIC]{num\_int}{operator}
+\hypertarget{operator:NUM_INT}{}
+
+For the numerical evaluation of univariate integrals over a finite
+interval the following strategy is used:
+\begin{enumerate}
+\item If the function has an antiderivative in close form
+    which is bounded in the integration interval, this
+    is used.
+\item Otherwise a Chebyshev approximation is computed,
+    starting with order 20, eventually up to order 80.
+    If that is recognized as sufficiently convergent
+    it is used for computing the integral by directly
+    integrating the coefficient sequence.
+\item If none of these methods is successful, an
+    adaptive multilevel quadrature algorithm is used.
+\end{enumerate}
+For multivariate integrals only the adaptive quadrature is used.
+This algorithm tolerates isolated singularities.
+The value $iterations$ here limits the number of
+local interval intersection levels.
+$Accuracy$ is a measure for the relative total discretization
+error (comparison of order 1 and order 2 approximations).
+
+Syntax:
+
+\begin{description}
+\item[num\_int] $(exp,var_1=(l_1 .. u_1)[,var_2=(l_2 .. u_2)\ldots]$
+\item[\ \ \ \ \ \ ]$[,accuracy=a][,iterations=i])$
+
+where $exp$ is the function to be integrated,
+
+$var_1, var_2 , \ldots$ are the integration variables,
+
+$l_1, l_2 , \ldots$ are the lower bounds,
+
+$u_1, u_2 , \ldots$ are the upper bounds.
+
+Result is the value of the integral.
+
+\end{description}
+
+Example:
+
+\begin{verbatim}
+    num_int(sin x,x=(0 .. pi));
+
+    2.0
+\end{verbatim}
+
+\section{Ordinary Differential Equations}
+\ttindextype[NUMERIC]{num\_odesolve}{operator}
+\hypertarget{operator:NUM_ODESOLVE}{}
+
+A Runge-Kutta method of order 3 finds an approximate graph for
+the solution of a ordinary differential equation
+real initial value problem.
+
+Syntax:
+\begin{description}
+\item[num\_odesolve]($exp$,$depvar=dv$,$indepvar$=$(from .. to)$
+
+$                   [,accuracy=a][,iterations=i]) $
+
+where
+
+$exp$ is the differential expression/equation,
+
+$depvar$ is an identifier representing the dependent variable
+(function to be found),
+
+$indepvar$ is an identifier representing the independent variable,
+
+$exp$ is an equation (or an expression implicitly set to zero) which
+contains the first derivative of $depvar$ wrt $indepvar$,
+
+$from$ is the starting point of integration,
+
+$to$ is the endpoint of integration (allowed to be below $from$),
+
+$dv$ is the initial value of $depvar$ in the point $indepvar=from$.
+
+The ODE $exp$ is converted into an explicit form, which then is
+used for a Runge Kutta iteration over the given range. The
+number of steps is controlled by the value of $i$
+(default: 20).
+If the steps are too coarse to reach the desired
+accuracy in the neighborhood of the starting point, the number is
+increased automatically.
+
+Result is a list of pairs, each representing a point of the
+approximate solution of the ODE problem.
+
+Remarks:
+\begin{enumerate}
+
+  \item[--]
+Note that the dependent variable must be explicitly declared
+using a \texttt{depend} statement, e.g., \texttt{depend y,x}.
+\item[--] The \REDUCE{} package \textsc{SOLVE} is used to convert the form into
+an explicit ODE. If that process fails or has no unique result,
+the evaluation is stopped with an error message.
+
+\end{enumerate}
+
+\end{description}
+
+Example:
+\begin{verbatim}
+
+    depend y,x;
+
+    num_odesolve(df(y,x)=y,y=1,x=(0 .. 1), iterations=5);
+
+{{x,y},
+
+ {0.0,1.0},
+
+ {0.2,1.22140275816},
+
+ {0.4,1.49182469764},
+
+ {0.6,1.82211880039},
+
+ {0.8,2.22554092849},
+
+ {1.0,2.71828182846}}
+
+\end{verbatim}
+
+
+\section{Bounds of a Function}
+\ttindextype[NUMERIC]{bounds}{operator}
+\hypertarget{operator:BOUNDS}{}
+
+Upper and lower bounds of a real valued function over an
+interval or a rectangular multivariate domain are computed
+by the operator \texttt{bounds}. The algorithmic basis is the computation
+with inequalities: starting from the interval(s) of the
+variables, the bounds are propagated in the expression
+using the rules for inequality computation. Some knowledge
+about the behavior of special functions like ABS, SIN, COS, EXP, LOG,
+fractional exponentials etc. is integrated and can be evaluated
+if the operator \texttt{bounds} is called with rounded mode on
+(otherwise only algebraic evaluation rules are available).
+
+If \texttt{bounds} finds a singularity within an interval, the evaluation
+is stopped with an error message indicating the problem part
+of the expression.
+
+Syntax:
+\begin{description}
+\item[bounds]$(exp,var_1=(l_1 .. u_1) [,var_2=(l_2 .. u_2) \ldots])$
+
+\item[\textit{bounds}]$(exp,\{var_1=(l_1 .. u_1) [,var_2=(l_2 .. u_2)\ldots]\})$
+
+where $exp$ is the function to be investigated,
+
+$var_1, var_2 , \ldots$ are the variables of exp,
+
+$l_1, l_2 , \ldots$  and  $u_1, u_2 , \ldots$ specify the area (intervals).
+
+\texttt{bounds} computes upper and lower bounds for the expression in the
+given area. An interval is returned.
+
+\end{description}
+
+Example:
+
+\begin{verbatim}
+
+    bounds(sin x,x=(1 .. 2));
+
+    - 1 .. 1
+
+    on rounded;
+    bounds(sin x,x=(1 .. 2));
+
+    0.841470984808 .. 1
+
+    bounds(x**2+x,x=(-0.5 .. 0.5));
+
+     - 0.25 .. 0.75
+
+\end{verbatim}
+
+\section{Chebyshev Curve Fitting}
+\ttindextype[NUMERIC]{chebyshev\_fit}{operator}
+\ttindextype[NUMERIC]{chebyshev\_eval}{operator}
+\ttindextype[NUMERIC]{chebyshev\_df}{operator}
+\ttindextype[NUMERIC]{chebyshev\_int}{operator}
+\hypertarget{operator:CHEBYSHEV_FIT}{}
+\hypertarget{operator:CHEBYSHEV_EVAL}{}
+\hypertarget{operator:CHEBYSHEV_DF}{}
+\hypertarget{operator:CHEBYSHEV_INT}{}
+
+The operator family $Chebyshev\_\ldots$ implements approximation
+and evaluation of functions by the Chebyshev method.
+Let $T_n^{(a,b)}(x)$ be the Chebyshev polynomial of order $n$
+transformed to the interval $(a,b)$. Then a function $f(x)$ can be
+approximated in $(a,b)$ by a series
+
+\begin{displaymath}
+ f(x) \approx \sum_{i=0}^N c_i T_i^{(a,b)}(x) 
+\end{displaymath}
+The operator \texttt{chebyshev\_fit} computes this approximation and
+returns a list, which has as first element the sum expressed
+as a polynomial and as second element the sequence
+of Chebyshev coefficients $c_{i}$.
+\texttt{chebyshev\_df} and \texttt{chebyshev\_int} transform a Chebyshev
+coefficient list into the coefficients of the corresponding
+derivative or integral respectively. For evaluating a Chebyshev
+approximation at a given point in the basic interval the
+operator \texttt{chebyshev\_eval} can be used. Note that
+\texttt{Chebyshev\_eval} is based on a recurrence relation which is
+in general more stable than a direct evaluation of the
+complete polynomial.
+
+\begin{description}
+\item[chebyshev\_fit] $(fcn,var=(lo .. hi),n)$
+
+\item[chebyshev\_eval] $(coeffs,var=(lo .. hi),var=pt)$
+
+\item[chebyshev\_df] $(coeffs,var=(lo .. hi))$
+
+\item[chebyshev\_int] $(coeffs,var=(lo .. hi))$
+
+where \meta{fcn} is an algebraic expression (the function to be
+fitted), \meta{var} is the variable of \meta{fcn}, \meta{lo} and \meta{hi} are
+numerical real values which describe an interval ($lo < hi$),
+\meta{n} is the approximation order, a positive integer, set to 20 if missing,
+\meta{pt} is a numerical value in the interval and \meta{coeffs} is
+a series of Chebyshev coefficients, computed by one of the operators
+\texttt{chebyshev\_coeff}, \texttt{chebyshev\_df}, or \texttt{chebyshev\_int}.
+\end{description}
+
+Example:
+
+\begin{verbatim}
+
+on rounded;
+
+w:=chebyshev_fit(sin x/x,x=(1 .. 3),5);
+
+w := {0.0382345446975*x  - 0.239802588672*x  + 0.0651206939005*x
+
+       + 0.977836217464,
+
+      {0.899091895826,-0.406599215895,-0.00519766024352,0.00946374143079,
+
+       -0.0000948947435876}}
+
+chebyshev_eval(second w, x=(1 .. 3), x=2.1);
+
+0.411091086819
+
+\end{verbatim}
+
+\section{General Curve Fitting}
+\ttindextype[NUMERIC]{num\_fit}{operator}
+\hypertarget{operator:NUM_FIT}{}
+
+The operator \texttt{num\_fit} finds for a set of
+points the linear combination of a given set of
+functions (function basis) which approximates the
+points best under the objective of the least squares
+criterion (minimum of the sum of the squares of the deviation).
+The solution is found as zero of the
+gradient vector of the sum of squared errors.
+
+Syntax:
+
+\begin{description}
+\item[num\_fit] $(vals,basis,var=pts)$
+
+where $vals$ is a list of numeric values,
+
+$var$ is a variable used for the approximation,
+
+$pts$ is a list of coordinate values which correspond to $var$,
+
+$basis$ is a set of functions varying in $var$ which is used
+  for the approximation.
+
+\end{description}
+
+The result is a list containing as first element the
+function which approximates the given values, and as
+second element a list of coefficients which were used
+to build this function from the basis.
+
+Example:
+
+\begin{verbatim}
+
+     % approximate a set of factorials by a polynomial
+    pts:=for i:=1 step 1 until 5 collect i$
+    vals:=for i:=1 step 1 until 5 collect
+            for j:=1:i product j$
+
+    num_fit(vals,{1,x,x**2},x=pts);
+
+                   2
+    {14.5714285714*x  - 61.4285714286*x + 54.6,{54.6,
+
+         - 61.4285714286,14.5714285714}}
+
+    num_fit(vals,{1,x,x**2,x**3,x**4},x=pts);
+
+    {2.20833333343*x  - 20.2500000011*x
+
+      + 67.7916666713*x  - 93.7500000077*x
+
+      + 45.0000000042,
+
+     {45.0000000042, - 93.7500000077,67.7916666713,
+
+      - 20.2500000011,2.20833333343}}
+\end{verbatim}
+

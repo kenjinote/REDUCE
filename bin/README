@@ -1,0 +1,67 @@
+                      The Reduce "bin" directory
+                      ==========================
+
+
+The files in this directory are intended to provide an easy way to launch
+Reduce. From the Reduce "trunk" you can just issue a command such as
+             bin/redpsl
+         or  bin/redcsl
+to use the PSL or CSL version of Reduce (supposing that you have configured
+and built it!).
+
+There are some features of the scripts used here that may not at first seem
+obvious, and so I will try to explain here what these features are trying
+to achieve.
+
+The first thing is that each script here can be invoked from anywhere - the
+directory that is current when you trigger one of these scripts does not
+matter. So, for instance, you can put this directory on your PATH and then use
+Reduce freely. This remark may seem obvious, but the important aspect of it
+is that these scripts identify directories where various Reduce resources are
+to be found, and contain curious-looking code to do this. However you should
+not copy any of these scripts and place them in a directory other than here
+since they rely on paths relative to the place where they themselves live.
+
+The second matter is that some people in some contexts have a single shared
+file-space that they access from a variety of different models of computer.
+The binaries that relate to different operating systems and computer
+architectures have to be kept separate, and the main configure and build
+scripts for Reduce achieve this by building binaries in sub-directories
+with name such as pslbuild/i686-pc-windows or cslbuild/x84_64-unknown-suse11.1.
+The scripts here automatically detect the nature on the machine that they are
+being run on and on that basis link through and launch the relevant version
+of the code.
+
+The file .../trunk/scripts/resetall.sh can be used to restore all these
+scripts to their original state.
+
+The programs provided for at present are
+
+   redcsl        Reduce using the CSL Lisp system. Note that just calling
+                 redcsl will probably cause a window to pop up, but
+                 "redcsl -w" causes the code to run as a console application.
+   redpsl        Reduce using the PSL Lisp system.
+
+The following may be of use of CSL developers but are not intended to be
+of general use to people who are not suffering problems or debugging new code:
+
+   bootstrapreduce  A slower CSL version that is used while building the
+                 full version, and where the function "lisp mapstore()" may
+                 be used to collect profiling information.
+   csl           The CSL Lisp system.
+
+There may be other scripts as well!
+
+At present for the CSL versions there is one further complication. If an
+exact match for your operating system can not be found in the set of installed
+binaries then the first available "soft match" will be tried, with a message
+displayed to explain. There is no clever arrangement to cause near matches
+to be tested for in a special order. The idea behind this is so that eg if
+you had binaries for say fedora 9 installed and were actually running a
+different version of fedora (say 10) then the code will TRY the fedora 9
+binary. This fall-back arrangement is not guaranteed to work, and in case
+of uncertainty please configure and rebuild everything for your current
+computer.
+
+
+                                                   Arthur Norman. 2009-2015

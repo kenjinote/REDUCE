@@ -1,0 +1,36 @@
+This is a branch of "cslbase" but it intended to provide a kit from which
+a CSL version of Reduce can be made with the least possible complication
+and with the least reasonable reliance on system support. It assumes that
+the generated files u01.c to u12.c and reduce.img have already been created
+using a full version of the system (so it includes ready-built copies here).
+It does not provide a GUI or any other clevers. It is expected that it JUST
+needs a bunch of files of C code to be compiled and linked together. You
+should not expect "help" capability etc, but the ALGEBRA bits of Reduce
+should work the way they always have.
+
+All custmisations here should be guarded by "#if(n)def EMBEDDED". And the
+*.h and *.c files that are in this directory should eventually be
+exectly the same as the ones in cslbase. Just this set has a ready-build
+reduce.img file, a set of u01,c to u12.c, and its own private and very
+simple Makefile
+
+                                             Arthur Norman.   July 2009
+
+This version has now fallen behind and is out of date with respect to the
+main set of files, so I need to merge in changes soon!
+
+                                                              March 2010
+
+Files brought up to date and a Makefile.x64 provided that works (for me)
+using the cgywin-hosted version of mingw64. Note that these days the single
+image file (reduce.img) should work whether the code is built in 32 or
+64-bit mode.
+
+                                                              May 2010
+
+Basically I now suggest you look at the new-embedded directory rather than
+this one. I will keep this here for a while, but be aware that it will
+be deleted in due course...
+
+                                                              July 2012
+

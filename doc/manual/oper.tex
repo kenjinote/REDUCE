@@ -1,0 +1,2059 @@
+\chapter{Built-in Prefix Operators}
+In the following subsections are descriptions of the most  useful prefix
+\index{Prefix}
+operators built into {\REDUCE} that are not defined in other sections (such
+as substitution operators). Some are fully defined internally as
+procedures; others are more nearly abstract operators, with only some of
+their properties known to the system.
+
+In many cases, an operator is described by a prototypical header line as
+follows. Each formal parameter is given a name and followed by its allowed
+type. The names of classes referred to in the definition are printed in
+lower case, and parameter names in upper case. If a parameter type is not
+commonly used, it may be a specific set enclosed in brackets
+\texttt{\{} \ldots{} \texttt{\}}.
+Operators that accept formal parameter lists of arbitrary length have the
+parameter and type class enclosed in square brackets indicating that zero
+or more occurrences of that argument are permitted. Optional parameters
+and their type classes are enclosed in angle brackets.
+
+\section{Numerical Operators}\index{Numerical operator}\index{Operator!numerical}
+{\REDUCE} includes a number of functions that are analogs of those found
+in most numerical systems.  With numerical arguments, such functions
+return the expected result.  However, they may also be called with
+non-numerical arguments.  In such cases, except where noted, the system
+attempts to simplify the expression as far as it can.  In such cases, a
+residual expression involving the original operator usually remains.
+These operators are as follows:
+
+\subsection{ABS}
+\hypertarget{operator:ABS}{}
+\texttt{abs}\ttindextype{abs}{operator} returns the absolute value
+of its single argument, if that argument has a numerical value.
+A non-numerical argument is returned as an absolute value, with an overall
+numerical coefficient taken outside the absolute value operator. For example:
+\begin{verbatim}
+        abs(-3/4)     ->  3/4
+        abs(2a)       ->  2*abs(a)
+        abs(i)        ->  1
+        abs(-x)       ->  abs(x)
+\end{verbatim}
+
+\subsection{CEILING}\ttindextype{ceiling}{operator}
+\hypertarget{operator:CEILING}{}
+This operator returns the ceiling (i.e., the least integer greater than
+the given argument) if its single argument has a numerical value.  A
+non-numerical argument is returned as an expression in the original
+operator.  For example:
+
+\begin{verbatim}
+        ceiling(-5/4) ->  -1
+        ceiling(-a)   ->  ceiling( - a)
+\end{verbatim}
+
+\subsection{CONJ}\ttindextype{conj}{operator}
+\hypertarget{operator:CONJ}{}
+This returns the complex conjugate
+of an expression, if that argument has a numerical value.  By default the
+complex conjugate of a non-numerical argument is returned as an expression
+in the operators
+\texttt{repart}\ttindextype{repart}{opreator} and \texttt{impart}\ttindextype{impart}{operator}.
+For example:
+\begin{verbatim}
+        conj(1+i)     -> - i + 1
+        conj(a+i*b)   -> - impart(a)*i - impart(b)
+                         + repart(a) - repart(b)*i
+\end{verbatim}
+
+If rules have been previously defined for the complex conjugate(s)
+of one or more non-numerical terms appearing in the argument, these rules are
+applied and the expansion in terms of the operators
+\texttt{repart}\ttindextype{repart}{operator} and \texttt{impart}\ttindextype{impart}{operator} is
+suppressed.
+
+For example:
+\begin{verbatim}
+        realvalued a,b;
+        conj(a+i*b)   ->   a - b*i
+        let conj z => z!*, conj c => c!*;
+        conj(a+b*z*z!*+z*c!*)   ->   a + b*z*z* + c*z*
+        conj atan z    ->   atan(z*)
+\end{verbatim}
+Note that in defining the rule \texttt{conj z => z!*},\ the rule
+\texttt{conj z!*  => z} is (in effect) automatically defined and
+\emph{should not} be entered by the user.  A more convenient method of
+associating two identifiers as mutual complex-conjugates is to use the
+\texttt{complex\_conjugates} declaration as described in the section
+\hyperlink{command:COMPLEX_CONJUGATES}{Declaring Complex Conjugates}.
+
+The main use of rules for \texttt{conj} is to associate two identifiers
+as complex conjugates as in the examples above. In addition rules of the form
+\texttt{let conj(z)=>z, conj(w)=>-w} may be used. They imply that
+\texttt{z} is real-valued and \texttt{w} is purely imaginary, although
+the effect of the first rule can also be obtained by declaring \texttt{z}
+to be \texttt{realvalued}.
+
+Rules of the form \texttt{let conj z => <<some-expression>>} may be used,
+but are not recommended. More useful results will usually be obtained by
+defining the equivalent rule \texttt{let z => conj(<<some-expression>>)}.
+Rules of the form \texttt{let conj z => <<some-expression>>} are particularly
+problematic if \texttt{<<some-expression>>} involves \texttt{z} itself as
+they may be inconsistent, for example \texttt{let conj z => z+1}. Even where
+they are consistent, better results may usually achieved by defining alternative rules.
+For example, given:
+\begin{verbatim}
+        realvalued a,b;
+        let conj z => 2*a-z, conj w => w-2*b*i;
+\end{verbatim}
+so that the real part of \texttt{z} is \texttt{a} and the imaginary part
+of \texttt{w} is \texttt{b}, more useful results will be obtained by
+defining the mathematically equivalent rules:
+\begin{verbatim}
+        realvalued a,b,x,y;
+        let z => a +i*y, w => x + b*i;
+\end{verbatim}
+
+Note also that the standard elementary functions and their inverses
+(where appropriate) are automatically defined to be
+\texttt{selfconjugate}\ttindextype{selfconjugate}{declaration} so that
+\texttt{conj(f(z))} is simplified to \texttt{f(conj(z))}. User-defined
+operators may be declared to be self-conjugate with the declaration
+\hyperlink{command:SELFCONJUGATE}{\texttt{selfconjugate}}.
+
+\subsection{Conversion between degree and radians}
+\ttindextype{deg2rad}{numerical operator}
+\ttindextype{rad2deg}{numerical operator}
+\ttindextype{deg2dms}{numerical operator}
+\ttindextype{rad2dms}{numerical operator}
+\ttindextype{dms2rad}{numerical operator}
+\ttindextype{dms2deg}{numerical operator}
+\hypertarget{operator:DEG2RAD}{}
+\hypertarget{operator:RAD2DEG}{}
+\hypertarget{operator:DEG2DMS}{}
+\hypertarget{operator:RAD2DMS}{}
+\hypertarget{operator:DMS2RAD}{}
+\hypertarget{operator:DMS2DEG}{}
+
+These operators convert an angle in degrees to radians and vice-versa.
+\f{rad2deg} converts the radian value to  an angle in degrees expressed as a single floating point value (according to the currently specified system precision\index{system precision}).  
+The value to be converted may be an integer, a rational or a floating value or indeed any expression that simplifies to a rounded value.
+In particular  numerical constants such as $\pi$ may be used in the input expression.
+\f{deg2rad} performs the inverse conversion.
+
+\f{rad2dms} converts the radian value to an angle expressed in degrees, minutes and seconds returned as a three element list.  The degree and minute values are integers the latter in the range $0 \ldots 59$ inclusive and the seconds value is  a floating point value in the half-open interval $[0, 60.0)$.
+Similarly, \f{deg2dms} converts an angle given in degrees into a such a three element list.
+
+The purpose of the operators  \f{dms2rad} and \f{dms2deg} should  also be obvious.  The degree, minute and second value to be converted is passed to the conversion function as a three element list.  There is considerable flexibility allowed in  format of the list supplied as parameter -- all three values may be integers, rational numbers or rounded values or any combination of these; the minute and second values need not lie between zero and sixty.  The list supplied is simplified with the appropriate \textit{carrys and borrows} performed (in effect at least) between the three values.  For example
+\begin{verbatim} 
+{60.5, 9.2, 11.234}      =>   {60, 39, 23.234}
+{45, 0, -1}              =>   {44, 59, 59}
+\end{verbatim}
+
+\subsection{FACTORIAL}\ttindextype{factorial}{numerical operator}
+\hypertarget{operator:FACTORIAL}{}
+
+If the single argument of \texttt{factorial} evaluates to a non-negative
+integer, its factorial is returned.  Otherwise an expression involving
+\texttt{factorial} is returned. For example:
+\begin{verbatim}
+        factorial(5)  ->  120
+        factorial(a)  ->  factorial(a)
+\end{verbatim}
+
+\subsection{FIX}\ttindextype{fix}{operator}
+\hypertarget{operator:FIX}{}
+This operator returns the fixed value (i.e., the integer part of
+the given argument) if its single argument has a numerical value.  A
+non-numerical argument is returned as an expression in the original
+operator.  For example:
+
+\begin{verbatim}
+        fix(-5/4)   ->  -1
+        fix(a)      ->  fix(a)
+\end{verbatim}
+
+\subsection{FLOOR}\ttindextype{floor}{operator}
+\hypertarget{operator:FLOOR}{}
+This operator returns the floor (i.e., the greatest integer less than
+the given argument) if its single argument has a numerical value.  A
+non-numerical argument is returned as an expression in the original
+operator.  For example:
+
+\begin{verbatim}
+        floor(-5/4)   ->  -2
+        floor(a)      ->  floor(a)
+\end{verbatim}
+
+\subsection{IMPART}\ttindextype{impart}{operator}
+\hypertarget{operator:IMPART}{}
+This operator returns the imaginary part of an expression, if that argument
+has an numerical value.  A non-numerical argument is returned as an expression
+in the operators \texttt{repart}\ttindextype{repart}{operator} and \texttt{impart}\ttindextype{impart}{operator}.  For example:
+\begin{verbatim}
+        impart(1+i)        -> 1
+        impart(sin(3+4*i)) -> cos(3)*sinh(4)
+        impart(log(2+i))   -> atan(1/2)
+        impart(asin(1+i))  -> acosh(sqrt(5)+2)/2
+        impart(a+i*b)      -> impart(a) + repart(b)
+\end{verbatim}
+
+For the inverse trigometric and hyperbolic functions with non-numeric arguments the output is usually more compact when the \sw{factor} is on.
+
+\subsection{LEGENDRE\_SYMBOL}
+\ttindextype{legendre\_symbol}{operator}
+\hypertarget{operator:LEGENDRE_SYMBOL}{}
+The operator \f{legendre\_symbol}(a,p) denotes the Legendre symbol
+\[
+  \left(\frac{a}{p}\right) \equiv a^{\frac{p-1}{2}} \pmod{p}
+\]
+which, by its very definition can only have one of the values $\{-1,0,1\}$.
+
+\subsection{MAX/MIN}
+\hypertarget{operator:MAX}{}
+\hypertarget{operator:MIN}{}
+
+\texttt{max} and \texttt{min}\ttindextype{max}{operator}\ttindextype{min}{operator} can take an arbitrary
+number of expressions as their arguments.  If all arguments evaluate to
+numerical values, the maximum or minimum of the argument list is returned.
+If any argument is non-numeric, an appropriately reduced expression is
+returned.  For example:
+\begin{verbatim}
+        max(2,-3,4,5) ->  5
+        min(2,-2)     ->  -2.
+        max(a,2,3)    ->  max(A,3)
+        min(x)        ->  X
+\end{verbatim}
+\texttt{max} or \texttt{min} of an empty list returns 0.
+
+\subsection{NEXTPRIME}\ttindextype{nextprime}{operator}
+\hypertarget{operator:NEXTPRIME}{}
+
+\texttt{nextprime} returns the next prime greater than its integer argument,
+using a probabilistic algorithm.  A type error occurs if the value of the
+argument is not an integer.  For example:
+\begin{verbatim}
+        nextprime(5)      ->  7
+        nextprime(-2)     ->  2
+        nextprime(-7)     -> -5
+        nextprime 1000000 -> 1000003
+\end{verbatim}
+whereas \texttt{nextprime(a)} gives a type error.
+
+\subsection{RANDOM}\ttindextype{random}{operator}
+\hypertarget{operator:RANDOM}{}
+
+\texttt{random(}{\em n\/}\texttt{)} returns a random number $r$ in the
+range $0\leq r < n$.  A type error occurs if the value of the argument is not a
+positive integer in algebraic mode, or positive number in symbolic mode.
+For example:
+\begin{verbatim}
+        random(5)         ->    3
+        random(1000)      ->  191
+\end{verbatim}
+whereas \texttt{random(a)} gives a type error.
+
+\subsection{RANDOM\_NEW\_SEED}\ttindextype{random\_new\_seed}{operator}
+\hypertarget{operator:RANDOM_NEW_SEED}{}
+
+\texttt{random\_new\_seed(}\emph{n}\texttt{)} reseeds the random number
+generator
+to a sequence determined by the integer argument $n$.  It can be used to
+ensure that a repeatable pseudo-random sequence will be delivered
+regardless of any previous use of \texttt{random}, or can be called early in
+a run with an argument derived from something variable (such as the time
+of day) to arrange that different runs of a REDUCE program will use
+different random sequences.  When a fresh copy of REDUCE is first created
+it is as if \texttt{random\_new\_seed(1)} has been obeyed.
+
+A type error occurs if the value of the argument is not a positive integer.
+
+\subsection{REIMPART}\ttindextype{reimpart}{operator}
+\hypertarget{operator:REIMPART}{}
+This returns a two-element list of the real and imaginary parts of an
+expression, if that argument has an
+numerical value.  A non-numerical argument is returned as an expression in
+the operators \texttt{repart}\ttindextype{repart}{operator} and \texttt{impart}\ttindextype{impart}{operator}.
+This is more efficient than calling \texttt{repart} and \texttt{impart}
+separately particularly if its argument is complicated.
+For example:
+\begin{verbatim}
+      reimpart(1+i)   -> {1,1}
+      reimpart(sin(3+4*i)) ->
+            {cosh(4)*sin(3),cos(3)*sinh(4)}
+      reimpart(log(2+i))   ->
+            {log(5)/2,atan(1/2)}
+      reimpart(asin(1+i))  ->
+            {acos(sqrt(5)2)/2,acosh(sqrt(5)+2)/2}
+      reimpart(a+i*b)      ->
+            { - impart(b) + repart(a),
+              impart(a) + repart(b)}
+\end{verbatim}
+For the inverse trigometric and hyperbolic functions with non-numeric arguments the output is usually more compact when the \sw{FACTOR} is on.
+
+\subsection{REPART}\ttindextype{repart}{operator}
+\hypertarget{operator:REPART}{}
+This returns the real part of an expression, if that argument has an
+numerical value.  A non-numerical argument is returned as an expression in
+the operators \texttt{repart} and \texttt{impart}\ttindex{impart}.
+For example:
+\begin{verbatim}
+        repart(1+i)   -> 1
+        repart(sin(3+4*i)) -> cosh(4)*sin(3)
+        repart(log(2+i))   -> log(5)/2
+        repart(asin(1+i))  -> acos(sqrt(5)-2)/2
+        repart(a+i*b)      ->  - impart(b) + repart(a)
+\end{verbatim}
+
+For the inverse trigometric and hyperbolic functions with non-numeric arguments the output is usually more compact when the \sw{FACTOR} is on.
+
+\subsection{ROUND}\ttindextype{round}{operator}
+\hypertarget{operator:ROUND}{}
+This operator returns the rounded value (i.e, the nearest integer) of its
+single argument if that argument has a numerical value.  A non-numeric
+argument is returned as an expression in the original operator.  For
+example:
+\begin{verbatim}
+        round(-5/4)   ->  -1
+        round(a)      ->  round(a)
+\end{verbatim}
+
+\subsection{SIGN}\ttindextype{sign}{operator}
+\hypertarget{operator:SIGN}{}
+\texttt{sign} tries to evaluate the sign of its argument. If this
+is possible \texttt{sign} returns one of 1, 0 or -1.  Otherwise, the result
+is the original form or a simplified variant. For example:
+\begin{verbatim}
+        sign(-5)      ->  -1
+        sign(-a^2*b)  ->  - sign(b)
+\end{verbatim}
+Note that even powers of formal expressions are assumed to be
+positive only as long as the switch \texttt{complex} is off.
+
+\section{Mathematical Functions}
+\hypertarget{operator:ACOS}{}
+\hypertarget{operator:ACOSD}{}
+\hypertarget{operator:ACOSH}{}
+\hypertarget{operator:ACOT}{}
+\hypertarget{operator:ACOTD}{}
+\hypertarget{operator:ACOTH}{}
+\hypertarget{operator:ACSC}{}
+\hypertarget{operator:ACSCD}{}
+\hypertarget{operator:ACSCH}{}
+\hypertarget{operator:ASEC}{}
+\hypertarget{operator:ASECD}{}
+\hypertarget{operator:ASECH}{}
+\hypertarget{operator:ASIN}{}
+\hypertarget{operator:ASIND}{}
+\hypertarget{operator:ASINH}{}
+\hypertarget{operator:ATAN}{}
+\hypertarget{operator:ATAND}{}
+\hypertarget{operator:ATANH}{}
+\hypertarget{operator:ATAN2}{}
+\hypertarget{operator:ATAN2D}{}
+\hypertarget{operator:COS}{}
+\hypertarget{operator:COSD}{}
+\hypertarget{operator:COSH}{}
+\hypertarget{operator:COT}{}
+\hypertarget{operator:COTD}{}
+\hypertarget{operator:COTH}{}
+\hypertarget{operator:CSC}{}
+\hypertarget{operator:CSCD}{}
+\hypertarget{operator:CSCH}{}
+\hypertarget{operator:EXP}{}
+\hypertarget{operator:HYPOT}{}
+\hypertarget{operator:LOG}{}
+\hypertarget{operator:LOGB}{}
+\hypertarget{operator:LOG10}{}
+\hypertarget{operator:SEC}{}
+\hypertarget{operator:SECD}{}
+\hypertarget{operator:SECH}{}
+\hypertarget{operator:SIN}{}
+\hypertarget{operator:SIND}{}
+\hypertarget{operator:SINH}{}
+\hypertarget{operator:SQRT}{}
+\hypertarget{operator:TAN}{}
+\hypertarget{operator:TAND}{}
+\hypertarget{operator:TANH}{}
+\hypertarget{operator:NORM}{}
+\hypertarget{operator:ARG}{}
+\hypertarget{operator:ARGD}{}
+
+{\REDUCE} knows that the following represent mathematical functions
+\index{Mathematical functions} that can
+take arbitrary scalar expressions as their argument(s).
+\ttindextype{acos}{numerical operator}\ttindextype{acosd}{numerical operator}\ttindextype{acosh}{numerical operator}
+\ttindextype{acot}{numerical operator}\ttindextype{acotd}{numerical operator}\ttindextype{acoth}{numerical operator}
+\ttindextype{acsc}{numerical operator}\ttindextype{acscd}{numerical operator}\ttindextype{acsch}{numerical operator}
+\ttindextype{asec}{numerical operator}\ttindextype{asecd}{numerical operator}\ttindextype{asech}{numerical operator}
+\ttindextype{asin}{numerical operator}\ttindextype{asind}{numerical operator}\ttindextype{asinh}{numerical operator}
+\ttindextype{atan}{numerical operator}\ttindextype{atand}{numerical operator}\ttindextype{atanh}{numerical operator}
+\ttindextype{atan2}{numerical operator}\ttindextype{atan2d}{numerical operator}
+\ttindextype{cos}{numerical operator}\ttindextype{cosd}{numerical operator}\ttindextype{cosh}{numerical operator}
+\ttindextype{cot}{numerical operator}\ttindextype{cotd}{numerical operator}\ttindextype{coth}{numerical operator}
+\ttindextype{csc}{numerical operator}\ttindextype{cscd}{numerical operator}\ttindextype{csch}{numerical operator}
+\ttindextype{exp}{numerical operator}\ttindextype{hypot}{numerical operator}
+\ttindextype{log}{numerical operator}\ttindextype{logb}{numerical operator}\ttindextype{log10}{numerical operator}
+\ttindextype{sec}{numerical operator}\ttindextype{secd}{numerical operator}\ttindextype{sech}{numerical operator}
+\ttindextype{sin}{numerical operator}\ttindextype{sind}{numerical operator}\ttindextype{sinh}{numerical operator}
+\ttindextype{sqrt}{numerical operator}
+\ttindextype{tan}{numerical operator}\ttindextype{tand}{numerical operator}\ttindextype{tanh}{numerical operator}
+\ttindextype{norm}{numerical operator}
+\ttindextype{arg}{numerical operator}
+\ttindextype{argd}{numerical operator}
+
+\index{Elementary functions}
+\subsection{Elementary Functions}
+\textbf{Trigonometric, hyperbolic and exponential functions:}
+\begin{verbatim}
+    sin cos tan cot csc sec sinh
+    cosh tanh coth csch sech exp
+\end{verbatim}
+
+These functions have arguments given in degrees rather than in radians.
+The secant, cosecant and cotangent functions and their inverses are also supported and, indeed, are treated more as \textit{first class} objects than their corresponding radian-based functions which are often converted to expressions involving sine and cosine by some of the standard {\REDUCE} simplifications rules.   
+
+\textbf{Their inverse functions:}
+\begin{verbatim}
+    asin acos atan acot acsc asec 
+    asinh acosh atanh acoth acsch asech
+    log log10 logb
+\end{verbatim}
+where \f{log} is the natural logarithm, \f{log10} is the logarithm to
+base 10, and \f{logb} has two arguments of which the second is the
+logarithmic base.
+Note on the CSL GUI and other graphical interfaces
+the inverse trig and hyperbolic functions are output as $\arcsin$ etc.
+
+\textbf{The degree variants of the trigonometric functions and their inverses:}
+\begin{verbatim}
+    sind cosd tand cotd cscd secd
+    asind acosd atand acotd acscd asecd
+\end{verbatim}
+The names of the degree-based functions are those of the normal trig
+functions with the letter d appended, for example \f{sind}, \f{cosd}
+and \f{tand} denote the sine, cosine and tangent repectively and their
+corresponding inverse functions are \f{asind}, \f{acosd} and
+\f{atand}. The secant, cosecant and cotangent functions and their
+inverses are also supported and, indeed, are treated more as
+\textit{first class} objects than their corresponding radian-based
+functions which are often converted to expressions involving sine and
+cosine by some of the standard {\REDUCE} simplifications rules.
+
+These degree-based functions are probably best regarded as functions
+defined for \emph{real} values only, but complex arguments are
+supported for completeness. The numerical evaluation routines are
+fairly comprehensive for both real and complex arguments. However, few
+simplifications occur for trigd functions with complex arguments.
+
+The range of the principal values returned by the inverse functions is
+consistent with those of the corresponding radian-valued functions.
+More precisely, for \f{asind}, \f{atand} and \f{acscd} the (closure of
+the) range is $[-90, 90]$ whilst for \f{acosd}, \f{acotd} and
+\f{asecd} the (closure of the) range is $[0, 180]$. In addition the
+operator \f{atan2d} is the degree valued version of the two argument
+inverse tangent function which returns an angle in the half-open
+interval $(-180, 180]$ in the correct quadrant depending on the signs
+of its two arguments. For $x>0$, \texttt{atan2d(y, x)} returns the
+same numerical value as \texttt{atand(y/x)}. If $x=0$ then $\pm 90$ is
+returned depending on the sign of $y$.
+
+\textbf{Miscellaneous functions:}
+\begin{verbatim}
+    sqrt  hypot  atan2
+    norm  arg    argd
+\end{verbatim}
+The function \texttt{hypot} takes two arguments $x$  and $y$ and
+returns the value $\sqrt{x^2+y^2}$ but, when the switch \sw{rounded} is ON,
+problems with rounding and possible overflow for large numerical arguments
+are reduced.
+
+The function \f{atan2} also takes two arguments $y$ and $x$
+respectively and returns a value of $\arctan(y/x)$ in the range
+$(-\pi, \pi]$ taking account of the signs of its two arguments and
+avoiding an error if $x=0$.
+
+The operator \f{norm} returns the modulus (or absolute value or norm) of a complex number when the switches \sw{rounded} and \sw{complex} are on.
+When the switches \sw{rounded} and \sw{complex} are both \texttt{on}, \f{arg} will return the argument in radians of the complex number supplied as its parameter  --- supplying zero as the parameter causes an error to be raised.  With a real numerical value as parameter, it returns $0$ or $\pi$ when the value is positive or negative respectively.
+\f{argd} is similar to \f{arg}, but returns the argument expressed in  degrees.
+Currently these are \emph{purely numeric} operators; when \sw{rounded} is \texttt{off} they basically return the input expression (perhaps with their parameter simplified).
+Example
+\begin{verbatim}
+1: on rounded;
+
+2: {argd(-5), argd(1+i)};
+
+{180.0,argd(i + 1)}
+
+3: on complex;
+
+*** Domain mode rounded changed to complex-rounded
+
+4: {argd(1+i), argd(-1-i)};
+
+{45.0, - 135.0}
+
+5: {arg(3+4i), norm(3+4i)};
+
+{0.927295218002,5.0}
+
+\end{verbatim}
+
+{\REDUCE} knows various elementary identities and properties
+of these functions. For example:
+\begin{verbatim}
+      cos(-x) = cos(x)        sin(-x) = -sin(x)
+      cos(n*pi) = (-1)^n      sin(n*pi) = 0
+      log(e) = 1              e^(i*pi/2) = i
+      log(1) = 0              e^(i*pi) = -1
+      log(e^x) = x            e^(3*i*pi/2) = -i
+      sin(asin(x) = x         atan(0) = 0
+      atan2(0, -1) = pi       atan2(1, 0) = pi/2
+\end{verbatim}
+
+The derivatives of all the elementary functions except \f{hypot} are
+also known to the system.  Beside these identities, there are a lot of
+simplifications for elementary functions defined in {\REDUCE} as
+rulelists.  In order to view these, the SHOWRULES operator can be
+used, e.g.
+\begin{verbatim}
+      showrules tan;
+
+{tan(~n*arbint(~i)*pi + ~~x)
+
+  => tan(x) when fixp(n),
+
+ tan(~x) => trigquot(sin(x),cos(x))
+
+  when knowledge_about(sin,x,tan),
+
+      ~x + ~~k*pi
+ tan(-------------) => 
+          ~~d
+
+         x                 k
+  - cot(--- + i*pi*impart(---))
+         d                 d
+
+                   k     1
+  when abs(repart(---))=---,
+                   d     2
+
+      ~~w + ~~k*pi
+ tan(--------------) => 
+          ~~d
+
+      w      k                k
+ tan(--- + (--- - fix(repart(---)))*pi) when ((
+      d      d                d
+
+ ratnump(rp) and abs(rp)>=1) where rp
+
+             k
+  => repart(---)),
+             d
+
+ tan(atan(~x)) => x,
+
+                             2
+ df(tan(~x),~x) => 1 + tan(x) }
+\end{verbatim}
+For further simplification, especially of expressions involving
+trigonometric functions, see section \ref{sec:TRIGSIMP}.
+
+Functions not listed above may be defined in the special functions
+package SPECFN.
+
+The user can add further rules for the reduction of expressions involving
+these operators by using the \texttt{let}\ttindex{let} command.
+
+\hypertarget{switch:COMBINELOGS}{}
+\hypertarget{switch:EXPANDLOGS}{}
+In many cases it is desirable to expand product arguments of logarithms,
+or collect a sum of logarithms into a single logarithm.  Since these are
+inverse operations, it is not possible to provide rules for doing both at
+the same time and preserve the {\REDUCE} concept of idempotent evaluation.
+As an alternative, REDUCE provides two switches
+\sw{expandlogs}\ttindexswitch{expandlogs} and
+\sw{combinelogs}\ttindexswitch{combinelogs} to carry
+out these operations.  Both are off by default, and are subject
+to the value of the switch \sw{precise}\ttindexswitch{precise}. This switch is on
+by default and prevents modifications that may be false in a complex domain.
+Thus to expand \texttt{log(3*y)} into a sum of logs, one can say
+\begin{verbatim}
+        on expandlogs; log(3*y);
+\end{verbatim}
+whereas to expand \texttt{log(x*y)} into a sum of logs, one needs to say
+\begin{verbatim}
+        off precise; on expandlogs; log(x*y);
+\end{verbatim}
+To combine this sum into a single log:
+\begin{verbatim}
+        off precise; on combinelogs; log(x) + log(y);
+\end{verbatim}
+
+These switches affect the logarithmic functions \f{log10} (base 10) and \f{logb}
+(arbitrary base) as well.
+
+At the present time, it is possible to have both switches on at once,
+which could lead to infinite recursion.  However, an expression is
+switched from one form to the other in this case.  Users should not rely
+on this behavior, since it may change in the future.
+
+\hypertarget{switch:COMBINEEXPT}{}
+The current version of {\REDUCE} does a poor job of simplifying surds.  In
+particular, expressions involving the product of variables raised to
+non-integer powers do not usually have their powers combined internally,
+even though they are printed as if those powers were combined.  For
+example, the expression
+\begin{verbatim}
+        x^(1/3)*x^(1/6);
+\end{verbatim}
+will print as
+\begin{verbatim}
+        sqrt(x)
+\end{verbatim}
+but will have an internal form containing the two exponentiated terms.
+If you now subtract \texttt{sqrt(x)} from this expression, you will
+\emph{not} get zero.  Instead, the confusing form
+\begin{verbatim}
+        sqrt(x) - sqrt(x)
+\end{verbatim}
+will result.  To combine such exponentiated terms, the switch
+\sw{combineexpt}\ttindexswitch{combineexpt} should be turned on.
+
+The square root function can be input using the name \texttt{sqrt}, or the
+power operation \texttt{\textasciicircum(1/2)}.  On output, unsimplified
+square roots
+are normally represented by the operator \texttt{sqrt} rather than a
+fractional power.  With the default system switch settings, the argument
+of a square root is first simplified, and any divisors of the expression
+that are perfect squares taken outside the square root argument.  The
+remaining expression is left under the square root.
+% However, if the switch \texttt{REDUCED}\ttindex{REDUCED} is on,
+% multiplicative factors in the argument of the square root are also
+% separated, becoming individual square roots. Thus with \texttt{REDUCED} off,
+Thus the expression
+\begin{verbatim}
+        sqrt(-8a^2*b)
+\end{verbatim}
+becomes
+\begin{verbatim}
+        2*a*sqrt(-2*b).
+\end{verbatim}
+% whereas with \texttt{REDUCED} on, it would become
+% \begin{verbatim}
+%         2*a*i*sqrt(2)*sqrt(b) .
+% \end{verbatim}
+% The switch \texttt{REDUCED}\ttindex{REDUCED} also applies to other rational
+% powers in addition to square roots.
+
+\hypertarget{switch:PRECISE}{}
+Note that such simplifications can cause trouble if \var{A} is eventually
+given a value that is a negative number.  If it is important that the
+positive property of the square root and higher even roots always be
+preserved, the switch \sw{precise}\ttindexswitch{precise} should be set on
+(the default value).
+This causes any non-numerical factors taken out of surds to be represented
+by their absolute value form.
+With % both \texttt{REDUCED} and
+\texttt{precise} on then, the above example would become
+\begin{verbatim}
+        2*abs(a)*sqrt(-2*b).
+\end{verbatim}
+
+\hypertarget{switch:PRECISE_COMPLEX}{}
+However, this is incorrect in the complex domain, where
+$\sqrt{x^{2}}$ is not identical to $|x|$. To avoid the above
+simplification, the switch
+\sw{precise\_complex}\ttindexswitch{precise\_complex} should be set on
+(default is off). For example:
+\begin{verbatim}
+on precise_complex; sqrt(-8a^2*b);
+\end{verbatim}
+yields the output
+\begin{verbatim}
+             2
+2*sqrt( - 2*a *b)
+\end{verbatim}
+
+If the switch \sw{rounded}\ttindexswitch{rounded} is on, any of the
+elementary functions
+\begin{verbatim}
+    acos acosd acosh acot acotd acoth acsc acscd
+    acsch asec asecd asech asin asind asinh atan
+    atan2 atanh atan2 atan2d cos cosd cosh cot
+    cotd coth csc cscd csch exp hypot log logb
+    log10 sec secd sech sin sind sinh sqrt tan
+    tand tanh
+\end{verbatim}
+when given a numerical argument has its value calculated to the current
+degree of floating point precision.  In addition, real (non-integer
+valued) powers of numbers will also be evaluated.
+
+If the \sw{complex}\ttindexswitch{complex} switch is turned on in addition to \sw{rounded},
+these functions will also calculate a real or complex result, again to
+the current degree of floating point precision,
+if given complex arguments.  For example, with \texttt{on rounded,complex;}
+\begin{verbatim}
+    2.3^(5.6i)  ->  - 0.0480793490914 - 0.998843519372*i
+    cos(2+3i)   ->  - 4.18962569097 - 9.10922789376*i
+\end{verbatim}
+
+For \texttt{log} and the inverse trigonometric and hyperbolic functions which are
+multi-valued, the principal value is returned. The branch cuts chosen
+(except for \texttt{acot} and \texttt{acotd}) are now
+those recommended by W.~Kahan (\cite{Kahan1987BranchCF})
+
+The exception for \texttt{acot} and \texttt{acotd} is necessary as elsewhere in {\REDUCE}
+$\mathop{\mathrm{acot}}(-z)$ is taken to be $\pi - \mathop{\mathrm{acot}}(z)$
+rather than $-\mathop{\mathrm{acot}}(z)$, and
+$\mathop{\mathrm{acotd}}(-z) = 180 - \mathop{\mathrm{acotd}}(z)$.
+\index{Branch Cuts}
+The branch cuts are:\\
+\begin{tabular}{ll}
+  $\log$, $\mathrm{sqrt}$:     & $ \{r   \mid r \in\mathbb{R} \land r < 0\} $\\
+  $\mathop{\mathrm{asin}}$, $\mathop{\mathrm{asind}}$, $\mathop{\mathrm{acos}}$, $\mathop{\mathrm{acosd}}$:
+                               & $ \{r   \mid r \in\mathbb{R} \land (r > 1 \lor r < -1)\} $\\
+  $\mathop{\mathrm{acsc}}$, $\mathop{\mathrm{acscd}}$, $\mathop{\mathrm{asec}}$, $\mathop{\mathrm{asecd}}$:
+                               & $ \{r   \mid r \in\mathbb{R} \land r \neq 0 \land r > -1 \land r < 1\} $\\
+  $\mathop{\mathrm{atan}}$, $\mathop{\mathrm{atand}}$, $\mathop{\mathrm{acot}}$, $\mathop{\mathrm{acotd}}$:
+                               & $ \{r*i \mid r \in\mathbb{R} \land (r > 1 \lor r < -1)\} $\\
+  $\mathop{\mathrm{asinh}}$:         & $ \{r*i \mid r \in\mathbb{R} \land (r \geq  1 \lor r \leq  -1)\} $\\
+  $\mathop{\mathrm{acsch}}$:         & $ \{r*i \mid r \in\mathbb{R} \land r \neq 0 \land r \geq  -1 \land r \leq  1\} $\\
+  $\mathop{\mathrm{acosh}}$:         & $ \{r   \mid r \in\mathbb{R} \land r < 1\} $\\
+  $\mathop{\mathrm{asech}}$:         & $ \{r   \mid r \in\mathbb{R} \land (r > 1 \lor r < 0)\} $\\
+  $\mathop{\mathrm{atanh}}$:         & $ \{r   \mid r \in\mathbb{R} \land (r > 1 \lor r < -1)\} $\\
+  $\mathop{\mathrm{acoth}}$:         & $ \{r   \mid r \in\mathbb{R} \land r > -1 \land r < 1\} $
+\end{tabular}
+
+\index{Special functions}
+\subsection{Special Functions}
+The functions in this section are either built-in or are autoloading
+functions from the package \texttt{SPECFN}. On the CSL GUI and other graphical
+interfaces many of the functions will be output in standard form; for example
+\texttt{BesselJ(nu,x)} will be output as $J_\nu(x)$ and \texttt{Fresnel\_S(u)}
+as $\mathrm{S}(u)$. For most of the non-unary special functions in this
+section (\f{Lerch\_Phi} is an exception), the last parameter is the `main'
+variable and the earlier parameters are the order (or orders)
+usually rendered in the literature as subscipts and/or superscripts.
+
+The information provided below is fairly rudimentary; more complete
+information may be found in the \hyperlink{SPECFNS}{SPECFN package}.
+\hyperlink{SPECFNTAB1}{Quick Reference Tables} are also available.
+
+\index{Integral functions}
+\ttindextype{Si}{(sine integral) operator}\ttindextype{Shi}{(hyperbolic sine integral) operator}\ttindextype{Chi}{(hyperbolic cosine integral) operator}
+\ttindextype{Ci}{(cosine integral) operator}\ttindextype{Ei}{(exponential integral) operator}\ttindextype{Li}{(logarithmic integral) operator}
+\ttindextype{Erf}{(error function) operator}\ttindextype{Fresnel\_S}{(Fresnel sine integral) operator}\ttindextype{Fresnel\_C}{(Fresnel cosine integral) operator}
+\textbf{Integral Functions:}
+\begin{verbatim}
+    Ei Li Si Ci Shi Chi Erf Fresnel_S Fresnel_C
+\end{verbatim}
+All these functions are unary;
+the first six are the exponential, logarithmic, sine and
+cosine integrals and their hyperbolic counterparts. \f{Erf},
+\f{Fresnel\_S} and \f{Fresnel\_C} are the error function and the Fresnel
+sine and cosine integrals respectively.
+
+\index{Polygamma functions}\index{Gamma function}\index{Beta function}
+\ttindextype{Beta}{operator}\ttindextype{ibeta}{operator}\ttindextype{Gamma}{operator}
+\ttindextype{igamma}{operator}\ttindextype{Polygamma}{operator}\ttindextype{psi}{operator}
+\textbf{Beta, Gamma and Related Functions:}
+\begin{verbatim}
+    Beta ibeta Gamma igamma psi Polygamma
+\end{verbatim}
+The \f{Gamma} function is unary whilst \f{Beta} is binary.
+The binary function \f{igamma} and ternary function \f{ibeta}
+are the (normalised) incomplete Gamma and Beta functions respectively.
+The unary function \f{psi} is sometimes known as the Digamma function and
+the binary function \f{Polygamma} with integer first parameter $n$ is the
+$n$th derivative of the function \f{psi}.
+
+\index{Bessel functions}\index{Hankel functions}
+\ttindextype{BesselI}{operator}\ttindextype{BesselJ}{operator}\ttindextype{BesselK}{operator}
+\ttindextype{BesselY}{operator}\ttindextype{Hankel1}{operator}\ttindextype{Hankel2}{operator}
+\textbf{Bessel and Related Functions:}
+\begin{verbatim}
+    BesselJ BesselY BesselI BesselK Hankel1 Hankel2
+\end{verbatim}
+All of these functions are binary, their first argument being the
+order of the function.
+
+For the special functions below, a second
+\hyperlink{SPECFNTAB2}{Quick Reference Table} is available.
+
+\index{Airy functions}
+\ttindex{Airy\_Ai}\ttindex{Airy\_Aiprime}
+\ttindex{Airy\_Bi}\ttindex{Airy\_Biprime}
+\textbf{Airy Functions:}
+\begin{verbatim}
+    Airy_Ai Airy_Aiprime Airy_Bi Airy_Biprime
+\end{verbatim}
+These are all unary functions.
+
+\index{Kummer functions}\index{Struve functions}\index{Lommel functions}
+\index{Whittaker functions}
+\ttindex{KummerM}\ttindex{KummerU}\ttindex{Lommel1}
+\ttindex{Lommel2}\ttindex{StruveH}\ttindex{StruveL}
+\ttindex{WhittakerM}\ttindex{WhittakerW}
+\textbf{Kummer, Lommel, Struve and Whittaker Functions:}
+\begin{verbatim}
+    KummerM KummerU Lommel1 Lommel2
+    StruveH StruveL WhittakerM WhittakerW
+\end{verbatim}
+The Struve functions are both binary whilst the remaining ones are all ternary.
+
+\index{Riemann Zeta function}\index{Lambert's W function}
+\ttindex{zeta} \ttindex{Lambert\_W}
+\textbf{Riemann Zeta and Lambert's W Function:}
+\begin{verbatim}
+    zeta  Lambert_W
+\end{verbatim}
+These are both unary functions.
+
+\ttindex{dilog}\ttindex{Polylog}\ttindex{Lerch\_Phi}
+\index{Polylogarithm and related functions} \index{Dilog function}
+\textbf{Polylogarithms and Related Functions}
+\nopagebreak
+\begin{verbatim}
+    dilog Polylog Lerch_Phi
+\end{verbatim}
+These take one, two and three arguments respectively.
+
+\index{Spherical and Solid Harmonics}
+\ttindex{SphericalHarmonicY}\ttindex{SolidHarmonicY}
+\textbf{Associated Legendre functions:}
+\begin{verbatim}
+    SphericalHarmonicY SolidHarmonicY
+\end{verbatim}
+These functions take four and six arguments respectively.
+
+\subsection{Polynomial Functions}
+\index{Polynomial functions}
+The polynomial functions below are from the non-core package SPECFN
+and for the most part are not autoloading. This package needs to be loaded
+before they may be used with the command:
+\begin{verbatim}
+    load_package specfn;
+\end{verbatim}
+The names of the {\REDUCE} operators for the polynomial functions below
+are mostly built by adding a P to the name of the polynomial,
+e.g.\ \f{EulerP} implements the Euler polynomials.
+
+The information in this subsection is fairly rudimentary; more complete
+information may be found in the \hyperlink{POLYFN}{SPECFN package}.\\
+A \hyperlink{SPECFNTAB3}{Quick Reference Table} is available for all the
+polynomial functions below.
+
+\textbf{Orthogonal Polynomials}
+\index{Orthogonal polynomials}
+\index{Hermite polynomials}\index{Jacobi polynomials}
+\index{Legendre polynomials}\index{Laguerre polynomials}
+\index{Chebyshev polynomials}\index{Gegenbauer polynomials}
+\ttindex{HermiteP}\ttindex{JacobiP}
+\ttindex{LegendreP}\ttindex{LaguerreP}
+\ttindex{ChebyshevT} \ttindex{ChebyshevU}
+\ttindex{GegenbauerP}
+
+Some well-known orthogonal polynomials are available:
+\begin{itemize}
+\item Hermite polynomials: (\f{HermiteP});
+\item Chebyshev polynomials: (\f{ChebyshevT}, \f{ChebyshevU});
+\item Legendre polynomials: (\f{LegendreP});
+\item Laguerre polynomials: (\f{LaguerreP});
+\item Associated Legendre functions: (\f{LegendreP});
+\item Generalised Laguerre (or Sonin) polynomials: (\f{LaguerreP});
+\item Gegenbauer polynomials: (\f{GegenbauerP});
+\item Jacobi polynomials: (\f{JacobiP}).
+\end{itemize}
+The first three of these functions are binary and the first
+argument should be an integer specifying the order of the
+required polynomial. The functions \f{LegendreP} and \f{LaguerreP} may be used
+either as binary operators or ternary ones and represent the corresponding
+`basic' and associated functions respectively.
+Finally the Gegenbauer polynomials are ternary whilst the Jacobi polynomials
+are quaternary.
+
+Most definitions are equivalent to those in \cite{AbramowitzStegun:72},
+except for the ternary associated Legendre functions:
+\[P_n^{(m)}(x) = (-1)^m(1-x^2)^{m/2}\frac{\mathrm{d}^m P_n(x)}{\mathrm{d}x^m}\,.\]
+
+% \begin{verbatim}
+% P(n,m,x) = (-1)^m *(1-x^2)^(m/2)*df(legendreP(n,x), x, m)
+% \end{verbatim}
+These are sometimes mistakenly referred to as associated Legendre polynomials,
+but they are only polynomial when $m$ is even.
+
+\textbf{Other Polynomial Functions}
+\index{Fibonacci polynomials}\index{Other polynomials}
+\ttindex{FibonacciP}
+\hypertarget{operator:FIBONACCIP}{}
+
+\textbf{Fibonacci Polynomials} are computed by the binary operator
+\f{FibonacciP}, where
+\texttt{FibonacciP(n,x)} returns the $n$th Fibonacci polynomial
+in the variable $x$. If $n$ is an integer, it will be
+
+evaluated using the recursive definition:
+\[F_0(x) = 0;\qquad F_1(x) = 1; \qquad F_n(x) = x F_{n-1}(x) + F_{n-2}(x)\,.\]
+
+\index{Euler polynomials}\ttindex{EulerP}
+\textbf{Euler Polynomials} are computed by the binary operator
+\f{EulerP}, where\linebreak
+\texttt{EulerP(n,x)} returns the $n$th Euler polynomial in the variable $x$.
+
+\index{Bernoulli polynomials}\ttindextype{BernoulliP}{operator}
+\textbf{Bernoulli Polynomials} are computed by the binary operator
+\f{BernoulliP}, where \texttt{BernoulliP(n,x)} returns the
+$n$th Bernoulli polynomial in the variable $x$.
+
+\subsection{Elliptic Functions and Integrals}
+All the functions documented in this subsection are autoloading
+functions from the package \texttt{ELLIPFN}.  On the CSL GUI and other graphical
+interfaces these functions will be output in standard mathematical form;
+for example \texttt{jacobisn(x,k)} will be output as $\mathrm{sn}(x,k)$ and
+\texttt{weierstrass(x,omega1,omega3)} as $\wp(x,\omega_1,\omega_3)$.
+
+\index{Jacobi Elliptic functions}\index{Elliptic functions}
+\ttindextype[ELLIPFN]{jacobiam}{operator}
+\ttindextype[ELLIPFN]{jacobisn}{operator}\ttindextype[ELLIPFN]{jacobicn}{operator}
+\ttindextype[ELLIPFN]{jacobidn}{operator}\ttindextype[ELLIPFN]{jacobins}{operator}
+\ttindextype[ELLIPFN]{jacobinc}{operator}\ttindextype[ELLIPFN]{jacobind}{operator}
+\ttindextype[ELLIPFN]{jacobisc}{operator}\ttindextype[ELLIPFN]{jacobisd}{operator}
+\ttindextype[ELLIPFN]{jacobicd}{operator}\ttindextype[ELLIPFN]{jacobics}{operator}
+\ttindextype[ELLIPFN]{jacobids}{operator}\ttindextype[ELLIPFN]{jacobidc}{operator}
+\textbf{Jacobi Elliptic Functions:}
+\begin{verbatim}
+    jacobisn jacobicn jacobidn
+\end{verbatim}
+and their three reciprocals
+\begin{verbatim}
+    jacobins jacobinc jacobind
+\end{verbatim}
+and six quotients
+\begin{verbatim}
+    jacobisc jacobisd jacobicd
+    jacobics jacobids jacobidc
+\end{verbatim}
+All are binary functions with the second argument being the modulus.
+The binary function \f{jacobiam} is the amplitude.
+
+\index{Elliptic Integrals}\index{Zeta function of Jacobi}
+\ttindextype[ELLIPFN]{jacobiZeta}{operator}\ttindextype[ELLIPFN]{jacobiE}{operator}
+\ttindextype[ELLIPFN]{ellipticK}{operator}\ttindextype[ELLIPFN]{ellipticE}{operator}\ttindextype[ELLIPFN]{ellipticF}{operator}
+\textbf{Complete and Incomplete Elliptic Integrals of the First \& Second Kinds:}
+\begin{verbatim}
+    ellipticK ellipticE ellipticF 
+    jacobiE jacobiZeta
+\end{verbatim}
+The function \f{ellipticE} may take one or two arguments to
+denote the complete and Legendre's form of the incomplete elliptic integrals of
+the second kind respectively. The complete integral of the first kind
+\f{ellipticK} is unary whilst \f{ellipticF}, \f{jacobiE} and
+\f{jacobiZeta} are binary and represent the incomplete integral of
+the first kind, Jacobi's form of the incomplete elliptic integral of
+the second kind and Jacobi's Zeta function respectively.
+
+\index{Jacobi Theta functions}
+\ttindextype[ELLIPFN]{elliptictheta1}{operator}\ttindextype[ELLIPFN]{elliptictheta2}{operator}
+\ttindextype[ELLIPFN]{elliptictheta3}{operator}\ttindextype[ELLIPFN]{elliptictheta4}{operator}
+\textbf{Jacobi's Theta Functions:}
+\begin{verbatim}
+    elliptictheta1 elliptictheta2
+    elliptictheta3 elliptictheta4
+\end{verbatim}
+are all binary functions with the second argument being the `parameter' $\tau$,
+the nome $q$ being given by $q = \exp(i\pi\tau)$
+
+\index{Weierstrass Elliptic functions}
+\index{Sigma functions}
+\ttindex{weierstrass}\ttindex{weierstrassZeta}
+\ttindex{weierstrass\_sigma}\ttindex{weierstrass\_sigma1}
+\ttindex{weierstrass\_sigma2}\ttindex{weierstrass\_sigma3}
+\textbf{Weierstrassian Elliptic Functions:}
+\begin{verbatim}
+    weierstrass    weierstrassZeta
+    weierstrass_sigma  weierstrass_sigma1  
+    weierstrass_sigma2   weierstrass_sigma3
+    weierstrass1   weierstrassZeta1
+\end{verbatim}
+are all ternary functions with the second and third arguments of the first
+six functions being the the lattice period parameters $\omega_1$ and $\omega_3$.
+The remaining two functions are alternative versions of the Weierstrass
+functions with the second and third arguments being the lattice invariants
+$g_2$ and $g_3$.
+
+\index{Inverse Elliptic functions}
+\ttindextype{arcsn}{operator}\ttindextype{arccn}{operator}\ttindextype{arcdn}{operator}
+\ttindextype{arcns}{operator}\ttindextype{arcnc}{operator}\ttindextype{arcnd}{operator}
+\ttindextype{arcsc}{operator}\ttindextype{arccs}{operator}\ttindextype{arcsd}{operator}
+\ttindextype{arcds}{operator}\ttindextype{arccd}{operator}\ttindextype{arcdc}{operator}
+\textbf{Inverse Elliptic Functions:}
+\begin{verbatim}
+    arcsn  arccn  arcdn   arcns  arcnc  arcnd
+    arcsc  arccs  arcsd   arcds  arccd  arcdc
+\end{verbatim}
+These are all binary functions with the second argument being the modulus $k$.
+They are the inverses of the corresponding Jacobi elliptic functions
+\texttt{jacobisn}, \texttt{jacobicn} etc.\/(wrt their first argument).
+
+For the elliptic functions above
+a \hyperlink{ELLIPFNTAB}{Quick Reference Table} is available.
+
+\section{Combinatorial Numbers}
+\index{Combinatorial numbers}
+\index{Binomial coefficients}  \ttindextype{Binomial}{operator}
+\hypertarget{operator:BINOMIAL}{}
+\textbf{Binomial coefficients} are provided by the binary operator \f{Binomial}.
+The value of \texttt{Binomial(n, m)}, where $n$ and $m$ are non-negative
+integers with $n \geq m$, is the number of ways of choosing $m$ items from a
+set of $n$ distinct items as well, of course, as being the coefficient of $x^m$
+in the expansion of $(1+x)^n$.
+
+The function call \texttt{Binomial(n,m)}, where $n$ and $m$
+are non-negative integers, will return the expected integer value
+(from Pascal's triangle). For other real numerical values the result will
+usually involve the $\Gamma$ function, but if the switch
+\sw{rounded} is ON the $\Gamma$ functions will be evaluated numerically.
+This will also be the case for complex numerical arguments if the switch
+\sw{complex} is ON.  For non-numeric arguments the result returned will
+involve the original operator \f{binomial}, or its pretty-printed equivalent
+on graphical interfaces.
+
+\hypertarget{operator:Stirling1}{}\hypertarget{operator:Stirling2}{}
+\index{Stirling numbers}\ttindex{Stirling1}\ttindex{Stirling2}
+\textbf{Stirling numbers} of the first and second kind are computed
+by the binary operators \f{Stirling1} and \f{Stirling2}
+respectively using explicit formulae.
+\texttt{Stirling1(n, k)} is $(-1)^{n-k}\ \times$
+\emph{(the number of permutations of the set} $\{1, 2, \ldots, n\}$
+\emph{into exactly $k$ cycles)}.\\
+\texttt{Stirling2(n, k)} is \emph{the number of partitions of the set}
+$\{1, 2, \ldots, n\}$ \emph{into exactly $k$ non-empty subsets}.\\
+Here $n$ and $k$ should be non-negative integers with $n \geq k$.
+
+For integer arguments an integer result will be
+returned, otherwise a result involving the original operator will be returned.
+Note on graphical user interfaces \texttt{Stirling1(n,m)} and
+\texttt{Stirling2(n,m)} are rendered as
+$\mathrm{s}_n^m$ and $\mathrm{S}_n^m$ respectively.
+
+Stirling numbers are implemented in the non-core package SPECFN and are
+not currently autoloading. Before use this package should be loaded with the
+command:
+\begin{verbatim}
+    load_package specfn;
+\end{verbatim}
+For more information see \hyperlink{STIRL}{here}.
+
+\hypertarget{operator:MOTZKIN}{}
+\index{Motzkin numbers}\ttindex{Motzkin}
+\textbf{A Motzkin number} $M_{n}$ (named after Theodore Motzkin) is the
+number of different ways of drawing non-intersecting chords on a circle between
+$n$ points. For a non-negative integer $n$, the operator \texttt{Motzkin(n)}
+returns the $n$th Motzkin number, according to the recursion formula
+\[
+  M_{0} = 1; \qquad M_{1}=1; \qquad
+  M_{n+1} = \frac{2n+3}{n+3}M_{n}+ \frac{3n}{n+3}M_{n-1}\,.
+\]
+The recursion is, of course, optimised as a simple loop to avoid repeated
+computation of lower-order numbers.
+
+For the functions in this and the section below
+a \hyperlink{SPECFNTAB4}{Quick Reference Table} is available.
+It also includes a list of reserved constants known to {\REDUCE}.
+
+\section{Bernoulli, Euler and Fibonacci Numbers}
+\ttindex{Bernoulli}\index{Bernoulli numbers}
+\hypertarget{operator:BERNOULLI}{}
+\textbf{Bernoulli numbers} are provided by the unary operator
+\f{Bernoulli}. If $n$ is a non-negative integer, the call \texttt{Bernoulli(n)}
+evaluates to the $n$th Bernoulli number; all of the odd Bernoulli numbers,
+except \texttt{Bernoulli(1)}, are zero. Otherwise the result involves the
+original operator \texttt{Bernoulli}; on graphical interfaces this is rendered
+as $\mathrm{B}_n$.
+
+\ttindex{Euler}\index{Euler numbers}
+\hypertarget{operator:EULER}{}
+\textbf{Euler numbers} are computed by the unary operator \f{Euler}.  If $n$
+is a non-negative integer, the call \texttt{Euler(n)} returns the $n$th
+Euler number; all of the odd Euler numbers are zero.
+Otherwise the result returned involves the original operator \texttt{Euler};
+on graphical interfaces this is rendered
+as $\mathrm{E}_n$.
+
+\ttindex{Fibonacci}\index{Fibonacci numbers}
+\hypertarget{operator:FIBONACCI}{}
+\textbf{Fibonacci numbers} are provided by the unary operator \f{Fibonacci},
+where \texttt{Fibonacci(n)} evaluates to the $n$th Fibonacci
+number; if $n$ is an integer, this will be evaluated following
+the recursive definition:
+\[F_0 = 0; \qquad F_1 = 1;\qquad F_n = F_{n-1} + F_{n-2}\,.\]
+The recursion is, of course, optimised as a simple loop to avoid repeated
+computation of lower-order numbers.
+Otherwise the result returned involves the original operator
+\texttt{fibonacci}; on graphical interfaces this is rendered
+as $\mathrm{F}_n$.
+
+
+\section{CHANGEVAR operator}
+\hypertarget{operator:CHANGEVAR}{}
+\ttindextype{changevar}{operator}
+
+\noindent
+Author: G.~\"{U}\c{c}oluk.
+
+The operator \texttt{changevar} does a variable transformation in a set of
+differential equations.
+Syntax:
+\begin{syntaxtable}
+  \texttt{changevar(}\meta{depvars},\,\meta{newvars},\,\meta{eqlist},\,\meta{diffeq}\texttt{)}
+\end{syntaxtable}
+\meta{diffeq} is either a single differential equation or a list of
+differential equations, \meta{depvars} are the dependent variables to
+be substituted, \meta{newvars} are the new depend variables, and
+\meta{eqlist} is a list of equations of the form \meta{depvar}
+\texttt{=} \meta{expression} where \meta{expression} is some function
+in the new dependent variables.
+
+The three lists \meta{depvars}, \meta{newvars}, and \meta{eqlist} must
+be of the same length. If there is only one variable to be
+substituted, then it can be given instead of the list. The same applies to the list
+of differential equations, i.e., the following two
+commands are equivalent
+\begin{verbatim}
+    changevar(u,y,x=e^y,df(u(x),x) - log(x));
+
+    changevar({u},{y},{x=e^y},{df(u(x),x) - log(x)});
+\end{verbatim}
+except for one difference: the first command returns the transformed differential
+equation, the second one a list with a single element.
+
+\hypertarget{switch:DISPJACOBIAN}{}
+The switch \sw{dispjacobian} governs the display the entries of the inverse Jacobian,
+it is \texttt{off} per default.\ttindexswitch{dispjacobian}
+
+The mathematics behind the change of independent variable(s) in differential
+equations is quite straightforward. It is basically the application of the
+chain rule. If the dependent variable of the differential equation is $F$,
+the independent variables are $x_{i}$ and the new independent variables are
+$u_{i}$ (where ${\scriptstyle i=1\ldots n}$) then the first derivatives are:
+\[
+    \frac{\partial F}{\partial x_{i}} = \frac{\partial F}{\partial u_{j}}
+                                        \frac{\partial u_{j}}{\partial x_{i}}
+\]
+We assumed Einstein's summation convention. Here the problem is to
+calculate the $\partial u_{j}/\partial x_{i}$ terms if the change of variables
+is given by
+\[
+    x_{i} = f_{i}(u_{1},\ldots,u_{n})
+\]
+The first thought might be solving the above given equations for $u_{j}$ and
+then differentiating them with respect to $x_{i}$, then again making use of the
+equations above, substituting new variables for the old ones in the calculated
+derivatives. This is not always a  preferable way to proceed. Mainly because
+the functions $f_{i}$ may not always be easily invertible. Another approach
+that makes use of the Jacobian is better. Consider the above given equations
+which relate the old variables to the new ones. Let us differentiate them:
+\begin{align*}
+  \frac{\partial x_{j}}{\partial x_{i}} & =
+        \frac{\partial f_{j}}{\partial x_{i}}   \\
+  \delta_{ij} & =
+        \frac{\partial f_{j}}{\partial u_{k}}
+        \frac{\partial u_{k}}{\partial x_{i}}
+\end{align*}
+The first derivative is nothing but the $(j,k)$ th entry of the Jacobian matrix.
+
+So if we speak in matrix language
+\[ {\bf 1 = J \cdot D} \]
+where we defined the Jacobian
+\[ {\bf J}_{ij} \stackrel{\triangle}{=}  \frac{\partial f_{i}}{\partial u_{j}} \]
+and the matrix of the derivatives we wanted to obtain as
+\[ {\bf D}_{ij} \stackrel{\triangle}{=}  \frac{\partial u_{i}}{\partial x_{j}}. \]
+If the Jacobian has a non-vanishing determinant then it is invertible and
+we are able to write from the matrix equation above:
+\[ {\bf  D = J^{-1}} \]
+so finally we have what we want
+\[
+   \frac{\partial u_{i}}{\partial x_{j}} = \left[{\bf J^{-1}}\right]_{ij}
+\]
+The higher derivatives are obtained by the successive application of the chain
+rule and using the definitions of the old variables in terms of the new ones. It
+can be easily verified that the only derivatives that are needed to be
+calculated are the first order ones which are obtained above.
+
+\subsection{\texttt{CHANGEVAR} example: The 2-dim. Laplace Equation}
+The 2-dimensional Laplace equation in cartesian coordinates is:
+\[
+   \frac{\partial^{2} u}{\partial x^{2}} +
+   \frac{\partial^{2} u}{\partial y^{2}} = 0
+\]
+Now assume we want to obtain the polar coordinate form of Laplace equation.
+The change of variables is:
+\[
+   x = r \cos \theta, \qquad  y = r \sin \theta
+\]
+The solution using \texttt{changevar} is as follows
+\begin{verbatim}
+  changevar({u},{r,theta},{x=r*cos theta,y=r*sin theta},
+            {df(u(x,y),x,2)+df(u(x,y),y,2)} );
+\end{verbatim}
+Here we could omit the curly braces in the first and last arguments (because
+those lists have only one member) and the curly braces in the third argument
+(because they are optional), but you cannot leave off the curly braces in the
+second argument. So one could equivalently write
+\begin{verbatim}
+   changevar(u,{r,theta},x=r*cos theta,y=r*sin theta,
+             df(u(x,y),x,2)+df(u(x,y),y,2) );
+\end{verbatim}
+If you have tried out the above example, you will notice that the denominator
+contains a $\cos^{2} \theta + \sin^{2} \theta$ which is actually equal to $1$.
+This has of course nothing to do with \texttt{changevar}.
+One has to be overcome these pattern matching problems by the
+conventional methods REDUCE provides (a rule, for example,
+will fix it).
+
+Secondly you will notice that your \texttt{u(x,y)} operator has changed to
+\texttt{u(r,theta)} in the result. Nothing magical  about this. That is just what
+we do with pencil and paper. \texttt{u(r,theta)} represents the  the transformed
+dependent variable.
+
+\subsection{Another \texttt{CHANGEVAR} example: An Euler Equation}
+Consider a differential equation which is of Euler type, for instance:
+\[
+   x^{3}y''' - 3 x^{2}y'' + 6 x y' - 6 y = 0
+\]
+where prime denotes differentiation with respect to $x$. As is well known,
+Euler type of equations are solved by a change of variable:
+\[
+   x = e^{u}
+\]
+So our call to \texttt{changevar} reads as follows:
+\begin{verbatim}
+   changevar(y, u, x=e**u, x**3*df(y(x),x,3)-
+             3*x**2*df(y(x),x,2)+6*x*df(y(x),x)-6*y(x));
+\end{verbatim}
+and returns the result
+\begin{verbatim}
+ df(y(u),u,3) - 6*df(y(u),u,2) + 11*df(y(u),u) - 6*y(u)
+\end{verbatim}
+
+
+\section{CONTINUED\_FRACTION Operator}
+\hypertarget{operator:CONTINUED_FRACTION}{}
+\hypertarget{operator:CONTFRAC}{}
+\index{approximation}\index{rational number}
+
+The operator \texttt{continued\_fraction}
+\ttindextype{continued\_fraction}{operator}
+generates the continued fraction expansion of a rational number argument.
+For irrational or rounded arguments, it approximates the real number
+as a rational number to the current system precision and generates
+the continued fraction expansion. Currently the operator \texttt{cf} is a
+complete synonym for \texttt{continued\_fraction} although this may change
+in future updates of the package \package{RATAPRX}.
+\ttindextype{cf}{operator}
+
+The operator \texttt{continued\_fraction} accepts one, two or
+three arguments: the number to be expanded; an \textbf{optional} maximum size
+permitted for the denominator of the convergent
+and an \textbf{optional} number of continuents to be generated:
+\begin{syntaxtable}
+  \texttt{continued\_fraction(}\meta{num}\texttt{)}\\
+  \texttt{continued\_fraction(}\meta{num}\texttt{,}\,\meta{size}\texttt{)}\\
+  \texttt{continued\_fraction(}\meta{num}\texttt{,}\,%
+  \meta{size}\texttt{,}\,\meta{numterms}\texttt{)}
+\end{syntaxtable}
+The result is the special operator \texttt{contfrac}
+\ttindextype{contfrac}{operator}
+with three arguments: the original number to be expanded
+\meta{num}, secondly the rational number approximation (the final convergent)
+and thirdly a list of continuents of the continued fraction (i.e.\ a list of
+pairs of partial numerators and denominators)
+
+\hspace{10mm}\texttt{\{t0, \{1, t1\}, \{1, t2\}, .... \}}
+
+which represents the same value according to the definition
+
+\hspace{10mm}\texttt{t0 +1/(t1 + 1/(t2 + ...))}.
+
+Note that, although with the current
+algorithm all the partial numerators have the value 1, they are stored
+in the list of continuents. This is for compatibility with the output of
+other continued fractions functions \texttt{cfrac} and \texttt{cf\_euler}.
+This facilitates pretty-printing and the implementation of various equivalence
+transformations all of which are documented in the continued fraction
+subsection of the \texttt{rataprx} manual (Section \ref{sec:rataprx:cf}).
+\ttindextype{cfrac}{operator}
+\ttindextype{cf\_euler}{operator}
+
+\textbf{Precision}: the second optional parameter \meta{size} is an upper
+bound for the absolute value of the  denominator of the convergent.\\
+\textbf{Number of terms}: the third optional parameter \meta{numterms} is
+the maximum number of terms (continuents) to be generated.\\
+If both optional parameters omitted, the expansion performed is exact for
+rational number arguments and for irrational or rounded arguments it is up
+to the current system precision.
+If both optional parameters are given the expansion is halted when the desired
+precision is reached or when the specified maximum number of terms have
+been generated whichever is the sooner. If the size parameter is zero,
+its value is ignored.  Thus to obtain a continued fraction expansion to,
+for example, 10 terms one would specify the \meta{size} parameter to be 0 and
+the \meta{numterms} parameter to be 10.
+
+Note that the operator \texttt{contfrac} is not normally seen as the output
+is pretty-printed, unless the number of continuents generated is larger
+than 12.
+
+\textit{Examples:}
+\begin{verbatim}
+continued_fraction(6/11);
+
+  6                1
+{----,exact,---------------}
+  11                 1
+             1 + ---------
+                       1
+                  1 + ---
+                       5
+
+continued_fraction(pi,1000);
+
+     355             1
+{pi,-----,3 + ----------------}
+     113               1
+               7 + ----------
+                          1
+                    15 + ---
+                          1
+
+continued_fraction(pi,0,6);
+
+     104348                    1
+{pi,--------,3 + ------------------------------}
+     33215                       1
+                  7 + ------------------------
+                                    1
+                       15 + -----------------
+                                      1
+                             1 + -----------
+                                         1
+                                  292 + ---
+                                         1
+
+continued_fraction(pi,1000,3);
+
+     333          1
+{pi,-----,3 + ----------}
+     106            1
+               7 + ----
+                    15
+
+continued_fraction(pi,1000,6);
+
+     355             1
+{pi,-----,3 + ----------------}
+     113               1
+               7 + ----------
+                          1
+                    15 + ---
+                          1
+
+continued_fraction e;
+
+{e,
+
+  13580623
+ ----------,
+  4996032
+
+ {2, {1,1}, {1,2}, {1,1}, {1,1}, {1,4}, {1,1}, {1,1},
+  {1,6}, {1,1}, {1,1}, {1,8}, {1,1}, {1,1}, {1,10},
+  {1,1}, {1,1}, {1,12}}}
+\end{verbatim}
+
+
+\section{DF Operator}
+\label{sec:DF-operator}
+\hypertarget{operator:DF}{}
+The operator \texttt{df}\ttindextype{df}{operator} is used to represent partial
+differentiation\index{Differentiation} with respect
+to one or more variables. It is used with the syntax:
+\begin{syntax}
+  \texttt{df(}\meta{exprn:algebraic}[,\,\meta{var:kernel}<,\,\meta{num:integer}>])\,:\,\textit{algebraic}.
+\end{syntax}
+The first argument is the expression to be differentiated. The remaining
+arguments specify the differentiation variables and the number of times
+they are applied.
+
+The number \texttt{num} may be omitted if it is 1.  For example,
+\begin{flushleft}
+  \hspace{0.5in}%
+  \begin{tabular}{@{}l@{}l}
+    \texttt{df(y,x)}            & ~=~$\partial y/\partial x$ \\
+    \texttt{df(y,x,2)}          & ~=~$\partial^{2}y/\partial x^{2}$ \\
+    \texttt{df(y,x1,2,x2,x3,2)} & ~=~$\partial^{5}y/\partial x_{1}^{2}
+    \partial x_{2}\partial x_{3}^{2}$.
+  \end{tabular}
+\end{flushleft}
+
+The evaluation of \texttt{df(y,x)} proceeds as follows: first, the values of
+\var{y} and \var{x} are found.  Let us assume that \var{x} has no assigned
+value, so its value is \var{x}.  Each term or other part of the value of
+\var{y} that contains the variable \var{x} is differentiated by the
+standard rules.  If \var{z} is another variable, not \var{x} itself, then
+its derivative with respect to \var{x} is taken to be 0, unless \var{z}
+has previously been declared to \texttt{depend} on \var{x}, in which
+case the derivative is reported as the symbol \texttt{df(z,x)}.
+
+
+\subsection{Switches influencing differentiation}
+\hypertarget{switch:COMMUTEDF}{}
+\hypertarget{switch:NOCOMMUTEDF}{}
+\hypertarget{switch:SIMPNONCOMDF}{}
+
+Consider \texttt{df(u,x,y,z)}, assuming \var{u} depends on each of \texttt{x,y,z}
+in some way.  If none of \texttt{x,y,z} is equal to \var{u}
+then the order of differentiation is commuted into a canonical form, unless the
+switch \sw{nocommutedf}\ttindexswitch{nocommutedf} is turned on (default is off).
+If at least one of \texttt{x,y,z} is equal to \var{u} then the order of
+differentiation is \emph{not} fully commuted and the derivative is \emph{not}
+simplified
+to zero, unless the switch \sw{commutedf}\ttindexswitch{commutedf} is turned on.
+It is off by default.
+
+If \sw{commutedf} is off and the switch \sw{simpnoncomdf}\ttindexswitch{simpnoncomdf}
+is on then simplify as follows:
+\begin{verbatim}
+        df(u,x,u)        ->  df(u,x,2) / df(u,x)
+        df(u,x,n,u)      ->  df(u,x,n+1) / df(u,x)
+\end{verbatim}
+\emph{provided} \texttt{u} depends only on the one variable \var{x}.
+This simplification removes the non-commutative aspect of the derivative.
+
+\hypertarget{switch:EXPANDDF}{}
+If the switch \sw{expanddf}\ttindexswitch{expanddf} is turned on then REDUCE uses
+the chain rule to expand symbolic derivatives of indirectly dependent variables
+provided the result is unambiguous, i.e. provided there is no direct dependence.
+It is off by default.  Thus, for example, given
+\begin{verbatim}
+        depend f,u,v; depend {u,v},x;
+        on expanddf;
+        df(f,x)    -> df(f,u)*df(u,x) + df(f,v)*df(v,x)
+\end{verbatim}
+whereas after
+\begin{verbatim}
+        depend f,x;
+\end{verbatim}
+\texttt{df(f,x)} does not expand at all (since the result would be ambiguous
+and the algorithm would loop).
+
+\hypertarget{switch:ALLOWDFINT}{}
+\hypertarget{switch:DFINT}{}
+Turning on the switch \sw{allowdfint}\ttindexswitch{allowdfint} allows
+``differentiation under the integral sign'', i.e.
+\begin{verbatim}
+        df(int(y, x), v) -> int(df(y, v), x)
+\end{verbatim}
+if this results in a simplification.  If the switch \sw{dfint}\ttindexswitch{dfint}
+is also turned on then this happens regardless of whether the result
+simplifies. Both switches are off by default.
+
+
+\subsection{Adding Differentiation Rules}
+\hypertarget{command:LETdf}{}
+
+The \texttt{let}\ttindex{let} statement can be used to introduce
+rules for differentiation of user-defined operators.  Its general form is
+\begin{syntaxtable}
+  \texttt{for all }\meta{var1}\texttt{,}\,\dots\texttt{,}\,\meta{varn} \\
+    \qquad \texttt{let df(}\meta{operator}\meta{varlist}\texttt{,}\,\meta{vari}\texttt{)
+    = }\meta{expression}
+\end{syntaxtable}
+where
+\begin{syntax}
+  \meta{varlist}\ \BNFprod\ (\meta{var1},\,\dots,\,\meta{varn}),
+\end{syntax}
+and
+\meta{var1},\,\dots,\,\meta{varn} are the dummy variable arguments of
+\meta{operator}.
+
+An analogous form applies to infix operators.
+
+\textit{Examples:}
+\begin{verbatim}
+        for all x let df(tan x,x) = 1 + tan(x)^2;
+\end{verbatim}
+(This is how the tan differentiation rule appears in the {\REDUCE}
+source.)
+\begin{verbatim}
+        for all x,y let df(f(x,y),x)=2*f(x,y),
+                        df(f(x,y),y)=x*f(x,y);
+\end{verbatim}
+Notice that all dummy arguments of the relevant operator must be declared
+arbitrary by the \texttt{for all} command, and that rules may be supplied for
+operators with any number of arguments.  If no differentiation rule
+appears for an argument in an operator, the differentiation routines will
+return as result an expression in terms of \texttt{df}\ttindextype{df}{operator}.  For
+example, if the rule for the differentiation with respect to the second
+argument of \texttt{f} is not supplied, the evaluation of \texttt{df(f(x,z),z)}
+would leave this expression unchanged. (No \texttt{depend} declaration
+is needed here, since \texttt{f(x,z)} obviously ``depends on'' \var{Z}.)
+
+Once such a rule has been defined for a given operator, any future
+differentiation\index{Differentiation} rules for that operator must be
+defined with the same number of arguments for that operator, otherwise we
+get the error message
+\begin{verbatim}
+   Incompatible DF rule argument length for <operator>
+\end{verbatim}
+
+
+\subsection{Options controlling display of derivatives}
+\hypertarget{switch:DFPRINT}{}
+
+If the switch \sw{dfprint}\ttindexswitch{dfprint} is turned on (it is
+off by default) then derivatives are displayed using subscripts, as
+illustrated below.  In graphical environments with typeset mathematics
+enabled, the (shared) variable
+\texttt{fancy\_print\_df}\ttindex{fancy\_print\_df} can be set to one
+of the values \texttt{partial}\ttindex{partial},
+\texttt{total}\ttindex{total} or \texttt{indexed}\ttindex{indexed} to
+control the display of derivatives.  The default value is
+\texttt{partial}.  However, if the switch \texttt{dfprint} is on then
+\texttt{fancy\_print\_df} is ignored.  For example, with the following
+settings, derivatives are displayed as follows (assuming
+\texttt{depend f,x,y} and \texttt{operator g}):
+
+\begin{tabular}{ccc}
+  \texttt{Setting} & \texttt{df(f,x,2,y)} & \texttt{df(g(x,y),x,2,y)} \\
+  \texttt{fancy\_print\_df:=partial} &
+  \(\frac{\partial^3 f}{\partial x^2 \partial y}\) &
+  \(\frac{\partial^3 g(x,y)}{\partial x^2 \partial y}\) \\
+  \texttt{fancy\_print\_df:=total} & \(\frac{d^3 f}{d x^2 d y}\) &
+  \(\frac{d^3 g(x,y)}{d x^2 d y}\) \\
+  \texttt{fancy\_print\_df:=indexed} & \(f_{x,x,y}\) & \(g(x,y)_{x,x,y}\) \\
+  \texttt{on dfprint} & \(f_{x,x,y}\) & \(g_{x,x,y}\)
+\end{tabular}
+
+\section{INT Operator}
+\hypertarget{operator:INT}{}
+\index{Integration}
+\texttt{int}\ttindextype{int}{operator} is an operator in {\REDUCE} for indefinite or definite integration.
+
+\subsection{Indefinite integration}
+\index{Indefinite integration}\index{Integration, indefinite}
+Indefinite
+integration is performed using a
+combination of the Risch-Norman algorithm and pattern matching \cite{Norman:77,Harrington:79,Norman:79}.
+It is used with the syntax:
+\begin{syntax}
+  \texttt{int(}\meta{exprn:algebraic}\texttt{,}\,\meta{var:kernel}\texttt{)}\,:\,\textit{algebraic}.
+\end{syntax}
+This will return correctly the indefinite integral for expressions comprising
+polynomials, log functions, exponential functions and tan and atan. The
+arbitrary constant is not represented. If the integral cannot be done in
+closed terms, it returns a formal integral for the answer in one of two ways:
+\begin{enumerate}
+\item It returns the input, \texttt{int(\ldots,\ldots)} unchanged.
+
+\item It returns an expression involving \texttt{int}s of some
+      other functions (sometimes more complicated than
+      the original one, unfortunately).
+\end{enumerate}
+Rational functions can be integrated when the denominator is factorizable
+by the program. In addition it will attempt to integrate expressions
+involving error functions, dilogarithms and other trigonometric
+expressions. In these cases it might not always succeed in finding the
+solution, even if one exists.
+
+\textit{Examples:}
+\begin{verbatim}
+        int(log(x),x) ->  x*(log(x) - 1),
+        int(e^x,x)    ->  e**x.
+\end{verbatim}
+The program checks that the second argument is a variable and gives an
+error if it is not.
+
+\subsection{Definite Integration} \index{Definite integration}
+\index{Integration, definite}
+
+If \texttt{int} is used with the syntax
+
+\begin{verbatim}
+   INT(EXPRN:algebraic,VAR:kernel,
+        LOWER:algebraic,UPPER:algebraic):algebraic.
+\end{verbatim}
+
+The definite integral of \texttt{exprn} with respect to \texttt{var} is
+calculated between the limits \texttt{lower} and \texttt{upper}.
+This is calculated by several methods that are tried one after the other:
+pattern matching, by first finding
+the indefinite integral and then substituting the limits into this, by contour integration, or
+by transforming the integrand into one or two Meijer G-functions.
+For details, consult
+the documentation on the DEFINT\indexpackage{DEFINT} package.
+
+
+\subsection{Options}
+\hypertarget{switch:TRINT}{}
+\hypertarget{switch:TRINTSUBST}{}
+\hypertarget{switch:TRDEFINT}{}
+\hypertarget{switch:FAILHARD}{}
+\hypertarget{switch:NOLNR}{}
+\hypertarget{switch:NOINTSUBST}{}
+
+The switch \sw{trint}\ttindexswitch{trint} when on will trace the operation of the algorithm. It
+produces a great deal of output in a somewhat illegible form, and is not
+of much interest to the general user. It is normally off.
+
+The switch \sw{trintsubst}\ttindexswitch{trintsubst} when on will trace the heuristic attempts to
+solve the integral by substitution. It is normally off.
+
+The switch \sw{trdefint}\ttindexswitch{trdefint} when on will trace the operation of the definite integration algorithm.
+
+If the switch \sw{failhard}\ttindexswitch{failhard} is on the algorithm will terminate with an
+error if the integral cannot be done in closed terms, rather than return a
+formal integration form. \sw{failhard} is normally off.
+
+The switch \sw{nolnr}\ttindexswitch{nolnr} suppresses the use of the linear properties of
+integration in cases when the integral cannot be found in closed terms.
+It is normally off.
+
+The switch \sw{nointsubst}\ttindexswitch{nointsubst} disables the heuristic attempts to solve
+the integral by substitution. It is normally off.
+
+\subsection{Advanced Use}
+\hypertarget{operator:ERF}{}
+
+If a function appears in the integrand that is not one of the functions
+\texttt{exp, Erf, tan, atan, log, dilog}\ttindex{exp}\ttindextype{Erf}{(error function) operator}
+\ttindex{tan}\ttindex{atan}\ttindex{log}\ttindex{dilog}
+then the algorithm will make an
+attempt to integrate the argument if it can, differentiate it and reach a
+known function.  However the answer cannot be guaranteed in this case.  If
+a function is known to be algebraically independent of this set it can be
+flagged transcendental by
+\begin{verbatim}
+        flag('(trilog),'transcendental);
+\end{verbatim}
+in which case this function will be added to the permitted field
+descriptors for a genuine decision procedure. If this is done the user is
+responsible for the mathematical correctness of his actions.
+
+
+The standard version does not deal with algebraic extensions. Thus
+integration of expressions involving square roots and other like things
+can lead to trouble.  The extension package \texttt{ALGINT} 
+will analytically integrate a wide range of
+expressions involving square roots where the answer exists in that class
+of functions. It is an implementation of the work described by J.H.
+Davenport \cite{Davenport:81}.
+
+\hypertarget{switch:ALGINT}{}
+The extension package is loaded automatically when the switch \sw{algint}
+is turned on.
+One enters an expression for integration, as with the regular integrator,
+for example:
+\begin{verbatim}
+        int(sqrt(x+sqrt(x**2+1))/x,x);
+\end{verbatim}
+If one later wishes to integrate expressions without using the facilities of
+this package, the switch \sw{algint} \ttindexswitch[ALGINT]{algint} should be turned
+off.
+
+\hypertarget{switch:TRA}{}
+The switches supported by the standard integrator (e.g., \sw{trint})
+\ttindexswitch[ALGINT]{trint} are also supported by this package.  In addition, the
+switch \sw{tra}, \ttindexswitch[ALGINT]{tra} if on, will give further tracing
+information about the specific functioning of the algebraic integrator.
+
+
+
+\section{LENGTH Operator}
+\hypertarget{operator:LENGTH}{}
+\texttt{length}\ttindex{length} is a generic operator for finding the
+length of various objects in the system.  The meaning depends on the type
+of the object.  In particular, the length of an algebraic expression is
+the number of additive top-level terms its expanded representation.
+
+\textit{Examples:}
+\begin{verbatim}
+        length(a+b)    ->  2
+        length(2)      ->  1.
+\end{verbatim}
+Other objects that support a length operator include arrays, lists and
+matrices. The explicit meaning in these cases is included in the description
+of these objects.
+
+\input{limits}
+
+\section{MAP Operator}\ttindextype{map}{operator}
+\hypertarget{operator:MAP}{}
+
+The \texttt{map} operator applies a uniform evaluation pattern to all members
+of a composite structure: a matrix, a list, or the arguments of an
+operator expression.  The evaluation pattern can be a unary procedure, an
+operator, or an algebraic expression with one free variable.
+
+It is used with the syntax:
+\begin{verbatim}
+   map(fnc:function,obj:object)
+\end{verbatim}
+Here \texttt{obj} is a list, a matrix or an operator expression.
+\texttt{fnc} can be one of the following:
+\begin{enumerate}
+\item the name of an operator with a single argument: the operator
+is evaluated once with each element of \texttt{obj} as its single argument;
+\item an algebraic expression with exactly one free variable, i.e.
+a variable preceded by the tilde symbol. The expression
+is evaluated for each element of \texttt{obj}, with the element
+substituted for the free variable;
+\item a replacement rule of the form \texttt{var => rep}
+where \texttt{var} is a variable (a kernel without a subscript)
+and \texttt{rep} is an expression that contains \texttt{var}.
+The replacement expression \texttt{rep} is evaluated for each element of
+\texttt{obj} with
+the element substituted for  \texttt{var}. The variable \texttt{var} may be
+optionally preceded by a tilde.
+\end{enumerate}
+The rule form  for \texttt{fnc} is needed when more than
+one free variable occurs.
+
+Examples:
+\begin{verbatim}
+        map(abs,{1,-2,a,-a})  ->  {1,2,ABS(A),ABS(A)}
+        map(int(~w,x), mat((x^2,x^5),(x^4,x^5))) ->
+
+                [  3     6 ]
+                [ x     x  ]
+                [----  ----]
+                [ 3     6  ]
+                [          ]
+                [  5     6 ]
+                [ x     x  ]
+                [----  ----]
+                [ 5     6  ]
+
+        map(~w*6, x^2/3 = y^3/2 -1) -> 2*X^2=3*(Y^3-2)
+\end{verbatim}
+
+You can use \texttt{map} in nested expressions. However, you cannot
+apply \texttt{map} to a non-composite object, e.g. an identifier or a number.
+
+
+\section{MKID Operator}\ttindextype{mkid}{operator}
+\hypertarget{operator:MKID}{}
+In many applications, it is useful to create a set of identifiers for
+naming objects in a consistent manner. In most cases, it is sufficient to
+create such names from two components. The operator \texttt{mkid} is provided
+for this purpose. Its syntax is:
+\begin{verbatim}
+mkid(u:id,v:id|non-negative integer):id
+\end{verbatim}
+for example
+\begin{verbatim}
+        mkid(a,3)      -> a3
+        mkid(apple,s)  -> apples
+\end{verbatim}
+while \texttt{mkid(a+b,2)} gives an error.
+
+The \texttt{set}\ttindextype{set}{statement} statement can be used to give a value to the
+identifiers created by \texttt{mkid}, for example
+\begin{verbatim}
+        set(mkid(a,3),3);
+\end{verbatim}
+will give \var{a3} the value 2.
+Similarly, the \texttt{unset}\ttindextype{unset}{statement} statement can be used to
+remove the value from these identifiers, for example
+\begin{verbatim}
+        unset(mkid(a,3));
+\end{verbatim}
+
+\section{The Pochhammer Notation}
+\ttindex{Pochhammer}\index{Pochhammer notation}
+\index{Pochhammer symbol}
+\hypertarget{POCH}{}
+\hypertarget{operator:POCHHAMMER}{}
+The Pochhammer notation $(a)_k$ (also called Pochhammer's symbol) is supported
+by the binary operator \texttt{Pochhammer(a,k)}.
+For a non-negative integer $k$, it is defined as
+(\url{http://dlmf.nist.gov/5.2.iii})
+\begin{align*}
+  (a)_0 &= 1, \\
+  (a)_k &= a(a+1)(a+2)\cdots(a+k-1).
+\end{align*}
+%% Note that MathJax does not support \intertext.
+For $a \neq 0, -1, -2, -3, \ldots$, this is equivalent to
+\[ (a)_k = \frac{\Gamma(a+k)}{\Gamma(a)}. \]
+When $n$ is integral, the defining product is expanded (assuming the switch
+\sw{exp} is on). With \sw{rounded} off, this expression is evaluated
+numerically if $a$ is numerical and $k$ is integral, and otherwise may be
+simplified where appropriate.  The simplification rules are based upon
+algorithms supplied by Wolfram Koepf \cite{Koepf:92}.
+
+The Pochhammer symbol is used quite extensively in the simplification and
+numerical evaluation of \hyperlink{SPECFNS}{special functions}.
+
+\section{PF Operator}\ttindextype{pf}{operator}
+\hypertarget{operator:PF}{}
+
+\index{Partial fraction}\index{Partial fraction!decomposition}\index{Decomposition!partial fraction}
+\texttt{pf(\meta{exp},\meta{var})} transforms the expression \meta{exp} into
+a list of partial fractions with respect to the main variable, \meta{var}.
+\texttt{pf}
+does a complete partial fraction decomposition, and as the algorithms used
+are fairly unsophisticated (factorization and the extended Euclidean
+algorithm), the code may be unacceptably slow in complicated cases.
+
+\textit{Example:}
+Given \texttt{2/((x+1)\textasciicircum2*(x+2))} in the workspace,
+\texttt{pf(ws,x);} gives the result
+\begin{samepage}
+\begin{verbatim}
+            2      - 2         2
+        {-------,-------,--------------} .
+          x + 2   x + 1    2
+                          x  + 2*x + 1
+\end{verbatim}
+\end{samepage}
+
+If you want the denominators in factored form, set the switch \sw{exp} to off.
+Thus, with \texttt{2/((x+1)\textasciicircum2*(x+2))} in the workspace,
+the input \texttt{off exp; pf(ws,x);} gives the result
+\begin{verbatim}
+            2      - 2       2
+        {-------,-------,----------} .
+          x + 2   x + 1          2
+                          (x + 1)
+\end{verbatim}
+
+To recombine the terms, \texttt{for each} \ldots{} \texttt{sum} can be used.
+So with the above list in the workspace,
+\texttt{for each j in ws sum j;} returns the result
+\begin{verbatim}
+             2
+     ------------------
+                     2
+      (x + 2)*(x + 1)
+\end{verbatim}
+
+Alternatively, one can use the operations on lists to extract any desired
+term.
+
+
+\section{RESIDUE and POLEORDER operators}
+\ttindextype{residue}{operator}
+\ttindextype{poleorder}{operator}
+\hypertarget{operator:RESIDUE}{}
+\hypertarget{operator:POLEORDER}{}
+
+The residue
+$\mathop{\mathrm{Res}}\limits_{z=a} f(z)$ of a function $f(z)$ at the point $a\in\mathbb{C}$ is defined
+as
+\[
+\mathop{\mathrm{Res}}\limits_{z=a} f(z)=
+\frac{1}{2 \pi i}\oint f(z)\,dz
+\;,
+\]
+with integration along a closed curve around $z=a$ with winding number 1.
+
+If $f(z)$ is given by a Laurent series expansion at $z=a$
+\[
+f(z)=\sum_{k=-\infty}^\infty a_k\,(z-a)^k
+\;,
+\]
+then
+\begin{equation}
+\mathop{\mathrm{Res}}\limits_{z=a} f(z)=a_{-1}
+\;.
+\label{eq:Laurent}
+\end{equation}
+If $a=\infty$, one defines on the other hand
+\begin{equation}
+\mathop{\mathrm{Res}}\limits_{z=\infty} f(z)=-a_{-1}
+\label{eq:Laurent2}
+\end{equation}
+for given Laurent representation
+\[
+f(z)=\sum_{k=-\infty}^\infty a_k\,\frac{1}{z^k}
+\;.
+\]
+The operator \f{residue}\texttt{(f,z,a)} determines the residue of $f$ at the point $z=a$
+if $f$ is meromorphic at $z=a$. The calculation of residues at essential
+singularities of $f$ is not supported, as are the residues of factorial terms.\footnote{This code was written by Wolfram Koepf.}
+\index{Koepf, Wolfram}\index{People!Koepf, Wolfram}
+
+\f{poleorder}\texttt{(f,z,a)} determines the pole order of $f$ at the point $z=a$
+if $f$ is meromorphic at $z=a$.
+
+Note that both functions use the operator \f{taylor} in
+connection with representations (\eqnref{eq:Laurent})--(\eqnref{eq:Laurent2}).
+
+Here are some examples:
+\begin{small}
+\begin{verbatim}
+2: residue(x/(x^2-2),x,sqrt(2));
+
+ 1
+---
+ 2
+
+3: poleorder(x/(x^2-2),x,sqrt(2));
+
+1
+
+4: residue(sin(x)/(x^2-2),x,sqrt(2));
+
+ sqrt(2)*sin(sqrt(2))
+----------------------
+          4
+
+5: poleorder(sin(x)/(x^2-2),x,sqrt(2));
+
+1
+
+6: residue(1/(x-1)^m/(x-2)^2,x,2);
+
+ - m
+
+7: poleorder(1/(x-1)/(x-2)^2,x,2);
+
+2
+
+8: residue(sin(x)/x^2,x,0);
+
+1
+
+9: poleorder(sin(x)/x^2,x,0);
+
+1
+
+10: residue((1+x^2)/(1-x^2),x,1);
+
+-1
+
+11: poleorder((1+x^2)/(1-x^2),x,1);
+
+1
+
+12: residue((1+x^2)/(1-x^2),x,-1);
+
+1
+
+13: poleorder((1+x^2)/(1-x^2),x,-1);
+
+1
+
+14: residue(tan(x),x,pi/2);
+
+-1
+
+15: poleorder(tan(x),x,pi/2);
+
+1
+
+16: residue((x^n-y^n)/(x-y),x,y);
+
+0
+
+17: poleorder((x^n-y^n)/(x-y),x,y);
+
+0
+
+18: residue((x^n-y^n)/(x-y)^2,x,y);
+
+  n
+ y *n
+------
+  y
+
+19: poleorder((x^n-y^n)/(x-y)^2,x,y);
+
+1
+
+20: residue(tan(x)/sec(x-pi/2)+1/cos(x),x,pi/2);
+
+-2
+
+21: poleorder(tan(x)/sec(x-pi/2)+1/cos(x),x,pi/2);
+
+1
+
+22: for k:=1:2 sum residue((a+b*x+c*x^2)/(d+e*x+f*x^2),x,
+    part(part(solve(d+e*x+f*x^2,x),k),2));
+
+ b*f - c*e
+-----------
+     2
+    f
+
+23: residue(x^3/sin(1/x)^2,x,infinity);
+
+  - 1
+------
+  15
+
+24: residue(x^3*sin(1/x)^2,x,infinity);
+
+-1
+
+25: residue(gamma(x),x,-1);
+
+-1
+
+26: residue(psi(x),x,-1);
+
+-1
+
+27: on fullroots;
+
+28: for k:=1:3 sum
+28: residue((a+b*x+c*x^2+d*x^3)/(e+f*x+g*x^2+h*x^3),x,
+28: part(part(solve(e+f*x+g*x^2+h*x^3,x),k),2));
+
+0
+\end{verbatim}
+\end{small}
+
+\section{SELECT Operator}\ttindextype{SELECT}{operator}
+\hypertarget{operator:SELECT}{}
+\ttindex{map}\ttindex{list}
+
+The \texttt{select} operator extracts from a list,
+or from the arguments of an n--ary operator, elements corresponding
+to a boolean predicate. It is used with the syntax:
+\begin{syntax}
+  \texttt{select(}\meta{fnc:function},\,\meta{lst:list}\texttt{)}
+\end{syntax}
+
+\texttt{fnc} can be one of the following forms:
+\begin{enumerate}
+\item the name of an operator with a single argument: the operator
+is evaluated once on each element of \texttt{lst};
+\item an algebraic expression with exactly one free variable, i.e.
+a variable preceded by the tilde symbol. The expression
+is evaluated for each element of \meta{lst}, with the element
+substituted for the free variable;
+\item a replacement rule of the form \meta{var} \texttt{=>} \meta{rep}
+where \meta{var} is a variable (a kernel without subscript)
+and \meta{rep} is an expression that contains \meta{var}.
+\meta{rep} is evaluated for each element of \texttt{LST} with
+the element substituted for  \meta{var}. \meta{var} may be
+optionally preceded by a tilde.
+\end{enumerate}
+The rule form  for \texttt{fnc} is needed when more than
+one free variable occurs.
+
+The result of evaluating \texttt{fnc} is
+interpreted as a boolean value corresponding to the conventions of
+\REDUCE. These values are composed with the leading operator of the
+input expression.
+
+\textit{Examples:}\nopagebreak
+\begin{verbatim}
+    select( ~w>0 , {1,-1,2,-3,3}) -> {1,2,3}
+    select(evenp deg(~w,y),part((x+y)^5,0):=list)
+           -> {X^5 ,10*X^3*Y^2 ,5*X*Y^4}
+    select(evenp deg(~w,x),2x^2+3x^3+4x^4) -> 4X^4 + 2X^2
+\end{verbatim}

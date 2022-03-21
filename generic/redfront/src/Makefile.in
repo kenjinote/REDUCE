@@ -1,0 +1,92 @@
+# ----------------------------------------------------------------------
+# $Id: Makefile.in 3960 2017-03-19 08:01:16Z thomas-sturm $
+# ----------------------------------------------------------------------
+# Copyright (c) 1999-2009 Andreas Dolzmann and Thomas Sturm
+# ----------------------------------------------------------------------
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#    * Redistributions of source code must retain the relevant
+#      copyright notice, this list of conditions and the following
+#      disclaimer.
+#    * Redistributions in binary form must reproduce the above
+#      copyright notice, this list of conditions and the following
+#      disclaimer in the documentation and/or other materials provided
+#      with the distribution.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+CC = @CC@
+
+LIBS = @LIBS@
+
+CFLAGS = @CFLAGS@ @DEFS@ -Wall -DBUILDTIME="\"`LANG=en date +%d-%b-%Y`\"" -I.
+
+LDFLAGS = @LDFLAGS@
+
+OBJ = redfront.o redsig.o redstrings.o redparent.o redchild.o redline.o reddeb.o
+
+srcdir = @srcdir@
+
+vpath %.c $(srcdir)
+vpath %.h .:$(srcdir)
+
+all: redfront
+	ln -s redfront rfcslb
+	ln -s redfront rfcsl
+	ln -s redfront rfpsl
+
+redfront: $(OBJ)
+	$(CC) $(LDFLAGS) -o redfront $(OBJ) $(LIBS)
+
+dredfront: $(OBJ)
+	$(CC) $(LDFLAGS) -o dredfront $(OBJ) $(LIBS)
+
+redfront.o: redfront.c redfront.h config.h
+redsig.o: redsig.c redfront.h config.h
+redstrings.o: redstrings.c redfront.h config.h
+redparent.o: redparent.c redfront.h config.h
+redchild.o: redchild.c redfront.h config.h
+redline.o: redline.c redfront.h config.h
+reddeb.o: redfront.h config.h
+
+clean:
+	-rm -f $(OBJ)
+
+dclean:
+	-rm -f dredfront
+
+veryclean: clean dclean
+	-rm -f redfront
+
+distclean: veryclean
+	-rm -f Makefile config.h config.log config.status
+
+maintainer-clean: distclean
+	-rm -fr autom4te.cache 
+	-rm -f configure config.h.in
+
+dist:
+	cd ..; \
+	tar cvf - redfront/redchild.c redfront/redfront.c \
+		redfront/redparent.c redfront/redsig.c redfront/redstrings.c \
+		redfront/redfront.h redfront/redfront.red \
+		redfront/Makefile.in redfront/config.h.in redfront/configure \
+	| gzip -v > redfront/redfront.tar.gz
+
+solaris_redfront: $(OBJ)
+	cc -o redfront $(OBJ) \
+	-B static -L/usr/local/lib -L/public.algebra/gnu/lib -lreadline \
+	-B dynamic -L/usr/libucb -ltermcap -lc -lintl -lmp -lw -lsocket -lnsl

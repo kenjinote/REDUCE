@@ -1,0 +1,313 @@
+
+\index{Gr\"obner Bases}
+\subsection{Introduction}
+
+{\REDUCE} supports a very general mechanism for computing
+with objects under a non--commutative multiplication, where
+commutator relations must be introduced explicitly by rule
+sets when needed. The package \package{NCPOLY} allows you to
+set up automatically a consistent environment for computing in an algebra
+where the non--commutativity is defined by Lie-bracket commutators.
+The package uses the {\REDUCE} \texttt{noncom}\ttindextype{noncom}{declaration}
+mechanism for elementary polynomial arithmetic; the commutator
+rules are automatically computed from the Lie brackets.
+You can perform polynomial arithmetic directly, including
+\emph{division} and \emph{factorization}.
+Additionally \package{NCPOLY} supports computations in a one sided ideal (left or right),
+especially one sided Gr\"obner bases and  \emph{polynomial reduction}.
+
+\subsection{Setup, Cleanup}
+
+\ttindextype[NCPOLY]{nc\_setup}{operator}
+\hypertarget{operator:NC_SETUP}{}
+Before the computations can start the environment for a
+non--commutative computation must be defined by a
+call to \f{nc\_setup}:
+\begin{syntax}
+    \f{nc\_setup}(\meta{vars}[,\meta{comms}][,\meta{dir}]);
+\end{syntax}
+where
+
+\meta{vars} is a list of variables; these must include the
+non--commutative quantities.
+
+\meta{comms} is a list of equations \texttt{<u>*<v> - <v>*<u>=<rh>}
+where $<u>$ and $<v>$ are members of $<vars>$, and $<rh>$ is
+a polynomial.
+
+\meta{dir} is either $left$ or $right$ selecting a left or a
+right one sided ideal. The initial direction is $left$.
+
+\f{nc\_setup} generates from \meta{comms} the necessary
+rules to support an algebra where all monomials are
+ordered corresponding to the given variable sequence.
+All pairs of variables which are not explicitly covered in
+the commutator set are considered as commutative and the
+corresponding rules are also activated.
+
+The second parameter in \f{nc\_setup} may be
+omitted if the operator is called for the second time,
+e.g. with a reordered variable sequence. In such a case
+the last commutator set is used again.
+
+Remarks: \begin{itemize}
+\item The variables need not be declared \texttt{noncom} -
+    \f{nc\_setup} performs all necessary declarations.
+\item The variables need not be formal operator expressions;
+    \f{nc\_setup} encapsulates a variable \var{x} internally
+    as \texttt{nc!*(!\_x)} expressions anyway where the operator f{nc!*}
+    keeps the noncom property.
+\item The commands \texttt{order} and \texttt{korder} should be avoided
+    because \f{nc\_setup} sets these such that the computation
+    results are printed in the correct term order.
+\end{itemize}
+
+Example:
+\begin {verbatim}
+   nc_setup({KK,NN,k,n},
+              {NN*n-n*NN= NN, KK*k-k*KK= KK});
+
+   NN*n;            ->   nn*n
+   n*NN;            ->   nn*n - nn
+   nc_setup({k,n,KK,NN});
+   NN*n - NN        ->   n*nn;
+
+\end{verbatim}
+Here $KK,NN,k,n$ are non--commutative variables where
+the commutators are described as $[NN,n]=NN$, $[KK,k]=KK$.
+
+The current term order must be compatible with the commutators:
+the product $<u>*<v>$ must precede all terms on the right hand
+side $<rh>$ under the current term order. Consequently
+\begin{itemize}
+\item the maximal degree of $<u>$ or $<v>$ in $<rh>$ is 1,
+\item in a total degree ordering the total degree of $<rh>$ may be
+not higher than 1,
+\item in an elimination degree order (e.g. $lex$) all variables in
+$<rh>$ must be below the minimum of $<u>$ and $<v>$.
+\item If $<rh>$ does not contain any variables or has at most $<u>$ or
+$<v>$, any term order can be selected.
+\end{itemize}
+
+\ttindextype[NCPOLY]{nc\_cleanup}{operator}
+\hypertarget{operator:NC_CLEANUP}{}
+If you want to use the non--commutative variables or results from
+non--commutative computations later in commutative operations
+it might be necessary to switch off the non--commutative
+evaluation mode because not
+all operators in \REDUCE are prepared for that environment. In
+such a case use the command
+\begin{syntax}
+    \f{nc\_cleanup};
+\end{syntax}
+without parameters. It removes all internal rules and definitions
+which \f{nc\_setup} had introduced. To reactive non--commutative
+call \f{nc\_setup} again.
+
+\subsection{Left and right ideals}
+
+A (polynomial) left ideal $L$ is defined by the axioms
+
+$u \in L, v \in L \Longrightarrow u+v \in L$
+
+$u \in L \Longrightarrow k*u \in L$ for an arbitrary polynomial $k$
+
+where ``*'' is the non--commutative multiplication. Correspondingly,
+a right ideal $R$ is defined by
+
+$u \in R, v \in R \Longrightarrow u+v \in R$
+
+$u \in R \Longrightarrow u*k \in R$ for an arbitrary polynomial $k$
+
+\subsection{Gr\"obner bases}
+
+\ttindextype[NCPOLY]{nc\_groebner}{operator}
+\hypertarget{operator:NC_GROEBNER}{}
+When a non--commutative environment has been set up
+by \f{nc\_setup}, a basis for a left or right polynomial ideal
+can be transformed into a Gr\"obner basis by the operator
+\f{nc\_groebner}:
+\begin{syntax}
+   \f{nc\_groebner}(\meta{plist});
+\end{syntax}
+Note that the variable set and variable sequence must be
+defined before in the \f{nc\_setup} call. The term order
+for the Gr\"obner calculation can be set by using the
+\texttt{torder} declaration. The internal steps of the
+Gr\"obner calculation can be watched by setting the
+switches \sw{trgroeb} (=list all internal basis polynomials)
+or \sw{trgroebs} (=list additionally the $S$-polynomials)
+\footnote{The command \texttt{lisp(!*trgroebfull:=t);} causes additionally
+all elementary polynomial operations to be printed.}.
+
+
+For details about \f{torder}, \sw{trgroeb} and \sw{trgroebs}
+see section~\ref{GROEBNER}.
+\begin{verbatim}
+2: nc_setup({k,n,NN,KK},{NN*n-n*NN=NN,KK*k-k*KK=KK},left);
+
+3: p1 := (n-k+1)*NN - (n+1);
+
+p1 :=  - k*nn + n*nn - n + nn - 1
+
+4: p2 := (k+1)*KK -(n-k);
+
+p2 := k*kk + k - n + kk
+
+5: nc_groebner ({p1,p2});
+
+{k*nn - n*nn + n - nn + 1,
+
+ k*kk + k - n + kk,
+
+ n*nn*kk - n*kk - n + nn*kk - kk - 1}
+
+\end{verbatim}
+Important: Do not use the operators of the \package{GROEBNER}
+package directly as they would not consider the non--commutative
+multiplication.
+
+\subsection{Left or right polynomial division}
+
+\ttindextype[NCPOLY]{nc\_divide}{operator}
+\hypertarget{operator:NC_DIVIDE}{}
+The operator \f{nc\_divide} computes the one sided quotient and remainder of
+two polynomials:
+\begin{syntax}
+    \f{nc\_divide}(\meta{p1},\meta{p2});
+\end{syntax}
+The result is a list with quotient and remainder.
+The division is performed as a pseudo--division, multiplying
+$<p1>$ by coefficients if necessary. The result $\{<q>,<r>\}$
+is defined by the relation
+
+  $<c>*<p1>=<q>*<p2> + <r>$ for direction $left$ and
+
+  $<c>*<p1>=<p2>*<q> + <r>$ for direction $right$,
+
+where $<c>$ is an expression that does not contain any of the
+ideal variables, and the leading term of $<r>$ is lower than
+the leading term of \meta{p2} according to the actual term order.
+
+\subsection{Left or right polynomial reduction}
+
+\ttindextype[NCPOLY]{nc\_preduce}{operator}
+\hypertarget{operator:NC_PREDUCE}{}
+For the computation of the one sided remainder of a polynomial
+modulo a given set of other polynomials the operator
+\f{nc\_preduce} may be used:
+\begin{syntax}
+    \f{nc\_preduce}(\meta{polynomial},\meta{plist});
+\end{syntax}
+The result of the reduction is unique (canonical) if
+and only if \meta{plist} is a one sided Gr\"obner basis.
+Then the computation is at the same time an ideal
+membership test: if the result is zero, the
+polynomial is member of the ideal, otherwise not.
+
+\subsection{Factorization}
+
+\subsubsection{Technique}
+
+\ttindextype[NCPOLY]{nc\_factorize}{operator}
+\hypertarget{operator:NC_FACTORIZE}{}
+Polynomials in a non--commutative ring cannot be factored
+using the ordinary \f{factorize} command of {\REDUCE}.
+Instead one of the operators of this section must be used:
+\begin{syntax}
+   \f{nc\_factorize}(\meta{polynomial});
+\end{syntax}
+The result is a list of factors of \meta{polynomial}. A list
+with the input expression is returned if it is irreducible.
+
+\ttindextype[NCPOLY]{nc\_factorize\_all}{operator}
+\hypertarget{operator:NC_FACTORIZE_ALL}{}
+As non--commutative factorization is not unique, there is
+an additional operator which computes all possible factorizations
+\begin{syntax}
+   \f{nc\_factorize\_all}(\meta{polynomial});
+\end{syntax}
+The result is a list of factor decompositions of \meta{polynomial}.
+If there are no factors at all the result list has only one
+member which is a list containing the input polynomial.
+
+\subsubsection{Control of the factorization}
+
+\ttindextype[NCPOLY]{left\_factor}{operator}
+\ttindextype[NCPOLY]{right\_factor}{operator}
+\ttindextype[NCPOLY]{left\_factors}{operator}
+\ttindextype[NCPOLY]{right\_factors}{operator}
+\hypertarget{operator:LEFT_FACTOR}{}
+\hypertarget{operator:RIGHT_FACTOR}{}
+\hypertarget{operator:LEFT_FACTORS}{}
+\hypertarget{operator:RIGHT_FACTORS}{}
+In contrast to factoring in commutative polynomial rings, the non--commutative
+factorization is rather time consuming. Therefore two additional
+operators allow you to reduce the amount of computing time when
+you look only for isolated factors in special context, e.g. factors
+with a limited degree or factors which contain only explicitly
+specified variables:
+\begin{syntaxtable}
+   \f{left\_factor}(\meta{polynomial}[,\meta{deg}[,\meta{vars}]]) \\
+   \f{right\_factor}(\meta{polynomial}[,\meta{deg}[,\meta{vars}]]) \\
+   \f{left\_factors}(\meta{polynomial}[,\meta{deg}[,\meta{vars}]]) \\
+   \f{right\_factors}(\meta{polynomial}[,\meta{deg}[,\meta{vars}]])
+\end{syntaxtable}
+where \meta{polynomial} is the form under investigation,
+\meta{vars} is an optional list of variables which must appear in the
+factor, and \meta{deg}
+is an optional integer degree bound for the total degree of the
+factor, a zero for an unbounded search, or a monomial
+(product of powers of the variables) where each exponent
+is an individual degree bound for its base variable; unmentioned
+variables are allowed in arbitrary degree. The operators
+\f{right\_factor} and \f{left\_factor} stop when they have found one factor, while
+the operators \f{right\_factors} and \f{left\_factors} select all one--sided factors
+within the given range. If there is no factor of the
+desired type, an empty list is returned by \f{right\_factors} and \f{left\_factors}
+while the routines \f{right\_factor} and \f{left\_factor} return the input polynomial.
+
+\subsubsection{Time of the factorization}
+
+\ttindextype[NCPOLY]{nc\_factor\_time}{shared variable}
+\hypertarget{variable:NC_FACTOR_TIME}{}
+The share variable \var{nc\_factor\_time} sets an upper limit
+for the time to be spent for a call to the non--commutative
+factorizer. If the value is a positive integer, a
+factorization is terminated with an error message as soon
+as the time limit is reached. The time units are milliseconds.
+
+\subsubsection{Usage of SOLVE}
+
+The factorizer internally uses \f{solve}\ttindextype{solve}{operator}, which is controlled
+by the \REDUCE switch \sw{varopt}\ttindexswitch{varopt}. This switch (which per default
+is set on) allows to reorder the variable sequence, which is
+favourable for the normal system. It should be avoided to set \sw{varopt}
+off when using the non--commutative factorizer, unless very small
+polynomials are used.
+
+\subsection{Output of expressions}
+
+\ttindextype[NCPOLY]{nc\_compact}{operator}
+\hypertarget{operator:NC_COMPACT}{}
+It is often desirable to have the commutative parts (coefficients)
+in a non--commutative operation condensed by factorization. The operator
+\begin{syntax}
+   \f{nc\_compact}(\meta{polynomial})
+\end{syntax}
+collects the coefficients to the powers of the lowest possible
+non-commutative variable.
+\begin{verbatim}
+load ncpoly;
+
+nc_setup({n,NN},{NN*n-n*NN=NN})$
+p1 := n**4 + n**2*nn + 4*n**2 + 4*n*nn + 4*nn + 4;
+
+       4    2         2
+p1 := n  + n *nn + 4*n  + 4*n*nn + 4*nn + 4
+
+nc_compact p1;
+
+  2     2          2
+(n  + 2)  + (n + 2) *nn
+\end{verbatim}

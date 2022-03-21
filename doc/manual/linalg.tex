@@ -1,0 +1,1781 @@
+
+\newcommand\exprlist  {expr$_{1}$,expr$_{2}$, \ldots ,expr$_{{\tt n}}$}
+\newcommand\lineqlist {lin\_eqn$_{1}$,lin\_eqn$_{2}$, \ldots ,lin\_eqn$_{n}$}
+\newcommand\matlist   {mat$_{1}$,mat$_{2}$, \ldots ,mat$_{n}$}
+\newcommand\veclist   {vec$_{1}$,vec$_{2}$, \ldots ,vec$_{n}$}
+
+\newcommand\lazyfootnote{\footnote{If you're feeling lazy then the \{\}'s can
+                  be omitted.}}
+
+%\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\setcounter{secnumdepth}{3}
+
+\index{Linear Algebra package}
+\index{Rebbeck, Matt}\index{People!Rebbeck, Matt}
+
+\subsection{Introduction}
+
+This package provides a selection of functions that are useful in the world of
+linear algebra. These functions are described alphabetically in subsection
+\ref{linalg:subsec3} and are labelled \ref{linalg:add_columns} to
+\ref{linalg:kronecker_product}.  They can be classified into four sections(n.b:
+the numbers after the dots signify the function label in section
+\ref{linalg:subsec3}).
+
+Contributions to this package have been made by Walter Tietze (ZIB).
+
+\subsubsection{Basic matrix handling}
+
+\begin{center}
+  \begin{tabular}{l l l l l l}
+    add\_columns     & \ldots & \ref{linalg:add_columns}  &
+    add\_rows        & \ldots & \ref{linalg:add_rows}  \\
+    add\_to\_columns & \ldots & \ref{linalg:add_to_columns}  &
+    add\_to\_rows    & \ldots & \ref{linalg:add_to_rows}  \\
+    augment\_columns & \ldots & \ref{linalg:augment_columns}  &
+    char\_poly       & \ldots & \ref{linalg:char_poly}  \\
+    column\_dim      & \ldots & \ref{linalg:column_dim}  &
+    copy\_into       & \ldots & \ref{linalg:copy_into} \\
+    diagonal         & \ldots & \ref{linalg:diagonal} &
+    extend           & \ldots & \ref{linalg:extend} \\
+    find\_companion  & \ldots & \ref{linalg:find_companion}  &
+    get\_columns     & \ldots & \ref{linalg:get_columns} \\
+    get\_rows        & \ldots & \ref{linalg:get_rows} &
+    hermitian\_tp    & \ldots & \ref{linalg:hermitian_tp} \\
+    matrix\_augment  & \ldots & \ref{linalg:matrix_augment} &
+    matrix\_stack    & \ldots & \ref{linalg:matrix_stack} \\
+    minor            & \ldots & \ref{linalg:minor} &
+    mult\_columns    & \ldots & \ref{linalg:mult_columns} \\
+    mult\_rows       & \ldots & \ref{linalg:mult_rows} &
+    pivot            & \ldots & \ref{linalg:pivot} \\
+    remove\_columns  & \ldots & \ref{linalg:remove_columns} &
+    remove\_rows     & \ldots & \ref{linalg:remove_rows} \\
+    row\_dim         & \ldots & \ref{linalg:row_dim} &
+    rows\_pivot      & \ldots & \ref{linalg:rows_pivot} \\
+    stack\_rows      & \ldots & \ref{linalg:stack_rows} &
+    sub\_matrix      & \ldots & \ref{linalg:sub_matrix} \\
+    swap\_columns    & \ldots & \ref{linalg:swap_columns} &
+    swap\_entries    & \ldots & \ref{linalg:swap_entries} \\
+    swap\_rows       & \ldots & \ref{linalg:swap_rows} &
+  \end{tabular}
+\end{center}
+
+
+\subsubsection{Constructors}
+
+Functions that create matrices.
+
+\begin{center}
+\begin{tabular}{l l l l l l}
+band\_matrix       & \ldots &\ref{linalg:band_matrix} &
+block\_matrix      & \ldots &\ref{linalg:block_matrix} \\
+char\_matrix       & \ldots &\ref{linalg:char_matrix} &
+coeff\_matrix      & \ldots &\ref{linalg:coeff_matrix} \\
+companion          & \ldots &\ref{linalg:companion} &
+hessian            & \ldots &\ref{linalg:hessian} \\
+hilbert            & \ldots &\ref{linalg:hilbert} &
+mat\_jacobian      & \ldots &\ref{linalg:mat_jacobian} \\
+jordan\_block      & \ldots &\ref{linalg:jordan_block} &
+make\_identity     & \ldots &\ref{linalg:make_identity} \\
+random\_matrix     & \ldots &\ref{linalg:random_matrix} &
+toeplitz           & \ldots &\ref{linalg:toeplitz} \\
+Vandermonde        & \ldots &\ref{linalg:Vandermonde} &
+Kronecker\_Product & \ldots &\ref{linalg:kronecker_product}
+\end{tabular}
+\end{center}
+
+\subsubsection{High level algorithms}
+
+\begin{center}
+\begin{tabular}{l l l l l l}
+char\_poly       & \ldots &\ref{linalg:char_poly} &
+cholesky         & \ldots &\ref{linalg:cholesky} \\
+gram\_schmidt    & \ldots &\ref{linalg:gram_schmidt} &
+lu\_decom        & \ldots &\ref{linalg:lu_decom} \\
+pseudo\_inverse  & \ldots &\ref{linalg:pseudo_inverse} &
+simplex          & \ldots &\ref{linalg:simplex} \\
+svd              & \ldots &\ref{linalg:svd} &
+triang\_adjoint  & \ldots &\ref{linalg:triang_adjoint}
+\end{tabular}
+\end{center}
+
+There is a separate {\small NORMFORM} package described in section \ref{NORMFORM} for computing
+the following matrix normal forms in \REDUCE:
+\begin{center}
+  smithex, smithex\_int, frobenius, ratjordan, jordansymbolic, jordan.
+\end{center}
+
+
+\subsubsection{Predicates}
+
+\begin{center}
+  \begin{tabular}{l l l l l l}
+    matrixp     & \ldots &\ref{linalg:matrixp} &
+    squarep     & \ldots &\ref{linalg:squarep} \\
+    symmetricp  & \ldots &\ref{linalg:symmetricp} &
+  \end{tabular}
+\end{center}
+
+
+\subsubsection*{Note on examples:}
+
+In the examples the matrix $\mathcal{A}$ will be
+\[
+\mathcal{A} = \begin{pmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9 \end{pmatrix}
+\]
+
+
+\subsubsection*{Notation}
+
+Throughout $\mathcal{I}$ is used to indicate the identity matrix and
+$\mathcal{A}^T$ to indicate the transpose of the matrix $\mathcal{A}$.
+
+\subsection{Getting started}
+
+If you have not used matrices within {\REDUCE} before then the following may be
+helpful.
+
+\subsubsection*{Creating matrices}
+
+Initialisation of matrices takes the following syntax:
+
+{\tt mat1 := mat((a,b,c),(d,e,f),(g,h,i));}
+
+will produce
+
+\begin{flushleft}
+\(
+mat1 := \begin{pmatrix} a & b & c \\ d & e & f \\ g & h & i \end{pmatrix}
+\)
+\end{flushleft}
+
+\subsubsection*{Getting at the entries}
+
+The $(i,j)$th entry can be accessed by:
+
+\texttt{mat1(i,j);}
+
+\subsubsection*{Loading the linear\_algebra package}
+
+The package is loaded by:
+
+\texttt{load\_package linalg;}
+
+
+\subsection{What's available}
+
+\label{linalg:subsec3}
+
+\subsubsection{add\_columns, add\_rows}
+\label{linalg:add_columns}
+\hypertarget{operator:ADD_COLUMNS}{}
+\ttindextype[LINALG]{add\_columns}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\
+\texttt{add\_columns($\mathcal{A}$,c1,c2,expr);}
+
+\begin{tabular}{l l l}
+$\mathcal{A}$ & :- & a matrix. \\
+$c1,c2$      & :- & positive integers. \\
+expr       & :- & a scalar expression.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\
+\texttt{add\_columns} replaces column $c$2 of $\mathcal{A}$ by\\
+$\texttt{expr} * \texttt{column($\mathcal{A}$,c1)} + \texttt{column($\mathcal{A}$,c2)}$.\\
+\texttt{add\_rows} performs the equivalent task on the rows of $\mathcal{A}$.
+
+\item[Examples:]\mbox{}\\
+  \texttt{add\_columns}\((\mathcal{A},1,2,x)  =
+  \begin{pmatrix} 1 & x+2 & 3 \\ 4 & 4*x+5 & 6 \\ 7 & 7*x+8 & 9 \end{pmatrix}\)
+
+  \texttt{add\_rows}\((\mathcal{A},2,3,5)  =
+  \begin{pmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 27 & 33 & 39 \end{pmatrix}\)
+
+\item[Related functions:]\mbox{}\\
+\texttt{add\_to\_columns}, \texttt{add\_to\_rows},
+\texttt{mult\_columns}, \texttt{mult\_rows}.
+\end{description}
+
+\subsubsection{add\_rows}
+\label{linalg:add_rows}
+\hypertarget{operator:ADD_ROWS}{}
+\ttindextype[LINALG]{add\_rows}{operator}
+
+See: \texttt{add\_columns}.
+
+
+\subsubsection{add\_to\_columns, add\_to\_rows}
+\label{linalg:add_to_columns}
+\hypertarget{operator:ADD_TO_COLUMNS}{}
+\ttindextype[LINALG]{add\_to\_columns}{operator}
+
+\begin{description}
+  \item[Syntax:]\mbox{}\\*
+\texttt{add\_to\_columns($\mathcal{A}$,column\_list,expr);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$   &:-& a matrix. \\
+column\_list &:-& a positive integer or a list of positive integers. \\
+expr        &:-& a scalar expression.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{add\_to\_columns} adds expr to each column specified in
+column\_list of $\mathcal{A}$.
+
+\texttt{add\_to\_rows} performs the equivalent task on the rows of
+$\mathcal{A}$.
+
+\item[Examples:]\mbox{}\\
+  \texttt{add\_to\_columns}\((\mathcal{A},\{1,2\},10)  =
+  \begin{pmatrix} 11 & 12 & 3 \\ 14 & 15 & 6 \\ 17 & 18 & 9 \end{pmatrix}\)
+
+  \texttt{add\_to\_rows}\((\mathcal{A},2,-x)  =
+  \begin{pmatrix} 1 & 2 & 3 \\ -x+4 & -x+5 & -x+6 \\ 7 & 8 & 9 \end{pmatrix}\)
+
+\item[Related functions:]\mbox{}\\
+\texttt{add\_columns}, \texttt{add\_rows}, \texttt{mult\_rows},
+\texttt{mult\_columns}.
+\end{description}
+
+\subsubsection{add\_to\_rows}
+\label{linalg:add_to_rows}
+\hypertarget{operator:ADD_TO_ROWS}{}
+\ttindextype[LINALG]{add\_to\_rows}{operator}
+
+See: \texttt{add\_to\_columns}.
+
+
+\subsubsection{augment\_columns, stack\_rows}
+\label{linalg:augment_columns}
+\hypertarget{operator:AUGMENT_COLUMNS}{}
+\ttindextype[LINALG]{augment\_columns}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\
+ \texttt{augment\_columns($\mathcal{A}$,column\_list);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$  &:-& a matrix. \\
+column\_list &:-&  either a positive integer or a list of positive
+                   integers.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\
+\texttt{augment\_columns} gets hold of the columns of $\mathcal{A}$ specified
+in column\_list and sticks them together. \\
+\texttt{stack\_rows} performs the same task on rows of
+                $\mathcal{A}$.
+
+\item[Examples:]\mbox{}\\
+  \texttt{augment\_columns}\((\mathcal{A},\{1,2\})  =
+  \begin{pmatrix}{cc} 1 & 2 \\ 4 & 5 \\ 7 & 8  \end{pmatrix}\)
+
+  \texttt{stack\_rows}\((\mathcal{A},\{1,3\})  =
+  \begin{pmatrix} 1 & 2 & 3 \\ 7 & 8 & 9 \end{pmatrix}\)
+
+\item[Related functions:]\mbox{}\\
+\texttt{get\_columns}, \texttt{get\_rows},
+\texttt{sub\_matrix}.
+\end{description}
+
+
+\subsubsection{band\_matrix}
+\label{linalg:band_matrix}
+\hypertarget{operator:BAND_MATRIX}{}
+\ttindextype[LINALG]{band\_matrix}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\
+\texttt{band\_matrix(expr\_list,square\_size);}\\[2mm]
+\begin{tabular}{l l p{.72\linewidth}}
+expr\_list  &:-&
+either a single scalar expression or a list of an odd number of scalar
+expressions. \\
+square\_size &:-& a positive integer.
+\end{tabular}
+
+
+\item[Synopsis:]\mbox{}\\
+                \texttt{band\_matrix} creates a square matrix of
+                dimension \texttt{square\_size}. The diagonal consists of the
+                middle expr of the \texttt{expr\_list}. The expressions to the
+                left of this fill the required number of sub-diagonals and the
+                expressions to the right the super-diagonals.
+
+\item[Examples:]
+\begin{flushleft}
+\texttt{band\_matrix}\((\{x,y,z\},6) =
+ \begin{pmatrix} y & z & 0 & 0 & 0 & 0 \\
+                 x & y & z & 0 & 0 & 0 \\
+                 0 & x & y & z & 0 & 0 \\
+                 0 & 0 & x & y & z & 0 \\
+                 0 & 0 & 0 & x & y & z \\
+                 0 & 0 & 0 & 0 & x & y
+ \end{pmatrix}\)
+\end{flushleft}
+
+\item[Related functions:]\mbox{}\\
+ \texttt{diagonal}.
+\end{description}
+
+
+\subsubsection{block\_matrix}
+\label{linalg:block_matrix}
+\hypertarget{operator:BLOCK_MATRIX}{}
+\ttindextype[LINALG]{block\_matrix}{operator}
+
+\begin{description}
+
+\item[Syntax:]\mbox{}\\
+\texttt{block\_matrix(r,c,matrix\_list);}\\[2mm]
+\begin{tabular}{l l l}
+$r,c$          &:-& positive integers. \\
+\texttt{matrix\_list} &:-& a list of matrices.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\
+\texttt{block\_matrix} creates a matrix that consists of $r\times c$ matrices
+filled from the \texttt{matrix\_list} row-wise.
+
+\item[Examples:]\mbox{}\\
+  \(\mathcal{B} = \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}, \,\,
+  \mathcal{C} = \begin{pmatrix} 5 \\ 5 \end{pmatrix}, \,\,
+  \mathcal{D} = \begin{pmatrix} 22 & 33 \\ 44 & 55 \end{pmatrix}\)
+
+  \texttt{block\_matrix}\((2,3,\{\mathcal{B,C,D,D,C,B}\})  =
+  \begin{pmatrix} 1 & 0 & 5 & 22 & 33 \\ 0 & 1 & 5 & 44 & 55 \\
+    22 & 33 & 5 & 1 & 0 \\ 44 & 55 & 5 & 0 & 1 \end{pmatrix}\)
+\end{description}
+
+
+\subsubsection{char\_matrix}
+\label{linalg:char_matrix}
+\hypertarget{operator:CHAR_MATRIX}{}
+\ttindextype[LINALG]{char\_matrix}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\
+\texttt{char\_matrix($\mathcal{A},\lambda$);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$ &:-& a square matrix. \\
+$\lambda$  &:-& a symbol or algebraic expression.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\
+\texttt{char\_matrix} creates the characteristic matrix $\mathcal{C}$ of
+$\mathcal{A}$.  This is $\mathcal{C} = \lambda \mathcal{I} - \mathcal{A}$.
+
+\item[Examples:]
+\begin{flushleft}
+\texttt{char\_matrix}\((\mathcal{A},x) =
+\begin{pmatrix} x-1 & -2 & -3 \\ -4 & x-5 & -6 \\ -7 & -8 & x-9 \end{pmatrix}\)
+\end{flushleft}
+
+\item[Related functions:]\mbox{}\\
+\texttt{char\_poly}.
+\end{description}
+
+
+\subsubsection{char\_poly}
+\label{linalg:char_poly}
+\hypertarget{operator:CHAR_POLY}{}
+\ttindextype[LINALG]{char\_poly}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\
+\texttt{char\_poly($\mathcal{A},\lambda$);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$ &:-& a square matrix. \\
+$\lambda$ &:-& a symbol or algebraic expression.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\
+\texttt{char\_poly} finds the characteristic polynomial of
+                $\mathcal{A}$.
+
+This is the determinant of $\lambda \mathcal{I} - \mathcal{A}$.
+
+\item[Examples:]\mbox{}\\
+\texttt{char\_poly($\mathcal{A},x$) $= x^3-15*x^2-18*x$}
+
+\item[Related functions:]\mbox{}\\
+ \texttt{char\_matrix}.
+\end{description}
+
+
+\subsubsection{cholesky}
+\label{linalg:cholesky}
+\hypertarget{operator:CHOLESKY}{}
+\ttindextype[LINALG]{cholesky}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\
+\texttt{cholesky($\mathcal{A}$);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$ &:-& a positive definite matrix containing numeric entries.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\
+\texttt{cholesky} computes the cholesky decomposition of $\mathcal{A}$.
+
+It returns \{$\mathcal{L},\mathcal{U}$\} where $\mathcal{L}$
+is a lower matrix, $\mathcal{U}$ is an upper matrix, \\ $\mathcal{A} =
+\mathcal{LU}$, and $\mathcal{U} = \mathcal{L}^T$.
+
+\item[Examples:]\mbox{}\\
+  \(\mathcal{F} = \begin{pmatrix} 1 & 1 & 0 \\ 1 & 3 & 1 \\ 0 & 1 & 1 \end{pmatrix}\)
+
+  \(\texttt{cholesky}(\mathcal{F})  =
+  \left\{ \begin{pmatrix} 1 & 0 & 0 \\ 1 & \sqrt{2} & 0 \\
+    0 & \frac{1}{\sqrt{2}} & \frac{1}{\sqrt{2}} \end{pmatrix},
+  \begin{pmatrix} 1 & 1 & 0 \\ 0 & \sqrt{2} & \frac{1}{\sqrt{2}} \\ 0
+    & 0 & \frac{1}{\sqrt{2}} \end{pmatrix}
+  \right\}\)
+
+\item[Related functions:]\mbox{}\\
+\texttt{lu\_decom}.
+\end{description}
+
+
+\subsubsection{coeff\_matrix}
+\label{linalg:coeff_matrix}
+\hypertarget{operator:COEFF_MATRIX}{}
+\ttindextype[LINALG]{coeff\_matrix}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\
+\texttt{coeff\_matrix(\{\lineqlist{}\});}
+\lazyfootnote{}\\[2mm]
+\begin{tabular}{l l p{.435\linewidth}}
+\lineqlist  &:-& linear equations. Can be
+of the form \textit{equation $=$ number} or just \textit{equation} which is
+equivalent to \textit{equation $=$ 0}.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\
+\texttt{coeff\_matrix} creates the coefficient matrix $\mathcal{C}$ of the linear equations.
+It returns \{$\mathcal{C,X,B}$\} such that $\mathcal{CX} = \mathcal{B}$.
+
+\item[Examples:]\mbox{}\\
+  \texttt{coeff\_matrix}\((\{x+y+4*z=10,y+x-z=20,x+y+4\}) =\) \\[3mm]
+  \(\left\{
+  \begin{pmatrix} 4 & 1 & 1 \\ -1 & 1 & 1 \\ 0 & 1 & 1 \end{pmatrix},
+  \begin{pmatrix} z \\ y \\ x \end{pmatrix},
+  \begin{pmatrix} 10 \\ 20 \\ -4 \end{pmatrix}
+  \right\}\)
+\end{description}
+
+\subsubsection{column\_dim, row\_dim}
+\label{linalg:column_dim}
+\hypertarget{operator:COLUMN_DIM}{}
+\ttindextype[LINALG]{column\_dim}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\
+\texttt{column\_dim($\mathcal{A}$);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$ &:-& a matrix.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\
+\texttt{column\_dim} finds the column dimension of
+                $\mathcal{A}$. \\
+\texttt{row\_dim} finds the row dimension of $\mathcal{A}$.
+
+\item[Examples:]\mbox{}\\
+\texttt{column\_dim}($\mathcal{A}$) = 3
+\end{description}
+
+\subsubsection{companion}
+\label{linalg:companion}
+\hypertarget{operator:COMPANION}{}
+\ttindextype[LINALG]{companion}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\
+\texttt{companion(poly,x);}\\[2mm]
+\begin{tabular}{l l l}
+\texttt{poly} &:-& a monic univariate polynomial in $x$. \\
+$x$    &:-& the variable.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\
+                \texttt{companion} creates the companion matrix $\mathcal{C}$
+                of \texttt{poly}.
+
+This is the square matrix of dimension $n$, where $n$ is the degree
+of \texttt{poly} w.r.t. $x$. The entries of $\mathcal{C}$ are: $\mathcal{C}(i,n)
+= -\texttt{coeffn}(\texttt{poly},x,i-1)$ for $i = 1,\ldots, n$,
+$\mathcal{C}(i,i-1) = 1$ for $i=2,\ldots,n$ and the rest are $0$.
+
+\item[Examples:]
+\begin{flushleft}
+\(
+\texttt{companion}(x^4+17*x^3-9*x^2+11,x) =
+ \begin{pmatrix} 0 & 0 & 0 & -11 \\ 1 & 0 & 0 & 0 \\
+0 & 1 & 0 & 9 \\ 0 & 0 & 1 & -17 \end{pmatrix}
+\)
+\end{flushleft}
+
+\item[Related functions:]\mbox{}\\
+\texttt{find\_companion}.
+\end{description}
+
+
+\subsubsection{copy\_into}
+\label{linalg:copy_into}
+\hypertarget{operator:COPY_INTO}{}
+\ttindextype[LINALG]{copy\_into}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\
+\texttt{copy\_into($\mathcal{A,B}$,r,c);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A,B}$ &:-& matrices. \\
+$r,c$          &:-& positive integers.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\
+\texttt{copy\_into} copies matrix $\mathcal{A}$ into
+                $\mathcal{B}$ with $\mathcal{A}(1,1)$ at $\mathcal{B}(r,c)$.
+
+\item[Examples:]\mbox{}\\
+  \(\mathcal{G} = \begin{pmatrix} 0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \\
+    0 & 0 & 0 & 0 \\ 0 & 0 & 0 & 0 \end{pmatrix}\)
+
+  \texttt{copy\_into}\((\mathcal{A,G},1,2)  =
+  \begin{pmatrix} 0 & 1 & 2 & 3 \\ 0 & 4 & 5 & 6 \\ 0 & 7 & 8
+    & 9 \\ 0 & 0 & 0 & 0  \end{pmatrix}\)
+
+\item[Related functions:]\mbox{}\\
+\texttt{augment\_columns}, \texttt{extend}, \texttt{matrix\_augment},
+\texttt{matrix\_stack}, \texttt{stack\_rows}, \texttt{sub\_matrix}.
+
+\end{description}
+
+
+\subsubsection{diagonal}
+\label{linalg:diagonal}
+\hypertarget{operator:DIAGONAL}{}
+\ttindextype[LINALG]{diagonal}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\
+\texttt{diagonal(\{\matlist{}\});}\lazyfootnote{}\\[2mm]
+\begin{tabular}{l l p{.58\linewidth}}
+\matlist &:-& each can be either a scalar expr or a square matrix.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\
+\texttt{diagonal} creates a matrix that contains the
+input on the diagonal.
+
+\item[Examples:]\mbox{}\\
+  \(\mathcal{H} = \begin{pmatrix} 66 & 77 \\ 88 & 99 \end{pmatrix}\)
+
+  \(\texttt{diagonal}(\{\mathcal{A},x,\mathcal{H}\}) =
+  \begin{pmatrix} 1 & 2 & 3 & 0 & 0 & 0 \\ 4 & 5 & 6 & 0 & 0
+    & 0 \\ 7 & 8 & 9 & 0 & 0 & 0 \\ 0 & 0 & 0 & x & 0 & 0 \\ 0 & 0 & 0 & 0
+    & 66 & 77 \\ 0 & 0 & 0 & 0 & 88 & 99
+  \end{pmatrix}\)
+
+\item[Related functions:]\mbox{}\\
+\texttt{jordan\_block}.
+\end{description}
+
+
+\subsubsection{extend}
+\label{linalg:extend}
+\hypertarget{operator:EXTEND}{}
+\ttindextype[LINALG]{extend}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\
+\texttt{extend($\mathcal{A}$,r,c,expr);}\\
+\begin{tabular}{l l l}
+$\mathcal{A}$ &:-& a matrix. \\
+$r,c$              &:-& positive integers. \\
+\texttt{expr}      &:-& algebraic expression or symbol.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\
+                \texttt{extend} returns a copy of $\mathcal{A}$ that has been
+                extended by $r$ rows and $c$ columns. The new entries are
+                made equal to \texttt{expr}.
+
+\item[Examples:]
+\begin{flushleft}
+\(
+\texttt{extend}(\mathcal{A},1,2,x) =
+\begin{pmatrix} 1 & 2 & 3 & x & x \\ 4 & 5 & 6 & x & x
+\\ 7 & 8 & 9 & x & x \\ x & x & x & x & x
+\end{pmatrix}
+\)
+\end{flushleft}
+
+\item[Related functions:]\mbox{}\\
+\texttt{copy\_into}, \texttt{matrix\_augment},
+\texttt{matrix\_stack}, \texttt{remove\_columns}, \texttt{remove\_rows}.
+
+\end{description}
+
+
+\subsubsection{find\_companion}
+\label{linalg:find_companion}
+\hypertarget{operator:FIND_COMPANION}{}
+\ttindextype[LINALG]{find\_companion}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\
+\texttt{find\_companion($\mathcal{A}$,x);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$ &:-& a matrix. \\
+$x$          &:-& the variable.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+  Given a companion matrix, \texttt{find\_companion} finds the polynomial
+from which it was made.
+
+\item[Examples:]\mbox{}\\
+  \(\mathcal{C} = \begin{pmatrix} 0 & 0 & 0 & -11 \\ 1 & 0 & 0 & 0
+    \\ 0 & 1 & 0 & 9 \\ 0 & 0 & 1 & -17 \end{pmatrix}\)
+
+  \texttt{find\_companion}\((\mathcal{C},x) = x^4+17*x^3-9*x^2+11\)
+
+\item[Related functions:]\mbox{}\\*
+\texttt{companion}.
+\end{description}
+
+\subsubsection{get\_columns, get\_rows}
+\label{linalg:get_columns}
+\hypertarget{operator:GET_COLUMNS}{}
+\ttindextype[LINALG]{get\_columns}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{get\_columns($\mathcal{A}$,column\_list);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$ &:-& a matrix. \\
+$c$          &:-& either a positive integer or a list of positive
+                integers.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{get\_columns} removes the columns of $\mathcal{A}$ specified in
+                \texttt{column\_list} and returns them as a list of column
+                matrices.
+
+ \texttt{get\_rows} performs the same task on the rows of
+                $\mathcal{A}$.
+
+\item[Examples:]\mbox{}\\
+  \texttt{get\_columns}\((\mathcal{A},\{1,3\})  =
+  \left\{
+  \begin{pmatrix} 1 \\ 4 \\ 7 \end{pmatrix},
+  \begin{pmatrix} 3 \\ 6 \\ 9 \end{pmatrix}
+  \right\}\)
+
+  \texttt{get\_rows}\((\mathcal{A},2)  =
+  \left\{
+  \begin{pmatrix} 4 & 5 & 6 \end{pmatrix}
+  \right\}\)
+
+\item[Related functions:]\mbox{}\\*
+\texttt{augment\_columns}, \texttt{stack\_rows}, \texttt{sub\_matrix}.
+\end{description}
+
+
+\subsubsection{get\_rows}
+\label{linalg:get_rows}
+\hypertarget{operator:GET_ROWS}{}
+\ttindextype[LINALG]{get\_rows}{operator}
+See: \texttt{get\_columns}.
+
+
+\subsubsection{gram\_schmidt}
+\label{linalg:gram_schmidt}
+\hypertarget{operator:GRAM_SCHMIDT}{}
+\ttindextype[LINALG]{gram\_schmidt}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{gram\_schmidt(\{\veclist{}\});} \lazyfootnote{}\\[2mm]
+\begin{tabular}{l l p{.62\linewidth}}
+\veclist &:-& linearly-independent vectors.
+                             Each vector must be written as a list,
+                             eg:\{1,0,0\}.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{gram\_schmidt} performs the Gram-Schmidt orthonormalisation on the input vectors.
+It returns a list of orthogonal normalised vectors.
+
+\item[Examples:]\mbox{}\\*
+\texttt{gram\_schmidt(\{\{1,0,0\},\{1,1,0\},\{1,1,1\}\})} =
+\{\{1,0,0\},\{0,1,0\},\{0,0,1\}\}\\
+\texttt{gram\_schmidt(\{\{1,2\},\{3,4\}\})} $\displaystyle=
+\{\{ \frac{1}{{\sqrt{5}}} , \frac{2}{\sqrt{5}} \},
+\{ \frac{2*\sqrt{5}}{5} , \frac{-\sqrt{5}}{5} \}\}$
+\end{description}
+
+\subsubsection{hermitian\_tp}
+\label{linalg:hermitian_tp}
+\hypertarget{operator:HERMITIAN_TP}{}
+\ttindextype[LINALG]{hermitian\_tp}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{hermitian\_tp($\mathcal{A}$);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$ &:-& a matrix.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+         \texttt{hermitian\_tp} computes the hermitian transpose of $\mathcal{A}$.
+
+This is a matrix in which the $(i,j)$th entry is the conjugate of the $(j,i)$th
+entry of $\mathcal{A}$.
+
+\item[Examples:]\mbox{}\\
+  \(\mathcal{J} = \begin{pmatrix} i+1 & i+2 & i+3 \\ 4 & 5 & 2 \\ 1 &
+    i & 0 \end{pmatrix}\)
+
+  \texttt{hermitian\_tp}\((\mathcal{J})  =
+  \begin{pmatrix} -i+1 & 4 & 1 \\ -i+2 & 5 & -i \\-i+3 & 2 & 0 \end{pmatrix}\)
+
+\item[Related functions:]\mbox{}\\*
+\texttt{tp}\footnote{standard reduce call for the
+transpose of a matrix - see section \protect\ref{sec:core-matrix-operators}.}.
+\end{description}
+
+
+\subsubsection{hessian}
+\label{linalg:hessian}
+\hypertarget{operator:HESSIAN}{}
+\ttindextype[LINALG]{hessian}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{hessian(expr,variable\_list);}\\[2mm]
+\begin{tabular}{l l l}
+expr           &:-& a scalar expression. \\
+variable\_list &:-& either a single variable or a list of variables.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+                \texttt{hessian} computes the hessian matrix of expr w.r.t.
+                the varibles in \texttt{variable\_list}.
+
+This is an $n\times n$ matrix where $n$ is the number of variables and the
+$(i,j)$th entry is \texttt{df(expr,variable\_list(i),variable\_list(j))}.
+
+\item[Examples:]
+\begin{flushleft}
+\(
+\texttt{hessian}(x*y*z+x^2,\{w,x,y,z\}) =
+ \begin{pmatrix} 0 & 0 & 0 & 0 \\ 0 & 2 & z & y \\ 0 & z & 0 & x \\ 0 & y & x & 0
+  \end{pmatrix}
+\)
+\end{flushleft}
+
+\item[Related functions:]\mbox{}\\*
+\texttt{df}\footnote{standard reduce call for
+differentiation - see section \protect\ref{sec:DF-operator}.}.
+\end{description}
+
+
+\subsubsection{hilbert}
+\label{linalg:hilbert}
+\hypertarget{operator:HILBERT}{}
+\ttindextype[LINALG]{hilbert}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{hilbert(square\_size,expr);}\\[2mm]
+\begin{tabular}{l l l}
+square\_size &:-& a positive integer. \\
+expr         &:-& an algebraic expression.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{hilbert} computes the square hilbert matrix of
+                dimension \texttt{square\_size}.
+
+This is the symmetric matrix in which the $(i,j)$th entry is
+$1/(i+j-\texttt{expr})$.
+
+\item[Examples:]
+\begin{flushleft}
+\(
+\texttt{hilbert}(3,y+x)  =
+\begin{pmatrix} \frac{-1}{x+y-2} & \frac{-1}{x+y-3}
+& \frac{-1}{x+y-4} \\ \frac{-1}{x+y-3} & \frac{-1}{x+y-4} &
+\frac{-1}{x+y-5} \\ \frac{-1}{x+y-4} & \frac{-1}{x+y-5} &
+\frac{-1}{x+y-6}
+\end{pmatrix}
+\)
+\end{flushleft}
+\end{description}
+
+
+\subsubsection{jacobian}
+\label{linalg:mat_jacobian}
+\hypertarget{operator:JACOBIAN}{}
+\ttindextype[LINALG]{jacobian}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{mat\_jacobian(expr\_list,variable\_list);}\\[2mm]
+\begin{tabular}{l l p{.72\linewidth}}
+expr\_list  &:-& either a
+single algebraic expression or a list of algebraic expressions.\\
+variable\_list &:-& either a single variable or a list of variables.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{mat\_jacobian} computes the jacobian matrix of \texttt{expr\_list} w.r.t.
+\texttt{variable\_list}.
+
+This is a matrix whose $(i,j)$th entry
+is \texttt{df(expr\_list(i),variable\_list(j))}.  The matrix is $n\times m$
+where $n$ is the number of variables and $m$ the number of expressions.
+
+\item[Examples:]\mbox{}\\
+  \texttt{mat\_jacobian}\((\{x^4,x*y^2,x*y*z^3\},\{w,x,y,z\}) =\)
+
+  \(\begin{pmatrix} 0 & 4*x^3 & 0 & 0 \\ 0 & y^2 & 2*x*y & 0 \\
+  0 & y*z^3 & x*z^3 & 3*x*y*z^2
+  \end{pmatrix}\)
+
+\item[Related functions:]\mbox{}\\*
+\texttt{hessian}, \texttt{df}\footnote{standard reduce call
+for differentiation - see section \protect\ref{sec:DF-operator}.}.
+
+NOTE: The function \texttt{mat\_jacobian} used to be called just "\texttt{jacobian}"
+however us of that name was in conflict with another Reduce package.
+\end{description}
+
+
+\subsubsection{jordan\_block}
+\label{linalg:jordan_block}
+\hypertarget{operator:JORDAN_BLOCK}{}
+\ttindextype[LINALG]{jordan\_block}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{jordan\_block(expr,square\_size);}\\[2mm]
+\begin{tabular}{l l l}
+expr        &:-& an algebraic expression or symbol. \\
+square\_size &:-& a positive integer.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{jordan\_block} computes the square jordan block matrix $\mathcal{J}$
+                of dimension \texttt{square\_size}.
+
+The entries of $\mathcal{J}$ are: $\mathcal{J}(i,i) = \texttt{expr}$ for
+                $i=1,\ldots,n$, $\mathcal{J}(i,i+1) = 1$ for $i=1,\ldots,n-1$,
+                and all other entries are 0.
+
+\item[Examples:]\nopagebreak
+\begin{flushleft}
+\texttt{jordan\_block(x,5)} \(=
+ \begin{pmatrix} x & 1 & 0 & 0 & 0 \\ 0 & x & 1 & 0 & 0 \\ 0
+& 0 & x & 1 & 0 \\ 0 & 0 & 0 & x & 1 \\ 0 & 0 & 0 & 0 & x
+ \end{pmatrix}\)
+\end{flushleft}
+
+\item[Related functions:]\mbox{}\\*
+\texttt{diagonal}, \texttt{companion}.
+\end{description}
+
+
+\subsubsection{lu\_decom}
+\label{linalg:lu_decom}
+\hypertarget{operator:LU_DECOM}{}
+\ttindextype[LINALG]{lu\_decom}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{lu\_decom($\mathcal{A}$);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$ &:-& \parbox[t]{.848\linewidth}{a matrix containing either
+numeric entries or imaginary entries with numeric coefficients.}
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+  \texttt{lu\_decom} performs LU decomposition on $\mathcal{A}$, ie: it returns
+  \{$\mathcal{L,U}$\} where $\mathcal{L}$ is a lower diagonal matrix, $\mathcal{U}$ an
+  upper diagonal matrix and $\mathcal{A} = \mathcal{LU}$.
+
+\textbf{Caution:}
+  The algorithm used can swap the rows of $\mathcal{A}$ during the calculation. This
+  means that $\mathcal{LU}$ does not equal $\mathcal{A}$ but a row equivalent of it. Due
+  to this, \texttt{lu\_decom} returns \{$\mathcal{L,U}$,vec\}. The call {\tt
+  convert($\mathcal{A}$,vec)} will return the matrix that has been decomposed, ie:
+  $\mathcal{LU} = $ \texttt{convert($\mathcal{A}$,vec)}.
+
+\item[Examples:]
+\(
+\mathcal{K} = \begin{pmatrix} 1 & 3 & 5 \\ -4 & 3 & 7 \\ 8 & 6 & 4 \end{pmatrix}
+\)
+
+\texttt{lu} $:=$ \texttt{lu\_decom}\((\mathcal{K}) =
+\left\{
+        \begin{pmatrix} 8 & 0 & 0 \\ -4 & 6 & 0 \\ 1 & 2.25 & 1.125 1 \end{pmatrix},
+        \begin{pmatrix} 1 & 0.75 & 0.5 \\ 0 & 1 & 1.5 \\ 0 & 0 & 1 \end{pmatrix},
+	[\; 3 \; 2 \; 3 \; ]
+\right\}\)
+
+\(\texttt{first lu * second lu} =
+        \begin{pmatrix} 8 & 6 & 4 \\ -4 & 3 & 7 \\ 1 & 3 & 5 \end{pmatrix}\)
+
+\(\texttt{convert($\mathcal{K}$,third lu)} =
+        \begin{pmatrix} 8 & 6 & 4 \\ -4 & 3 & 7 \\ 1 & 3 & 5 \end{pmatrix}\)
+
+\(
+\mathcal{P} = \begin{pmatrix} i+1 & i+2 & i+3 \\ 4 & 5 & 2 \\ 1 & i & 0 \end{pmatrix}
+\)
+
+\begin{align*}
+\texttt{lu} := \texttt{lu}\_\texttt{decom}(\mathcal{P}) = &
+\left\{
+        \begin{pmatrix} 1 & 0 & 0 \\ 4 & -4*i+5 & 0 \\ i+1 &
+3 & 0.41463*i+2.26829 \end{pmatrix}, \right. \nonumber \\ &
+\left. \: \; \, \begin{pmatrix} 1 & i & 0 \\ 0 & 1 &
+0.19512*i+0.24390 \\ 0 & 0 & 1 \end{pmatrix}, \,\,
+[\; 3 \; 2 \; 3 \;] \,\,
+\right\}
+\end{align*}
+
+\(\texttt{first lu * second lu} =
+        \begin{pmatrix} 1 & i & 0 \\ 4 & 5 & 2 \\ i+1 & i+2 & i+3 \end{pmatrix}\)
+
+\(\mathtt{convert(\mathcal{P},third lu}) =
+        \begin{pmatrix} 1 & i & 0 \\ 4 & 5 & 2 \\ i+1 & i+2 & i+3 \end{pmatrix}\)
+
+\item[Related functions:]\mbox{}\\
+\texttt{cholesky}.
+\end{description}
+
+
+\subsubsection{make\_identity}
+\label{linalg:make_identity}
+\hypertarget{operator:MAKE_IDENTITY}{}
+\ttindextype[LINALG]{make\_identity}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{make\_identity(square\_size);}\\[2mm]
+\begin{tabular}{l l l}
+square\_size &:-& a positive integer.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{make\_identity} creates the identity matrix of
+                dimension square\_size.
+
+\item[Examples:]
+\begin{flushleft}
+\texttt{make\_identity}(4) \(=
+        \begin{pmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\
+                        0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1
+ \end{pmatrix}\)
+\end{flushleft}
+
+\item[Related functions:]\mbox{}\\*
+\texttt{diagonal}.
+\end{description}
+
+
+\subsubsection{matrix\_augment, matrix\_stack}
+\label{linalg:matrix_augment}
+\hypertarget{operator:MATRIX_AUGMENT}{}
+\ttindextype[LINALG]{matrix\_augment}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{matrix\_augment(\{\matlist\});}\lazyfootnote{}\\[2mm]
+\begin{tabular}{l l l}
+\matlist &:-& matrices.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{matrix\_augment} sticks the matrices in
+                  \texttt{matrix\_list} together horizontally.
+
+\texttt{matrix\_stack} sticks the matrices in \texttt{matrix\_list}
+                together vertically.
+
+\item[Examples:]\mbox{}\\
+  \texttt{matrix\_augment}\((\{\mathcal{A,A}\})  =
+  \begin{pmatrix} 1 & 2 & 3 & 1 & 2 & 3 \\ 4 & 4 & 6
+    & 4 & 5 & 6 \\ 7 & 8 & 9 & 7 & 8 & 9
+  \end{pmatrix}\)
+
+  \texttt{matrix\_stack}\((\{\mathcal{A,A}\})  =
+  \begin{pmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9
+    \\ 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9
+  \end{pmatrix}\)
+
+\item[Related functions:]\mbox{}\\
+\texttt{augment\_columns}, \texttt{stack\_rows},
+\texttt{sub\_matrix}.
+\end{description}
+
+
+\subsubsection{matrixp}
+\label{linalg:matrixp}
+\hypertarget{operator:MATRIXP}{}
+\ttindextype[LINALG]{matrixp}{boolean operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{matrixp(test\_input);}\\[2mm]
+\begin{tabular}{l l l}
+test\_input &:-& anything you like.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{matrixp} is a boolean function that returns t if
+                the input is a matrix and nil otherwise.
+
+\item[Examples:]\mbox{}\\*
+\texttt{matrixp}($\mathcal{A}$) = t
+
+\texttt{matrixp}(doodlesackbanana) = nil
+
+\item[Related functions:]\mbox{}\\*
+\texttt{squarep}, \texttt{symmetricp}.
+\end{description}
+
+
+\subsubsection{matrix\_stack}
+\label{linalg:matrix_stack}
+\hypertarget{operator:MATRIX_STACK}{}
+\ttindextype[LINALG]{matrix\_stack}{operator}
+See: \texttt{matrix\_augment}.
+
+
+\subsubsection{minor}
+\label{linalg:minor}
+\hypertarget{operator:MINOR}{}
+\ttindextype[LINALG]{minor}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{minor($\mathcal{A}$,r,c);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$ &:-& a matrix. \\
+$r,c$        &:-& positive integers.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+                \texttt{minor} computes the $(r,c)$th minor of $\mathcal{A}$.
+
+                This is created by removing the $r$th row and the $c$th
+                column from $\mathcal{A}$.
+
+\item[Examples:]
+\begin{flushleft}
+\(
+\texttt{minor}(\mathcal{A},1,3)  =
+        \begin{pmatrix} 4 & 5 \\ 7 & 8 \end{pmatrix}
+\)
+\end{flushleft}
+
+\item[Related functions:]\mbox{}\\*
+\texttt{remove\_columns}, \texttt{remove\_rows}.
+\end{description}
+
+
+\subsubsection{mult\_columns, mult\_rows}
+\label{linalg:mult_columns}
+\hypertarget{operator:MULT_COLUMNS}{}
+\ttindextype[LINALG]{mult\_columns}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{mult\_columns($\mathcal{A}$,column\_list,expr);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$   &:-& a matrix. \\
+column\_list &:-& a positive integer or a list of positive integers. \\
+expr        &:-& an algebraic expression.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{mult\_columns} returns a copy of $\mathcal{A}$ in which
+                the columns specified in column\_list have been
+multiplied by expr.
+
+\texttt{mult\_rows} performs the same task on the rows of $\mathcal{A}$.
+
+\item[Examples:]\mbox{}\\
+  \texttt{mult\_columns}\((\mathcal{A},\{1,3\},x)  =
+  \begin{pmatrix} x & 2 & 3*x \\ 4*x & 5 & 6*x \\ 7*x & 8 & 9*x \end{pmatrix}\)
+
+  \texttt{mult\_rows}\((\mathcal{A},2,10)  =
+  \begin{pmatrix} 1 & 2 & 3 \\ 40 & 50 & 60 \\ 7 & 8 & 9 \end{pmatrix}\)
+
+\item[Related functions:]\mbox{}\\*
+\texttt{add\_to\_columns}, \texttt{add\_to\_rows}.
+\end{description}
+
+
+\subsubsection{\texttt{mult\_rows}}
+\label{linalg:mult_rows}
+\hypertarget{operator:MULT_ROWS}{}
+\ttindextype[LINALG]{mult\_rows}{operator}
+See: \texttt{mult\_columns}.
+
+
+\subsubsection{pivot}
+\label{linalg:pivot}
+\hypertarget{operator:PIVOT}{}
+\ttindextype[LINALG]{pivot}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{pivot($\mathcal{A}$,r,c);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$ &:-& a matrix. \\
+$r,c$        &:-& positive integers such that $\mathcal{A}(r,c) \neq 0$.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{pivot} pivots $\mathcal{A}$ about its $(r,c)$th entry.
+
+To do this, multiples of the r'th row are added to every
+     other row in the matrix.
+
+This means that the c'th column
+                will be 0 except for the (r,c)'th entry.
+
+\item[Examples:]
+\begin{flushleft}
+\(
+\texttt{pivot}(\mathcal{A},2,3) =
+        \begin{pmatrix} -1 & -0.5 & 0 \\ 4 & 5 & 6 \\ 1 & 0.5 & 0 \end{pmatrix}
+\)
+\end{flushleft}
+
+\item[Related functions:]\mbox{}\\
+\texttt{rows\_pivot}.
+\end{description}
+
+
+\subsubsection{pseudo\_inverse}
+\label{linalg:pseudo_inverse}
+\hypertarget{operator:PSEUDO_INVERSE}{}
+\ttindextype[LINALG]{pseudo\_inverse}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{pseudo\_inverse($\mathcal{A}$);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$ &:-& a matrix containing only real numeric entries.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{pseudo\_inverse}, also known as the Moore-Penrose inverse, computes
+the pseudo inverse of $\mathcal{A}$.
+
+Given the singular value decomposition of $\mathcal{A}$, i.e: $\mathcal{A} =
+\mathcal{U}
+\Sigma\mathcal{V}^T$, then the pseudo inverse $\mathcal{A}^{\dagger}$ is defined
+by $\mathcal{A}^{\dagger} = \mathcal{V} \Sigma^{\dagger} \mathcal{U}^{T}$. For the
+diagonal
+matrix $\Sigma$, the pseudoinverse $\Sigma^{\dagger}$ is computed by taking the reciprocal
+of only the nonzero diagonal elements.
+
+If $\mathcal{A}$ is square and non-singular, then $\mathcal{A}^{\dagger} = \mathcal{A}$.
+In general, however,
+$\mathcal{A} \mathcal{A}^{\dagger} \mathcal{A} = \mathcal{A}$, and
+$\mathcal{A}^{\dagger} \mathcal{A} \mathcal{A}^{\dagger} = \mathcal{A}^{\dagger}$.
+
+Perhaps more importantly, $\mathcal{A}^{\dagger}$ solves the following least-squares
+problem: given a rectangular matrix $\mathcal{A}$ and a vector $b$, find the
+$x$ minimizing $\|\mathcal{A}x - b\|_2$,
+and which, in addition, has minimum $\ell_{2}$ (euclidean) Norm, $\|x\|_2$.
+This $x$ is $\mathcal{A}^{\dagger} b$.
+
+\item[Examples:]
+\begin{flushleft}
+\[
+\mathcal{R} = \begin{pmatrix} 1 & 2 & 3 & 4 \\ 9 & 8 & 7 & 6 \end{pmatrix},
+\quad
+\text{pseudo}\_\text{inverse}(\mathcal{R}) =
+        \begin{pmatrix} -0.2 & 0.1 \\ -0.05 & 0.05 \\ 0.1 & 0 \\ 0.25 & -0.05 \end{pmatrix}
+\]
+\end{flushleft}
+
+\item[Related functions:]\mbox{}\\*
+\texttt{svd}.
+\end{description}
+
+\subsubsection{random\_matrix}
+\label{linalg:random_matrix}
+\hypertarget{operator:RANDOM_MATRIX}{}
+\ttindextype[LINALG]{random\_matrix}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{random\_matrix(r,c,limit);}\\[2mm]
+\begin{tabular}{l l l}
+$r,c$, limit &:-& positive integers. \\
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{random\_matrix} creates an $r\times c$ matrix with random entries in the
+range $-\text{limit} < \text{entry} < \text{limit}$.
+
+\hypertarget{switch:IMAGINARY}{}
+\hypertarget{switch:NOT_NEGATIVE}{}
+\hypertarget{switch:ONLY_INTEGER}{}
+\hypertarget{switch:SYMMETRIC}{}
+\hypertarget{switch:LOWER_MATRIX}{}
+\hypertarget{switch:UPPER_MATRIX}{}
+\ttindexswitch[LINALG]{imaginary}
+\ttindexswitch[LINALG]{not\_negative}
+\ttindexswitch[LINALG]{only\_integer}
+\ttindexswitch[LINALG]{symmetric}
+\ttindexswitch[LINALG]{lower\_matrix}
+\ttindexswitch[LINALG]{upper\_matrix}
+\item[Switches:]\mbox{}\\*
+\begin{tabular}{l l p{0.685\linewidth}}
+\texttt{imaginary}  &:-& if
+on, then matrix entries are $x+iy$ where $-\text{limit} < x,y < \text{limit}$.\\
+\texttt{not\_negative} &:-& if on then $0 <
+\text{entry} < \text{limit}$. In the imaginary case we have $0<x,y<\text{limit}$.\\
+\texttt{only\_integer} &:-& if on then each
+entry is an integer. In the imaginary case $x,y$ are integers.\\
+\texttt{symmetric} &:-& if on then the matrix is symmetric. \\
+\texttt{upper\_matrix} &:-& if on then the
+matrix is upper triangular. \\
+\texttt{lower\_matrix} &:-& if on then the matrix is lower triangular.
+\end{tabular}
+
+\item[Examples:]\mbox{}\\
+  \texttt{random\_matrix}\((3,3,10) =
+  \begin{pmatrix} -4.729721 & 6.987047 & 7.521383 \\
+    - 5.224177 & 5.797709 & - 4.321952 \\
+    - 9.418455 & - 9.94318 & - 0.730980
+  \end{pmatrix}\)
+
+  \texttt{on only\_integer, not\_negative, upper\_matrix, imaginary;}
+
+  \texttt{random\_matrix}\((4,4,10) =
+  \begin{pmatrix} 2*i+5 & 3*i+7 & 7*i+3 & 6 \\ 0 & 2*i+5 &
+    5*i+1 & 2*i+1 \\ 0 & 0 & 8 & i \\ 0 & 0 & 0& 5*i+9
+  \end{pmatrix}\)
+\end{description}
+
+
+\subsubsection{remove\_columns, remove\_rows}
+\label{linalg:remove_columns}
+\hypertarget{operator:REMOVE_COLUMNS}{}
+\ttindextype[LINALG]{remove\_columns}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{remove\_columns($\mathcal{A}$,column\_list);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$   &:-& a matrix. \\
+column\_list &:-& either a positive integer or a list of
+                  positive integers.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{remove\_columns} removes the columns specified in
+                column\_list from $\mathcal{A}$.
+
+\texttt{remove\_rows} performs the same task on the rows
+                of $\mathcal{A}$.
+
+\item[Examples:]\mbox{}\\
+\texttt{remove\_columns}\((\mathcal{A},2) =
+        \begin{pmatrix} 1 & 3 \\ 4 & 6 \\ 7 & 9  \end{pmatrix}\)
+
+\texttt{remove\_rows}\((\mathcal{A},\{1,3\}) =
+        \begin{pmatrix} 4 & 5 & 6 \end{pmatrix}\)
+
+\item[Related functions:]\mbox{}\\*
+\texttt{minor}.
+\end{description}
+
+
+\subsubsection{remove\_rows}
+\label{linalg:remove_rows}
+\hypertarget{operator:REMOVE_ROWS}{}
+\ttindextype[LINALG]{remove\_rows}{operator}
+See: \texttt{remove\_columns}.
+
+
+\subsubsection{row\_dim}
+\label{linalg:row_dim}
+\hypertarget{operator:ROW_DIM}{}
+\ttindextype[LINALG]{row\_dim}{operator}
+
+See: \texttt{column\_dim}.
+
+
+\subsubsection{rows\_pivot}
+\label{linalg:rows_pivot}
+\hypertarget{operator:ROWS_PIVOT}{}
+\ttindextype[LINALG]{rows\_pivot}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{rows\_pivot($\mathcal{A}$,r,c,\{row\_list\});}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$ &:-& a matrix. \\
+r,c        &:-& positive integers such that $\mathcal{A}$(r,c) neq 0.\\
+row\_list  &:-& positive integer or a list of positive integers.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{rows\_pivot} performs the same task as \texttt{pivot} but applies
+the pivot only to the rows specified in row\_list.
+
+\item[Examples:]\mbox{}\\
+  \(\mathcal{N} = \begin{pmatrix} 1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 &
+    9 \\1 & 2 & 3 \\ 4 & 5 & 6 \end{pmatrix}\)
+
+  \texttt{rows\_pivot}\((\mathcal{N},2,3,\{4,5\}) = \begin{pmatrix}
+    1 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 9 \\ -0.75 & 0 & 0.75 \\
+    -0.375 & 0 & 0.375
+  \end{pmatrix}\)
+
+\item[Related functions:]\mbox{}\\
+\texttt{pivot}.
+\end{description}
+
+
+\subsubsection{simplex}
+\label{linalg:simplex}
+\hypertarget{operator:SIMPLEX}{}
+\ttindextype[LINALG]{simplex}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{simplex(max/min,objective function,\{linear
+inequalities\},[\{bounds\}]);}\\[2mm]
+\begin{tabular}{l l p{.63\linewidth}}
+  max/min             & :- & either max or min
+    (signifying maximise and minimise). \\
+  objective function  & :- & the function you are maximising or
+  minimising. \\
+  linear inequalities & :- & the constraint
+    inequalities. Each one must be of the form
+    \textit{sum of variables ($<=,=,>=$) number}.\\
+  bounds & :- & bounds on the variables as
+    specified for the LP file format. Each bound is of one of the forms $l\leq
+    v$, $v\leq u$, or $l\leq v\leq u$, where $v$ is a variable and $l$, $u$ are
+    numbers or \texttt{infinity} or \texttt{-infinity}
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{simplex} applies the revised simplex algorithm to find the
+optimal(either maximum or minimum) value of the objective function
+under the linear inequality constraints.
+
+It returns \{optimal value,\{ values of variables at this optimal\}\}.
+
+\hypertarget{switch:FASTSIMPLEX}{}
+\ttindexswitch[LINALG]{fastsimplex}
+The \texttt{\{bounds\}} argument is optional and admissible only when the switch
+\sw{fastsimplex} is on, which is the default.
+
+Without a \texttt{\{bounds\}} argument, the algorithm implies that all the
+variables are non-negative.
+
+\item[Examples:]
+\begin{verbatim}
+simplex(max,x+y,{x>=10,y>=20,x+y<=25});
+
+***** Error in simplex: Problem has no feasible solution.
+
+simplex(max,10x+5y+5.5z,{5x+3z<=200,x+0.1y+0.5z<=12,
+        0.1x+0.2y+0.3z<=9, 30x+10y+50z<=1500});
+
+{525.0,{x=40.0,y=25.0,z=0}}
+\end{verbatim}
+\end{description}
+
+
+\subsubsection{squarep}
+\label{linalg:squarep}
+\hypertarget{operator:SQUAREP}{}
+\ttindextype[LINALG]{squarep}{predicate}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{squarep($\mathcal{A}$);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$ &:-& a matrix.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{squarep} is a boolean function that returns t if
+                the matrix is square and nil otherwise.
+
+\item[Examples:]\mbox{}\\
+  \(\mathcal{L} = \begin{pmatrix} 1 & 3 & 5 \end{pmatrix}\)
+
+  \(\texttt{squarep}(\mathcal{A}) = \texttt{t}\)
+
+  \(\texttt{squarep}(\mathcal{L}) = \texttt{nil}\)
+
+\item[Related functions:]\mbox{}\\*
+\texttt{matrixp}, \texttt{symmetricp}.
+\end{description}
+
+
+\subsubsection{stack\_rows}
+\label{linalg:stack_rows}
+\hypertarget{operator:STACK_ROWS}{}
+\ttindextype[LINALG]{stack\_rows}{operator}
+
+See: \texttt{augment\_columns}.
+
+
+\subsubsection{sub\_matrix}
+\label{linalg:sub_matrix}
+\hypertarget{operator:SUB_MATRIX}{}
+\ttindextype[LINALG]{sub\_matrix}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{sub\_matrix($\mathcal{A}$,row\_list,column\_list);}\\[2mm]
+\begin{tabular}{l l p{.605\linewidth}}
+$\mathcal{A}$              &:-& a matrix. \\
+row\_list, column\_list &:-& either a
+positive integer or a list of positive integers.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{sub\_matrix} produces the matrix consisting of the
+              intersection of the rows specified in row\_list and the
+columns specified in column\_list.
+
+\item[Examples:]
+\begin{flushleft}
+\texttt{sub\_matrix}\((\mathcal{A},\{1,3\},\{2,3\}) =
+        \begin{pmatrix} 2 & 3 \\ 8 & 9 \end{pmatrix}\)
+\end{flushleft}
+
+\item[Related functions:]\mbox{}\\*
+\texttt{augment\_columns}, \texttt{stack\_rows}.
+\end{description}
+
+
+\subsubsection{svd (singular value decomposition)}
+\label{linalg:svd}
+\hypertarget{operator:SVD}{}
+\ttindextype[LINALG]{svd}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{svd($\mathcal{A}$);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$ &:-& a matrix containing only real numeric entries.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{svd} computes the singular value decomposition of $\mathcal{A}$.
+If $A$
+is an $m\times n$ real matrix of (column) rank $r$, \texttt{svd} returns the
+3-element list \{$\mathcal{U},\Sigma,\mathcal{V}$\} where $\mathcal{A} =
+\mathcal{U} \Sigma \mathcal{V}^T$.
+
+Let $k=\min(m,n)$.  Then $U$ is $m\times k$,
+$V$ is $n\times k$, and and $\Sigma = \mbox{diag}(\sigma_{1}, \ldots ,\sigma_{k})$,
+where $\sigma_{i}\ge 0$ are the singular values of $\mathcal{A}$; only $r$ of
+these are non-zero.  The singular values are the non-negative square roots of
+the eigenvalues of $\mathcal{A}^T \mathcal{A}$.
+
+$\mathcal{U}$ and $\mathcal{V}$ are such that $\mathcal{UU}^T = \mathcal{VV}^T =
+\mathcal{V}^T \mathcal{V} = \mathcal{I}_k$.
+
+\textbf{Note:} there are a number of different definitions of SVD in the
+literature, in some of which $\Sigma$ is square and $U$ and $V$ rectangular, as
+here, but in others $U$ and $V$ are square, and $\Sigma$ is rectangular.
+
+\item[Examples:]\mbox{}\\
+  \( \mathcal{Q} = \begin{pmatrix} 1 & 3 \\ -4 & 3 \\ 3 & 6 \end{pmatrix}\)
+
+  \(\begin{aligned}
+     \mathtt{svd(\mathcal{Q})} = &
+       \left\{
+         \begin{pmatrix} 0.0236042 & 0.419897 \\ -0.969049 & 0.232684 \\ 0.245739 & 0.877237 \end{pmatrix},
+         \begin{pmatrix}  4.83288 & 0 \\ 0 & 7.52618 \end{pmatrix}, \right.  \\
+         & \left. \: \; \,
+           \begin{pmatrix} 0.959473 & 0.281799 \\ - 0.281799 & 0.959473 \end{pmatrix}
+       \right\} \\[2mm]
+      \mathtt{svd(TP(\mathcal{Q}))} = &
+       \left\{
+         \begin{pmatrix} 0.959473 & 0.281799 \\ - 0.281799 & 0.959473 \end{pmatrix},
+         \begin{pmatrix}  4.83288 & 0 \\ 0 & 7.52618 \end{pmatrix}, \right.  \\
+         & \left. \: \; \,
+         \begin{pmatrix} 0.0236042 & 0.419897 \\ -0.969049 & 0.232684 \\ 0.245739 & 0.877237 \end{pmatrix}
+       \right\}
+    \end{aligned}\)
+\end{description}
+
+
+\subsubsection{swap\_columns, swap\_rows}
+\label{linalg:swap_columns}
+\hypertarget{operator:SWAP_COLUMNS}{}
+\ttindextype[LINALG]{swap\_columns}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{swap\_columns($\mathcal{A}$,c1,c2);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$ &:-& a matrix. \\
+c1,c1      &:-& positive integers.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{swap\_columns} swaps column c1 of $\mathcal{A}$ with column c2.
+
+\texttt{swap\_rows} performs the same task on 2 rows of $\mathcal{A}$.
+
+\item[Examples:]
+\begin{flushleft}
+\texttt{swap\_columns}\((\mathcal{A},2,3) =
+        \begin{pmatrix} 1 & 3 & 2 \\ 4 & 6 & 5 \\ 7 & 9 & 8 \end{pmatrix}\)
+\end{flushleft}
+
+\item[Related functions:]\mbox{}\\*
+\texttt{swap\_entries}.
+\end{description}
+
+
+\subsubsection{swap\_entries}
+\label{linalg:swap_entries}
+\hypertarget{operator:SWAP_ENTRIES}{}
+\ttindextype[LINALG]{swap\_entries}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{swap\_entries($\mathcal{A}$,\{r1,c1\},\{r2,c2\});}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$  &:-& a matrix. \\
+r1,c1,r2,c2 &:-& positive integers.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{swap\_entries} swaps $\mathcal{A}$(r1,c1) with
+                $\mathcal{A}$(r2,c2).
+
+\item[Examples:]
+\begin{flushleft}
+\texttt{swap\_entries}\((\mathcal{A},\{1,1\},\{3,3\}) =
+        \begin{pmatrix} 9 & 2 & 3 \\ 4 & 5 & 6 \\ 7 & 8 & 1 \end{pmatrix}\)
+\end{flushleft}
+
+\item[Related functions:]\mbox{}\\*
+\texttt{swap\_columns}, \texttt{swap\_rows}.
+\end{description}
+
+
+\subsubsection{swap\_rows}
+\label{linalg:swap_rows}
+\hypertarget{operator:SWAP_ROWS}{}
+\ttindextype[LINALG]{swap\_rows}{operator}
+See: \texttt{swap\_columns}.
+
+
+\subsubsection{symmetricp}
+\label{linalg:symmetricp}
+\hypertarget{operator:SYMMETRICP}{}
+\ttindextype[LINALG]{symmetricp}{predicate}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{symmetricp($\mathcal{A}$);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$ &:-& a matrix.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{symmetricp} is a boolean function that returns t if the
+                matrix is symmetric and nil otherwise.
+
+\item[Examples:]\mbox{}\\
+  \(\mathcal{M} = \begin{pmatrix} 1 & 2 \\ 2 & 1 \end{pmatrix}\)
+
+  \(\texttt{symmetricp}(\mathcal{A}) = \texttt{nil}\)
+  \(\texttt{symmetricp}(\mathcal{M}) = \texttt{t}\)
+
+\item[Related functions:]\mbox{}\\*
+\texttt{matrixp}, \texttt{squarep}.
+\end{description}
+
+
+\subsubsection{toeplitz}
+\label{linalg:toeplitz}
+\hypertarget{operator:TOEPLITZ}{}
+\ttindextype[LINALG]{toeplitz}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{toeplitz(\{\exprlist{}\});} \lazyfootnote{}\\[2mm]
+\begin{tabular}{l l l}
+\exprlist{} &:-& algebraic expressions.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{toeplitz} creates the toeplitz matrix from the
+                expression list.
+
+This is a square symmetric matrix in
+                which the first expression is placed on the diagonal
+                and the i'th expression is placed on the (i-1)'th sub
+                and super diagonals.
+
+It has dimension n where n is the
+                number of expressions.
+
+\item[Examples:]
+\begin{flushleft}
+\(
+\texttt{toeplitz}(\{w,x,y,z\}) =
+        \begin{pmatrix} w & x & y & z \\ x & w & x & y \\
+      y & x & w & x \\ z & y & x & w
+\end{pmatrix}
+\)
+\end{flushleft}
+\end{description}
+
+\subsubsection{triang\_adjoint}
+\label{linalg:triang_adjoint}
+\hypertarget{operator:TRIANG_ADJOINT}{}
+\ttindextype[LINALG]{triang\_adjoint}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{triang\_adjoint($\mathcal{A}$);}\\[2mm]
+\begin{tabular}{l l l}
+$\mathcal{A}$  &:-& a matrix.
+\end{tabular}
+
+\item[Synopsis:]
+
+\texttt{triang\_adjoint} computes the triangularizing adjoint $\mathcal{F}$ of
+matrix $\mathcal{A}$ due to the algorithm of Arne Storjohann. $\mathcal{F}$ is
+lower triangular matrix and the resulting matrix $\mathcal{T}$ of
+$\mathcal{F * A = T}$ is upper triangular with the property that the $i$-th
+entry in the diagonal of $\mathcal{T}$ is the determinant of the principal
+$i$-th submatrix of the matrix $\mathcal{A}$.
+
+\item[Examples:]\mbox{}\\
+  \texttt{triang\_adjoint}\((\mathcal{A}) =
+  \begin{pmatrix} 1 & 0 & 0 \\ -4 & 1 & 0 \\ -3 & 6 & -3 \end{pmatrix}\)
+
+  \(\mathcal{F} * \mathcal{A} =
+  \begin{pmatrix} 1 & 2 & 3 \\ 0 & -3 & -6 \\ 0 & 0 & 0 \end{pmatrix}\)
+\end{description}
+
+\subsubsection{Vandermonde}
+\label{linalg:Vandermonde}
+\hypertarget{operator:VANDERMONDE}{}
+\ttindextype[LINALG]{vandermonde}{operator}
+
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{vandermonde}(\{\exprlist{}\});
+%\addtocounter{footnote}{-1}\footnotemark
+\lazyfootnote{}\\[2mm]
+\begin{tabular}{l l l}
+\exprlist{} &:-& algebraic expressions.
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+  \texttt{Vandermonde} creates the Vandermonde matrix from the expression list.
+  This is the square matrix in which the $(i,j)$th entry is $\text{expr}_i^{(j-1)}$.
+  It has dimension $n$, where $n$ is the number of expressions.
+
+\item[Examples:]
+\begin{flushleft}
+\(
+  \texttt{vandermonde}(\{x,2*y,3*z\}) =
+  \begin{pmatrix} 1 & x & x^2 \\ 1 & 2*y & 4*y^2 \\ 1 & 3*z & 9*z^2 \end{pmatrix}
+\)
+\end{flushleft}
+\end{description}
+
+\subsubsection{kronecker\_product}
+\hypertarget{operator:KRONECKER_PRODUCT}{}
+\ttindextype[LINALG]{kronecker\_product}{operator}
+\label{linalg:kronecker_product}
+\begin{description}
+\item[Syntax:]\mbox{}\\*
+\texttt{kronecker\_product}($M_1,M_2$)\\[2mm]
+\begin{tabular}{l l l}
+$M_1,M_2$ &:-& Matrices
+\end{tabular}
+
+\item[Synopsis:]\mbox{}\\*
+\texttt{kronecker\_product} creates a matrix containing the Kronecker product
+(also called \texttt{direct product} or \texttt{tensor product}) of its arguments.
+
+\item[Examples:]
+\begin{verbatim}
+a1 := mat((1,2),(3,4),(5,6))$
+a2 := mat((1,1,1),(2,z,2),(3,3,3))$
+kronecker_product(a1,a2);
+\end{verbatim}
+\begin{flushleft}
+\(
+\begin{pmatrix} 1 & 1 & 1 & 2 & 2 & 2 \\
+2 &  z & 2 & 4  &2*z &4 \\
+3 &  3 & 3 & 6  & 6  &6 \\
+3 &  3 & 3 & 4  & 4  &4 \\
+6 & 3*z& 6 & 8  &4*z &8 \\
+9 &  9 & 9 & 12 &12  &12\\
+5 &  5 & 5 & 6  & 6  &6 \\
+10 &5*z& 10& 12 &6*z &12 \\
+15 &15 & 15& 18 &18  &18
+\end{pmatrix}
+\)
+\end{flushleft}
+\end{description}
+
+\subsection{Fast Linear Algebra}
+\hypertarget{switch:FAST_LA}{}
+\ttindexswitch[LINALG]{fast\_la}
+
+By turning the \sw{fast\_la} switch on, the speed of the following
+functions will be increased:
+
+\begin{tabular}{l l l l}
+   add\_columns    & add\_rows      & augment\_columns & column\_dim  \\
+   copy\_into      & make\_identity & matrix\_augment  & matrix\_stack\\
+   minor           & mult\_column   &  mult\_row       & pivot        \\
+   remove\_columns & remove\_rows   & rows\_pivot      & squarep      \\
+   stack\_rows     & sub\_matrix    & swap\_columns    & swap\_entries\\
+   swap\_rows      & symmetricp
+\end{tabular}
+
+The increase in speed will be insignificant unless you are making a
+significant number(i.e: thousands) of calls. When using this switch,
+error checking is minimised. This means that illegal input may give
+strange error messages. Beware.
+
+%\newpage
+
+\subsection{Acknowledgments}
+
+Many of the ideas for this package came from the Maple[3] Linalg package
+[4].
+
+The algorithms for \texttt{cholesky}, \texttt{lu\_decom}, and \texttt{svd} are
+taken from the book Linear Algebra - J.H. Wilkinson \& C. Reinsch[5].
+
+The \texttt{gram\_schmidt} code comes from Karin Gatermann's Symmetry
+package[6] for {\REDUCE}.

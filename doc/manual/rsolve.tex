@@ -1,0 +1,108 @@
+\section{Finding rational or integer zeros}
+\index{Wright, Francis J.}
+\index{People!Wright, Francis J.}
+
+\iffalse
+% \begin{abstract}
+  The operators \f{r\_solve} and \f{i_\solve}  compute
+  respectively the exact rational or integer zeros of a single
+  univariate polynomial using fast modular methods.
+%\end{abstract}
+
+
+  \subsection{Introduction}
+  \fi
+\ttindextype{i\_solve}{operator}\ttindextype{r\_solve}{operator}
+\hypertarget{operator:I_SOLVE}{}
+\hypertarget{operator:R_SOLVE}{}
+The operators \f{r\_solve} and \f{i\_solve}  compute the exact rational zeros
+of a single univariate polynomial using fast modular methods.  The
+algorithm used is that described by R. Loos (\cite{Loos:1983a}).
+The operator \f{r\_solve} computes
+all rational zeros whereas the operator \f{i\_solve} computes only
+integer zeros in a way that is slightly more efficient than extracting
+them from the rational zeros.  The \f{r\_solve} and \f{i\_solve}
+interfaces are almost identical, and are intended to be completely
+compatible with that of the general \f{r\_solve} operator, although
+\f{r\_solve} and \f{i\_solve} give more convenient output when
+only rational or integer zeros respectively are required.  The current
+implementation appears to be faster than \f{solve} by a factor that
+depends on the example, but is typically up to about 2.\footnote{This code was written by Francis J.~Wright.}
+
+Extension to compute Gaussian integer and rational
+zeros and zeros of polynomial systems is planned.
+
+
+\subsection{The user interface}
+
+The first argument is required and must simplify to either a
+univariate polynomial expression or equation with integer, rational or
+rounded coefficients.  Symbolic coefficients are not allowed (and
+currently complex coefficients are not allowed either.)  The argument
+is simplified to a quotient of integer polynomials and the denominator
+is silently ignored.
+
+\hypertarget{operator:ARBRAT}{\texttt{ARBRAT}}
+Subsequent arguments are optional.  If the polynomial variable is to
+be specified then it must be the first optional argument, and if the
+first optional argument is not a valid option (see below) then it is
+(mis-)interpreted as the polynomial variable.  However, since the
+variable in a non-constant univariate polynomial can be deduced from
+the polynomial it is unnecessary to specify it separately, except in
+the degenerate case that the first argument simplifies to either 0 or
+$0 = 0$.  In this case the result is returned by \f{i\_solve} in
+terms of the operator \f{arbint} and by \f{r\_solve} in terms of
+the (new) analogous operator \f{arbrat}.  The operator
+\f{i\_solve} will generally run slightly faster than \f{r\_solve}.
+  
+The (rational or integer) zeros of the first argument are returned as
+a list and the default output format is the same as that used by
+\f{solve}.  Each distinct zero is returned in the form of an
+equation with the variable on the left and the multiplicities of the
+zeros are assigned to the variable \var{root\_multiplicities} as a
+list.  However, if the switch \sw{multiplicities} is turned on then
+each zero is explicitly included in the solution list the appropriate
+number of times (and \var{root\_multiplicities} has no value).
+  
+\begin{sloppypar}
+Optional keyword arguments acting as local switches allow other output
+formats.  They have the following meanings:
+\begin{description}
+\item[\texttt{separate}:] assign the multiplicity list to the global
+  variable \texttt{root\_multiplicities} (the default);
+\item[\texttt{expand} \textnormal{or} \texttt{multiplicities}:] expand the solution
+  list to include multiple zeros multiple times (the default if the
+  \texttt|multiplicities| switch is on);
+\item[\texttt{together}:] return each solution as a list whose second
+  element is the multiplicity;
+\item[\texttt{nomul}:] do not compute multiplicities (thereby saving
+  some time);
+\item[\texttt{noeqs}:] do not return univariate zeros as equations but
+  just as values.
+\end{description}
+\end{sloppypar}
+
+
+\subsection{Examples}
+
+\begin{verbatim}
+r_solve((9x^2 - 16)*(x^2 - 9), x);
+\end{verbatim}
+\[
+  \left\{x=\frac{-4}{3},x=3,x=-3,x=\frac{4}{3}\right\}
+\]
+\begin{verbatim}
+i_solve((9x^2 - 16)*(x^2 - 9), x);
+\end{verbatim}
+\[
+  \{x=3,x=-3\}
+\]
+See the test/demonstration file \texttt{rsolve.tst} for more examples.
+
+
+\subsection{Tracing}
+
+\hypertarget{switch:TRSOLVE}{}
+The switch \sw{trsolve}\ttindexswitch[RSOLVE]{trsolve} turns on tracing of the algorithm.  It is off
+by default.
+

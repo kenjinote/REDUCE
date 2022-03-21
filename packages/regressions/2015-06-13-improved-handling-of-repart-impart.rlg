@@ -1,0 +1,318 @@
+
+repart(log(5));
+
+
+log(5)
+
+impart(log(5));
+
+
+0
+
+
+log(2+3i);
+
+
+log(3*i + 2)
+
+repart(log(2+3i));
+
+
+ log(13)
+---------
+    2
+
+impart(log(2+3i));
+
+
+      3
+atan(---)
+      2
+
+% This used to return incorrect value 0
+on complex;
+
+
+impart(log(2+3i));
+
+
+      3
+atan(---)
+      2
+
+
+off complex;
+
+
+
+realvalued y;
+
+
+
+repart(log(5));
+
+
+log(5)
+
+impart(log(5));
+
+
+0
+
+repart(log(-5));
+
+
+log(5)
+
+impart(log(-5));
+
+
+pi
+
+repart(log(5i));
+
+
+log(5)
+
+impart(log(5i));
+
+
+ pi
+----
+ 2
+
+repart(log(-5i));
+
+
+log(5)
+
+impart(log(-5i));
+
+
+  - pi
+-------
+   2
+
+repart(log(x));
+
+
+              2            2
+ log(impart(x)  + repart(x) )
+------------------------------
+              2
+
+impart(log(x));
+
+
+atan2(impart(x),repart(x))
+
+repart(log(i*x));
+
+
+              2            2
+ log(impart(x)  + repart(x) )
+------------------------------
+              2
+
+impart(log(i*x));
+
+
+atan2(repart(x), - impart(x))
+
+repart(log(y));
+
+
+log(abs(y))
+
+impart(log(y));
+
+
+ pi*(sign(y) - 1)
+------------------
+    2*sign(y)
+
+repart(log(i*y));
+
+
+log(abs(y))
+
+impart(log(i*y));
+
+
+    pi
+-----------
+ 2*sign(y)
+
+off precise;
+
+
+repart(log(5));
+
+
+log(5)
+
+impart(log(5));
+
+
+0
+
+repart(log(-5));
+
+
+log(5)
+
+impart(log(-5));
+
+
+pi
+
+repart(log(5i));
+
+
+log(5)
+
+impart(log(5i));
+
+
+ pi
+----
+ 2
+
+repart(log(-5i));
+
+
+log(5)
+
+impart(log(-5i));
+
+
+  - pi
+-------
+   2
+
+repart(log(x));
+
+
+              2            2
+ log(impart(x)  + repart(x) )
+------------------------------
+              2
+
+impart(log(x));
+
+
+atan2(impart(x),repart(x))
+
+repart(log(i*x));
+
+
+              2            2
+ log(impart(x)  + repart(x) )
+------------------------------
+              2
+
+impart(log(i*x));
+
+
+atan2(repart(x), - impart(x))
+
+repart(log(y));
+
+
+log(abs(y))
+
+impart(log(y));
+
+
+ pi*(sign(y) - 1)
+------------------
+    2*sign(y)
+
+repart(log(i*y));
+
+
+log(abs(y))
+
+impart(log(i*y));
+
+
+    pi
+-----------
+ 2*sign(y)
+
+
+on rational;
+
+
+
+repart log(-3/2);
+
+
+     3
+log(---)
+     2
+
+repart log (-3*i/2);
+
+
+     3
+log(---)
+     2
+
+
+off rational;
+
+
+
+repart(log10(-5));
+
+
+log10(5)
+
+impart(log10(-5));
+
+
+   pi
+---------
+ log(10)
+
+
+repart(logb(-5,6));
+
+
+repart(logb(-5,6))
+
+impart(logb(-5,6));
+
+
+impart(logb(-5,6))
+
+
+on rounded;
+
+
+
+repart(log10(-5));
+
+
+0.698970004336
+
+impart(log10(-5));
+
+
+1.36437635384
+
+
+repart(logb(-5,6));
+
+
+repart(logb(-5,6))
+
+impart(logb(-5,6));
+
+
+impart(logb(-5,6))
+
+
+end;
+

@@ -1,0 +1,959 @@
+\chapter{Display and Structuring of Expressions}\index{Display}
+\index{Structuring}
+In this section, we consider a variety of commands and operators that
+permit the user to obtain various parts of algebraic expressions and also
+display their structure in a variety of forms. Also presented are some
+additional concepts in the {\REDUCE} design that help the user gain a better
+understanding of the structure of the system.
+
+\section{Kernels}\index{Kernel}
+{\REDUCE} is designed so that each operator in the system has an
+evaluation (or simplification)\index{Simplification} function associated
+with it that transforms the expression into an internal canonical form.
+\index{Canonical form}  This form, which bears little resemblance to the
+original expression, is described in detail in \cite{Hearn:71a}.
+
+The evaluation function may transform its arguments in one of two
+alternative ways.  First, it may convert the expression into other
+operators in the system, leaving no functions of the original operator for
+further manipulation.  This is in a sense true of the evaluation functions
+associated with the operators \texttt{+}, \texttt{*} and \texttt{/} , for example,
+because the canonical form\index{Canonical form} does not include these
+operators explicitly.  It is also true of an operator such as the
+determinant operator \texttt{det}\ttindextype{det}{operator} because the relevant
+evaluation function calculates the appropriate determinant, and the
+operator \texttt{det} no longer appears.  On the other hand, the evaluation
+process may leave some residual functions of the relevant operator.  For
+example, with the operator \texttt{cos}, a residual expression like
+\texttt{cos(x)} may remain after evaluation unless a rule for the reduction of
+cosines into exponentials, for example, were introduced.  These residual
+functions of an operator are termed \emph{kernels}\index{Kernel} and are
+stored uniquely like variables.  Subsequently, the kernel is carried
+through the calculation as a variable unless transformations are
+introduced for the operator at a later stage.
+
+\hypertarget{switch:INTSTR}{}
+In those cases where the evaluation process leaves an operator expression
+with non-trivial arguments, the form of the argument can vary depending on
+the state of the system at the point of evaluation.  Such arguments are
+normally produced in expanded form with no terms factored or grouped in
+any way.  For example, the expression \texttt{cos(2*x+2*y)} will normally be
+returned in the same form.  If the argument \texttt{2*x+2*y} were evaluated
+at the top level, however, it would be printed as \texttt{2*(X+Y)}.  If it is
+desirable to have the arguments themselves in a similar form, the switch
+\texttt{intstr}\ttindexswitch{intstr} (for ``internal structure''), if on, will
+cause this to happen.
+
+In cases where the arguments of the kernel operators may be reordered, the
+system puts them in a canonical order, based on an internal intrinsic
+ordering of the variables. However, some commands allow arguments in the
+form of kernels, and the user has no way of telling what internal order the
+system will assign to these arguments. To resolve this difficulty, we
+introduce the notion of a \emph{kernel form}\index{kernel form} as an
+expression that transforms to a kernel on evaluation.
+
+Examples of kernel forms are:
+\begin{verbatim}
+        a
+        cos(x*y)
+        log(sin(x))
+\end{verbatim}
+whereas
+\begin{verbatim}
+        a*b
+        (a+b)^4
+\end{verbatim}
+are not.
+
+We see that kernel forms can usually be used as generalized variables, and
+most algebraic properties associated with variables may also be associated
+with kernels.
+
+\section{The Expression Workspace}\index{Workspace}\label{Workspace}
+
+Several mechanisms are available for saving and retrieving previously
+evaluated expressions.  The simplest of these refers to the last algebraic
+expression simplified.  When an assignment of an algebraic expression is
+made, or an expression is evaluated at the top level, (i.e., not inside a
+compound statement or procedure) the results of the evaluation are
+automatically saved in a variable \var{ws} that we shall refer to as the
+workspace. (More precisely, the expression is assigned to the variable
+\var{ws} that is then available for further manipulation.)
+
+\textit{Example:}
+
+If we evaluate the expression \texttt{(x+y)\textasciicircum2} at the top
+level and next
+wish to differentiate it with respect to \texttt{y}, we can simply say
+\begin{verbatim}
+        df(ws,y);
+\end{verbatim}
+to get the desired answer.
+
+\hypertarget{command:SAVEAS}{}
+If the user wishes to assign the workspace to a variable or expression for
+later use, the \texttt{saveas}\ttindextype{saveas}{statement}
+\index{Statement!saveas@\texttt{saveas}} statement can be used.  It
+has the syntax
+\begin{syntax}
+  \texttt{saveas}\ \meta{expression}
+\end{syntax}
+For example, after the differentiation in the last example, the workspace
+holds the expression \texttt{2*x+2*y}.  If we wish to assign this to the
+variable \var{z} we can now say
+\begin{verbatim}
+        saveas z;
+\end{verbatim}
+If the user wishes to save the expression in a form that allows him to use
+some of its variables as arbitrary parameters, the \texttt{for all}
+command can be used.
+
+\textit{Example:}
+\begin{verbatim}
+        for all x saveas h(x);
+\end{verbatim}
+
+with the above expression would mean that \texttt{h(z)} evaluates to
+\texttt{2*y+2*z}.
+
+A further method for referencing more than the last expression is described
+in chapter~\ref{interactive} on interactive use of {\REDUCE}.
+
+
+\section{Output of Expressions}
+
+A considerable degree of flexibility is available in {\REDUCE} in the
+printing of expressions generated during calculations.  No explicit format
+statements are supplied, as these are in most cases of little use in
+algebraic calculations, where the size of output or its composition is not
+generally known in advance.  Instead, {\REDUCE} provides a series of mode
+options to the user that should enable him to produce his output in a
+comprehensible and possibly pleasing form.
+
+\hypertarget{switch:OUTPUT}{}
+The most extreme option offered is to suppress the output entirely from
+any top level evaluation.  This is accomplished by turning off the switch
+\sw{output}\ttindexswitch{output} which is normally on.  It is useful for
+limiting output when loading large files or producing ``clean'' output from
+the prettyprint programs.
+
+In most circumstances, however, we wish to view the output, so we need to
+know how to format it appropriately.  As we mentioned earlier, an
+algebraic expression is normally printed in an expanded form, filling the
+whole output line with terms.  Certain output declarations,\index{Output
+declaration} however, can be used to affect this format.  To begin with,
+we look at an operator for changing the length of the output line.
+
+\subsection{LINELENGTH Operator}\ttindextype{linelength}{operator}
+\hypertarget{operator:LINELENGTH}{}
+
+This operator is used with the syntax
+\begin{verbatim}
+        linelength(num:integer):integer
+\end{verbatim}
+and sets the output line length to the integer \texttt{num}. It returns the
+previous output line length (so that it can be stored for later resetting
+of the output line if needed).
+
+\subsection{Output Declarations}
+\hypertarget{switch:PRI}{}
+
+We now describe a number of switches and declarations that are available
+for controlling output formats. It should be noted, however, that the
+transformation of large expressions to produce these varied output formats
+can take a lot of computing time and space. If a user wishes to speed up
+the printing of the output in such cases, he can turn off the switch
+\sw{pri}\ttindexswitch{pri}. If this is done, then output is produced in one fixed
+format, which basically reflects the internal form of the expression, and
+none of the options below apply. \sw{pri} is normally on.
+
+With \sw{pri} on, the output declarations\index{Output declaration}
+and switches available are as follows:
+
+\subsubsection{ORDER Declaration}
+\hypertarget{command:ORDER}{}
+
+The declaration \texttt{order}\ttindextype{order}{declaration}\index{Declaration!\texttt{order}}
+may be used to order variables on output.  The syntax is:
+\begin{verbatim}
+        order v1,...vn;
+\end{verbatim}
+where the \texttt{vi} are kernels.  Thus,
+\begin{verbatim}
+        order x,y,z;
+\end{verbatim}
+orders \texttt{x} ahead of \texttt{y}, \texttt{y} ahead of \texttt{z} and all three
+ahead of other variables not given an order. \texttt{order nil;} resets the
+output order to the system default.  The order of variables may be changed
+by further calls of \texttt{order}, but then the reordered variables would
+have an order lower than those in earlier \texttt{order} calls.
+Thus,
+\begin{verbatim}
+        order x,y,z;
+        order y,x;
+\end{verbatim}
+would order \texttt{z} ahead of \texttt{y} and \texttt{x}.  The default ordering is
+usually alphabetic.
+
+\subsubsection{FACTOR Declaration}
+\hypertarget{command:FACTOR}{}
+
+This declaration takes a list of identifiers or kernels\index{Kernel}
+as argument.
+\texttt{factor}\ttindextype{factor}{declaration}\index{Declaration!\texttt{factor}}
+is not a factoring command
+(use \texttt{factorize} or the \sw{factor} switch for this purpose); rather it
+is a separation command.  All terms involving fixed powers of the declared
+expressions are printed as a product of the fixed powers and a sum of the
+rest of the terms.
+
+For example, after the declaration
+\begin{verbatim}
+        factor x;
+\end{verbatim}
+the polynomial $(x+y+1)^{2}$ will be printed as
+\begin{verbatim}
+         2                  2
+        x  + 2*x*(y + 1) + y  + 2*y + 1
+\end{verbatim}
+All expressions involving a given prefix operator may also be factored by
+putting the operator name in the list of factored identifiers. For example:
+\begin{verbatim}
+        factor x,cos,sin(x);
+\end{verbatim}
+causes all powers of \texttt{x} and \texttt{sin(x)} and all functions of
+\texttt{cos} to be factored.
+
+Note that \texttt{factor} does not affect the order of its arguments.  You
+should also use \texttt{order} if this is important.
+
+\hypertarget{command:REMFAC}{}
+The declaration \texttt{remfac v1,...,vn;}\ttindextype{remfac}{declaration}\index{Declaration!\texttt{remfac}} removes the
+factoring flag from the expressions \texttt{v1} through \texttt{vn}.
+
+\subsection{Output Control Switches}
+\label{sec-output}
+In addition to these declarations, the form of the output can be modified
+by switching various output control switches using the declarations
+\texttt{on} and \texttt{off}.  We shall illustrate the use of these switches by an
+example, namely the printing of the expression
+\begin{verbatim}
+        x^2*(y^2+2*y)+x*(y^2+z)/(2*a) .
+\end{verbatim}
+The relevant switches are as follows:
+
+\subsubsection{ALLFAC Switch}
+\hypertarget{switch:ALLFAC}{}
+\ttindexswitch{allfac}
+
+This switch will cause the system to search the whole expression, or any
+sub-expression enclosed in parentheses, for simple multiplicative factors
+and print them outside the parentheses. Thus our expression with \texttt{allfac}
+\ttindexswitch{allfac}
+off will print as
+\begin{verbatim}
+            2  2        2          2
+        (2*x *y *a + 4*x *y*a + x*y  + x*z)/(2*a)
+\end{verbatim}
+and with \texttt{allfac} on as
+\begin{verbatim}
+                2                2
+        x*(2*x*y *a + 4*x*y*a + y  + z)/(2*a) .
+\end{verbatim}
+\sw{allfac} is normally on, and is on in the following examples, except
+where otherwise stated.
+
+\subsubsection{DIV Switch}
+\hypertarget{switch:DIV}{}
+\ttindexswitch{div}
+
+This switch makes the system search the denominator of an expression for
+simple factors that it divides into the numerator, so that rational
+fractions and negative powers appear in the output. With \sw{div} on, our
+expression would print as
+\begin{verbatim}
+              2                2  (-1)        (-1)
+        x*(x*y  + 2*x*y + 1/2*y *a     + 1/2*a    *z) .
+\end{verbatim}
+\sw{div} is normally off.
+
+\subsubsection{HORNER Switch}\ttindexswitch{horner}
+\hypertarget{switch:HORNER}{}
+
+This switch causes the system to print polynomials according to Horner's rule.
+With \sw{horner} on, our expression prints as
+\begin{verbatim}
+            2
+        x*(y  + z + 2*(y + 2)*a*x*y)/(2*a) .
+\end{verbatim}
+\sw{horner} is normally off.
+
+\subsubsection{LIST Switch}
+\hypertarget{switch:LIST}{}
+\ttindexswitch{list}
+
+This switch causes the system to print each term in any sum on a separate
+line. With \sw{list} on, our expression prints as
+\begin{verbatim}
+                2
+        x*(2*x*y *a
+
+            + 4*x*y*a
+
+               2
+            + y
+
+            + z)/(2*a) .
+\end{verbatim}
+\texttt{list} is normally off.
+
+\subsubsection{NOSPLIT Switch}\ttindexswitch{nosplit}
+\hypertarget{switch:NOSPLIT}{}
+
+Under normal circumstances, the printing routines try to break an expression
+across lines at a natural point.  This is a fairly expensive process.  If
+you are not overly concerned about where the end-of-line breaks come, you
+can speed up the printing of expressions by turning off the switch
+\sw{nosplit}.  This switch is normally on.
+
+\subsubsection{RAT Switch}
+\hypertarget{switch:RAT}{}
+\ttindexswitch{rat}
+
+This switch is only useful with expressions in which variables are
+factored with \texttt{factor}. With this mode, the overall denominator of the
+expression is printed with each factored sub-expression. We assume a prior
+declaration \texttt{factor x;} in the following output. We first print the
+expression with \texttt{rat} set to off:
+\begin{verbatim}
+            2                   2
+        (2*x *y*a*(y + 2) + x*(y  + z))/(2*a) .
+\end{verbatim}
+With \sw{rat} on the output becomes:
+%\extendedmanual{\newpage}
+\begin{verbatim}
+         2                 2
+        x *y*(y + 2) + x*(y  + z)/(2*a) .
+\end{verbatim}
+\texttt{rat} is normally off.
+
+Next, if we leave \texttt{x} factored, and turn on both \sw{div} and
+\sw{rat}, the result becomes
+\begin{verbatim}
+         2                    (-1)   2
+        x *y*(y + 2) + 1/2*x*a    *(y  + z) .
+\end{verbatim}
+Finally, with \texttt{x} factored, \sw{rat} on and \sw{allfac}\ttindexswitch{allfac}
+off we retrieve the original structure
+\begin{verbatim}
+         2   2              2
+        X *(Y  + 2*Y) + X*(Y  + Z)/(2*A) .
+\end{verbatim}
+
+\subsubsection{RATPRI Switch}
+\hypertarget{switch:RATPRI}{}
+\ttindexswitch{ratpri}
+
+If the numerator and denominator of an expression can each be printed in
+one line, the output routines will print them in a two dimensional
+notation, with numerator and denominator on separate lines and a line of
+dashes in between. For example, \texttt{(a+b)/2} will print as
+\begin{verbatim}
+        a + b
+        -----
+          2
+\end{verbatim}
+Turning this switch off causes such expressions to be output in a linear
+form.
+
+\subsubsection{REVPRI Switch}
+\hypertarget{switch:REVPRI}{}
+\ttindexswitch{revpri}
+
+The normal ordering of terms in output is from highest to lowest power.
+In some situations (e.g., when a power series is output), the opposite
+ordering is more convenient.  The switch \sw{revpri} if on causes such a
+reverse ordering of terms.  For example, the expression
+\texttt{y*(x+1)\textasciicircum2+(y+3)\textasciicircum2} will normally print as
+\begin{verbatim}
+         2              2
+        x *y + 2*x*y + y  + 7*y + 9
+\end{verbatim}
+whereas with \sw{REVPRI} on, it will print as
+\begin{verbatim}
+                   2            2
+        9 + 7*y + y  + 2*x*y + x *y.
+\end{verbatim}
+
+\hypertarget{command:WRITE}{\subsection{WRITE Command}}\ttindextype{WRITE}{command}
+
+In simple cases no explicit output\index{Output} command is necessary in
+{\REDUCE}, since the value of any expression is automatically printed if a
+semicolon is used as a delimiter.  There are, however, several situations
+in which such a command is useful.
+
+In a \texttt{for}, \texttt{while}, or \texttt{repeat} statement it may be desired
+to output something each time the statement within the loop construct is
+repeated.
+
+It may be desired for a procedure to output intermediate results or other
+information while it is running. It may be desired to have results labeled
+in special ways, especially if the output is directed to a file or device
+other than the terminal.
+
+The \texttt{write} command consists of the word \texttt{write} followed by one
+or more items separated by commas, and followed by a terminator.  There
+are three kinds of items that can be used:
+\begin{enumerate}
+\item Expressions (including variables and constants).  The expression is
+evaluated, and the result is printed out.
+
+\item Assignments.  The expression on the right side of the \texttt{:=}
+\ttindextype{:=}{(assignment) operator}
+operator is evaluated, and is assigned to the variable on the left; then
+the symbol on the left is printed, followed by a ``\texttt{:=}'', followed by
+the value of the expression on the right -- almost exactly the way an
+assignment followed by a semicolon prints out normally. (The difference is
+that if the \texttt{write} is in a \texttt{for} statement and the left-hand side
+of the assignment is an array position or something similar containing the
+variable of the \texttt{for} iteration, then the value of that variable is
+inserted in the printout.)
+
+\item Arbitrary strings of characters, preceded and followed by double-quote
+marks (e.g., \texttt{"string"}).
+\end{enumerate}
+The items specified by a single \texttt{write} statement print side by side
+on one line. (The line is broken automatically if it is too long.) Strings
+print exactly as quoted.  The \texttt{write} command itself however does not
+return a value.
+
+The print line is closed at the end of a \texttt{write} command evaluation.
+Therefore the command \texttt{write "";} (specifying nothing to be printed
+except the empty string) causes a line to be skipped.
+
+\textit{Examples:}
+\begin{enumerate}
+\item if \texttt{a} is \texttt{x+5}, \texttt{b} is itself, \texttt{c} is 123, \texttt{m} is
+an array, and \texttt{q}=3, then
+\begin{verbatim}
+        write m(q):=a," ",b/c," THANK YOU";
+\end{verbatim}
+will set \texttt{m(3)} to \texttt{x+5} and print
+\begin{verbatim}
+                b
+m(3) := x + 5 ----- THANK YOU
+               123
+\end{verbatim}
+The blanks between the \texttt{5} and the fraction, and the fraction
+and \texttt{t}, come from the blanks in the quoted strings.
+
+\item To print a table of the squares of the integers from 1 to 20:
+\begin{verbatim}
+     for i:=1:20 do write i," ",i^2;
+\end{verbatim}
+
+\item To print a table of the squares of the integers from 1 to 20, and at
+the same time store them in positions 1 to 20 of an array \texttt{a}:
+\begin{verbatim}
+     for i:=1:20 do <<a(i):=i^2; write i," ",a(i)>>;
+\end{verbatim}
+This will give us two columns of numbers. If we had used
+\begin{verbatim}
+     for i:=1:20 do write i," ",a(i):=i^2;
+\end{verbatim}
+we would also get \texttt{a(}i\texttt{) := } repeated on each line.
+
+\item The following more complete example calculates the famous f and g
+series, first reported in \cite{Sconzo1965SymbolicCO}.
+\begin{verbatim}
+ x1:= -sig*(mu+2*eps)$
+ x2:= eps - 2*sig^2$
+ x3:= -3*mu*sig$
+ f:= 1$
+ g:= 0$
+ for i:= 1 step 1 until 10 do begin
+   f1:= -mu*g+x1*df(f,eps)+x2*df(f,sig)+x3*df(f,mu);
+   write "f(",i,") := ",f1;
+   g1:= f+x1*df(g,eps)+x2*df(g,sig)+x3*df(g,mu);
+   write "g(",i,") := ",g1;
+   f:=f1$
+   g:=g1$
+  end;
+\end{verbatim}
+A portion of the output, to illustrate the printout from the \texttt{write}
+command, is as follows:
+\begin{verbatim}
+                ... <prior output> ...
+
+                           2
+ f(4) := mu*(3*eps - 15*sig  + mu)
+
+ g(4) := 6*sig*mu
+
+                                    2
+ f(5) := 15*sig*mu*( - 3*eps + 7*sig  - mu)
+
+                           2
+ g(5) := mu*(9*eps - 45*sig  + mu)
+
+                ... <more output> ...
+
+\end{verbatim}
+\end{enumerate}
+
+\subsection{Suppression of Zeros}
+\hypertarget{switch:NERO}{}
+\ttindexswitch{nero}
+
+It is sometimes annoying to have zero assignments (i.e. assignments of the
+form \meta{expression}\texttt{ := 0}) printed, especially in printing large arrays
+with many zero elements.  The output from such assignments can be
+suppressed by turning on the switch \sw{nero}.\ttindextype{nero}{switch}
+
+\subsection{{FORTRAN} Style Output Of Expressions}
+
+It is naturally possible to evaluate expressions numerically in {\REDUCE} by
+giving all variables and sub-expressions numerical values. However, as we
+pointed out elsewhere the user must declare real arithmetical operation by
+turning on the switch \sw{rounded}\ttindexswitch{rounded}.  However, it should be
+remembered that arithmetic in {\REDUCE} is not particularly fast, since
+results are interpreted rather than evaluated in a compiled form. The user
+with a large amount of numerical computation after all necessary algebraic
+manipulations have been performed is therefore well advised to perform
+these calculations in a FORTRAN\index{FORTRAN} or similar system.  For
+this purpose, {\REDUCE} offers facilities for users to produce FORTRAN
+compatible files for numerical processing.
+
+\hypertarget{reserved:CARD_NO}{}
+\hypertarget{switch:FORT}{}
+\ttindexswitch{fort}
+First, when the switch \sw{fort} is on, the system will
+print expressions in a FORTRAN notation.  Expressions begin in column
+seven.  If an expression extends over one line, a continuation mark (.)
+followed by a blank appears on subsequent cards.  After a certain number
+of lines have been produced (according to the value of the variable
+\var{card\_no}),\ttindextype{card\_no}{shared global variable}
+a new expression is started.  If the
+expression printed arises from an assignment to a variable, the variable
+is printed as the name of the expression.  Otherwise the expression is
+given the default name \texttt{ANS}.  An error occurs if identifiers or
+numbers are outside the bounds permitted by FORTRAN.
+
+A second option is to use the \texttt{WRITE} command to produce other programs.
+
+\textit{Example:}
+
+The following {\REDUCE} statements
+\begin{verbatim}
+ on fort;
+ out "forfil";
+ write "C     this is a fortran program";
+ write " 1    format(e13.5)";
+ write "      u=1.23";
+ write "      v=2.17";
+ write "      w=5.2";
+ x:=(u+v+w)^11;
+ write "C     it was foolish to expand this expression";
+ write "      print 1,x";
+ write "      end";
+ shut "forfil";
+ off fort;
+\end{verbatim}
+will generate a file \texttt{forfil} that contains:
+
+{\small
+\begin{verbatim}
+c     this is a fortran program
+ 1    format(e13.5)
+      u=1.23
+      v=2.17
+      w=5.2
+      ans1=1980.0*u**2*v**7*w**2+4620.0*u**2*v**6*w**3+6930.0*u**2*v
+     . **5*w**4+6930.0*u**2*v**4*w**5+4620.0*u**2*v**3*w**6+1980.0*u
+     . **2*v**2*w**7+495.0*u**2*v*w**8+55.0*u**2*w**9+11.0*u*v**10+
+     . 110.0*u*v**9*w+495.0*u*v**8*w**2+1320.0*u*v**7*w**3+2310.0*u*v
+     . **6*w**4+2772.0*u*v**5*w**5+2310.0*u*v**4*w**6+1320.0*u*v**3*w
+     . **7+495.0*u*v**2*w**8+110.0*u*v*w**9+11.0*u*w**10+v**11+11.0*v
+     . **10*w+55.0*v**9*w**2+165.0*v**8*w**3+330.0*v**7*w**4+462.0*v
+     . **6*w**5+462.0*v**5*w**6+330.0*v**4*w**7+165.0*v**3*w**8+55.0*
+     . v**2*w**9+11.0*v*w**10+w**11
+      x=u**11+11.0*u**10*v+11.0*u**10*w+55.0*u**9*v**2+110.0*u**9*v*w
+     . +55.0*u**9*w**2+165.0*u**8*v**3+495.0*u**8*v**2*w+495.0*u**8*v
+     . *w**2+165.0*u**8*w**3+330.0*u**7*v**4+1320.0*u**7*v**3*w+
+     . 1980.0*u**7*v**2*w**2+1320.0*u**7*v*w**3+330.0*u**7*w**4+462.0
+     . *u**6*v**5+2310.0*u**6*v**4*w+4620.0*u**6*v**3*w**2+4620.0*u**
+     . 6*v**2*w**3+2310.0*u**6*v*w**4+462.0*u**6*w**5+462.0*u**5*v**6
+     . +2772.0*u**5*v**5*w+6930.0*u**5*v**4*w**2+9240.0*u**5*v**3*w**
+     . 3+6930.0*u**5*v**2*w**4+2772.0*u**5*v*w**5+462.0*u**5*w**6+
+     . 330.0*u**4*v**7+2310.0*u**4*v**6*w+6930.0*u**4*v**5*w**2+
+     . 11550.0*u**4*v**4*w**3+11550.0*u**4*v**3*w**4+6930.0*u**4*v**2
+     . *w**5+2310.0*u**4*v*w**6+330.0*u**4*w**7+165.0*u**3*v**8+
+     . 1320.0*u**3*v**7*w+4620.0*u**3*v**6*w**2+9240.0*u**3*v**5*w**3
+     . +11550.0*u**3*v**4*w**4+9240.0*u**3*v**3*w**5+4620.0*u**3*v**2
+     . *w**6+1320.0*u**3*v*w**7+165.0*u**3*w**8+55.0*u**2*v**9+495.0*
+     . u**2*v**8*w+ans1
+c     it was foolish to expand this expression
+      print 1,x
+      end
+\end{verbatim}
+}
+If the arguments of a \texttt{write} statement include an expression that
+requires continuation records, the output will need editing, since the
+output routine prints the arguments of \texttt{write} sequentially, and the
+continuation mechanism therefore generates its auxiliary variables after
+the preceding expression has been printed.
+
+Finally, since there is no direct analog of \emph{list} in FORTRAN,
+a comment line of the form
+\begin{verbatim}
+    c ***** invalid fortran construct (list) not printed
+\end{verbatim}
+will be printed if you try to print a list with \texttt{fort} on.
+
+\subsubsection{{FORTRAN} Output Options}\index{Output}\index{FORTRAN}
+\hypertarget{reserved:FORT_WIDTH}{}
+\hypertarget{switch:PERIOD}{}
+\hypertarget{switch:FORTUPPER}{}
+\ttindextype{card\_no}{shared global variable}
+\ttindextype{fort\_width}{variable}
+There are a number of methods available to change the default format of the
+FORTRAN output.
+
+The breakup of the expression into subparts is such that the number of
+continuation lines produced is less than a given number. This number can
+be modified by the assignment
+\begin{syntax}
+  \texttt{card\_no := }\meta{number}\texttt{;}
+\end{syntax}
+where \meta{number} is the \emph{total} number of cards allowed in a
+statement. The default value of \texttt{card\_no} is 20.
+
+The width of the output expression is also adjustable by the assignment
+\begin{syntax}
+  \texttt{fort\_width := }\meta{integer}\texttt{;}
+\end{syntax}
+\var{fort\_width} which sets the total width of a given line to
+\meta{integer}.  The initial FORTRAN output width is 70.
+
+{\REDUCE} automatically inserts a decimal point after each isolated integer
+coefficient in a FORTRAN expression (so that, for example, 4 becomes
+\texttt{4.} ). To prevent this, set the \sw{period}\ttindexswitch{period}
+mode switch to \texttt{off}.
+
+FORTRAN output is normally produced in lower case.  If upper case is desired,
+the switch \texttt{fortupper}\ttindexswitch{fortupper} should be turned on.
+
+\hypertarget{operator:VARNAME}{}
+Finally, the default name \texttt{ans} assigned to an unnamed expression and
+its subparts can be changed by the operator \texttt{varname}.
+\ttindextype{varname}{operator}  This takes a single identifier as argument, which then
+replaces \texttt{ans} as the expression name.  The value of \texttt{varname} is
+its argument.
+
+Further facilities for the production of FORTRAN and other language output
+are provided by the GENTRAN and SCOPE packages
+\extendedmanual{described in sections~\ref{GENTRAN} and \ref{SCOPE}}.
+
+\subsection{Saving Expressions for Later Use as Input}
+\index{Saving an expression}
+\hypertarget{switch:NAT}{}
+
+It is often useful to save an expression on an external file for use later
+as input in further calculations. The commands for opening and closing
+output files are explained elsewhere. However, we see in the examples on
+output of expressions that the standard ``natural'' method of printing
+expressions is not compatible with the input syntax. So to print the
+expression in an input compatible form we must inhibit this natural style
+by turning off the switch \sw{nat}.\ttindexswitch{nat} If this is done, a
+dollar sign will also be printed at the end of the expression.
+
+\textit{Example:}
+
+The following sequence of commands
+\begin{verbatim}
+        off nat; out "out"; x := (y+z)^2; write "end";
+        shut "out"; on nat;
+\end{verbatim}
+will generate a file \texttt{out} that contains
+\begin{verbatim}
+        x := y**2 + 2*y*z + z**2$
+        end$
+\end{verbatim}
+
+\subsection{Displaying Expression Structure}\index{Displaying structure}
+\hypertarget{operator:STRUCTR}{}
+
+In those cases where the final result has a complicated form, it is often
+convenient to display the skeletal structure of the answer.  The operator
+\texttt{structr},\ttindextype{STRUCTR}{operator} that takes a single expression as argument,
+will do this for you.  Its syntax is:
+\begin{verbatim}
+   structr(exprn:algebraic[,id1:identifier[,id2:identifier]]);
+\end{verbatim}
+The structure is printed effectively as a tree, in which the subparts are
+laid out with auxiliary names.  If the optional \texttt{id1} is absent, the
+auxiliary names are prefixed by the root \texttt{ans}.  This root may be
+changed by the operator \texttt{varname}\ttindextype{varname}{operator}.  If the
+optional \texttt{id1} is present, and is an array name, the subparts are
+named as elements of that array, otherwise \texttt{id1} is used as the root
+prefix. (The second optional argument \texttt{id2} is explained later.)
+
+The \texttt{exprn} can be either a scalar or a matrix expression.  Use of any
+other will result in an error.
+
+\textit{Example:}
+
+Let us suppose that the workspace contains
+\texttt{((a+b)\textasciicircum2+c)\textasciicircum3+d}.
+Then the input \texttt{STRUCTR ws;} will (with \sw{exp} off) result in the
+output:
+\begin{verbatim}
+        ans3
+
+           where
+
+                          3
+              ans3 := ans2  + d
+
+                          2
+              ans2 := ans1  + c
+
+              ans1 := a + b
+\end{verbatim}
+\hypertarget{switch:SAVESTRUCTR}{}
+The workspace remains unchanged after this operation, since \texttt{structr}
+in the default situation returns
+no value (if \texttt{structr} is used as a sub-expression, its value is taken
+to be 0).  In addition, the sub-expressions are normally only displayed
+and not retained. If you wish to access the sub-expressions with their
+displayed names, the switch \sw{savestructr}\ttindexswitch{savestructr} should be
+turned on.  In this case, \texttt{structr} returns a list whose first element
+is a representation for the expression, and subsequent elements are the
+sub-expression relations.  Thus, with \sw{savestructr} on, \texttt{structr ws}
+in the above example would return
+\begin{verbatim}
+                       3              2
+        {ans3,ans3=ans2  + d,ans2=ans1  + c,ans1=a + b}
+\end{verbatim}
+The \texttt{part}\ttindextype{part}{operator} operator can
+be used to retrieve the required parts of the expression.  For example, to
+get the value of \texttt{ans2} in the above, one could say:
+\begin{verbatim}
+        part(ws,3,2);
+\end{verbatim}
+If \sw{fort} is on, then the results are printed in the reverse order; the
+algorithm in fact guaranteeing that no sub-expression will be referenced
+before it is defined.  The second optional argument \texttt{id2} may also be
+used in this case to name the actual expression (or expressions in the
+case of a matrix argument).
+
+\textit{Example:}
+
+Let us suppose that \texttt{m}, a 2 by 1 matrix, contains the elements
+\texttt{((a+b)\textasciicircum2 + c)\textasciicircum3 + d} and \texttt{(a + b)*(c + d)} respectively,
+and that \texttt{v} has been declared to be an array.  With \texttt{exp} off and
+\texttt{fort} on, the statement \texttt{structr(2*m,v,k);} will result in the output
+
+\begin{verbatim}
+      v(1)=a+b
+      v(2)=v(1)**2+c
+      v(3)=v(2)**3+d
+      v(4)=c+d
+      k(1,1)=2.*v(3)
+      k(2,1)=2.*v(1)*v(4)
+\end{verbatim}
+
+\section{Changing the Internal Order of Variables}
+\hypertarget{command:KORDER}{}
+
+The internal ordering of variables (more specifically kernels) can have
+a significant effect on the space and time associated with a calculation.
+In its default state, {\REDUCE} uses a specific order for this which may
+vary between sessions.  However, it is possible for the user to change
+this internal order by means of the declaration
+\texttt{korder}\ttindextype{korder}{declaration}\index{Declaration!\texttt{korder}}.
+The syntax for this is:
+\begin{verbatim}
+        korder v1,...,vn;
+\end{verbatim}
+where the \texttt{vi} are kernels\index{Kernel}.  With this declaration, the
+\texttt{vi} are ordered internally ahead of any other kernels in the system.
+\texttt{v1} has the highest order, \texttt{v2} the next highest, and so on.  A
+further call of \texttt{korder} replaces a previous one. \texttt{korder nil;}
+resets the internal order to the system default.
+
+Unlike the \texttt{order}\ttindextype{order}{declaration}\index{Declaration!\texttt{order}}
+declaration, that has a purely
+cosmetic effect on the way results are printed, the use of \texttt{korder}
+can have a significant effect on computation time.  In critical cases
+then, the user can experiment with the ordering of the variables used to
+determine the optimum set for a given problem.
+
+\section{Obtaining Parts of Algebraic Expressions}
+
+There are many occasions where it is desirable to obtain a specific part
+of an expression, or even change such a part to another expression. A
+number of operators are available in {\REDUCE} for this purpose, and will be
+described in this section. In addition, operators for obtaining specific
+parts of polynomials and rational functions (such as a denominator) are
+described in another section.
+
+\subsection{COEFF Operator}\ttindextype{coeff}{operator}
+\hypertarget{operator:COEFF}{}
+\hypertarget{switch:RATARG}{}
+Syntax:
+\begin{verbatim}
+        coeff(exprn:polynomial,var:kernel)
+\end{verbatim}
+\texttt{coeff} is an operator that partitions \texttt{exprn} into its various
+coefficients with respect to \texttt{var} and returns them as a list, with
+the coefficient independent of \texttt{var} first.
+
+Under normal circumstances, an error results if \texttt{exprn} is not a
+polynomial in \texttt{var}, although the coefficients themselves can be
+rational as long as they do not depend on \texttt{var}.  However, if the
+switch \sw{ratarg}\ttindexswitch{ratarg} is on, denominators are not checked for
+dependence on \texttt{var}, and are taken to be part of the coefficients.
+
+\textit{Example:}
+\begin{verbatim}
+        coeff((y^2+z)^3/z,y);
+\end{verbatim}
+returns the result
+\begin{verbatim}
+          2
+        {z ,0,3*z,0,3,0,1/z}.
+\end{verbatim}
+whereas
+\begin{verbatim}
+        coeff((y^2+z)^3/y,y);
+\end{verbatim}
+gives an error if \texttt{ratarg} is off, and the result
+\begin{verbatim}
+          3        2
+        {z /y,0,3*z /y,0,3*z/y,0,1/y}
+\end{verbatim}
+if \sw{ratarg} is on.
+
+\hypertarget{reserved:HIGH_POW}{}
+\hypertarget{reserved:LOW_POW}{}
+\index{Reserved variable ! \texttt{low\_pow}}
+\index{Reserved variable ! \texttt{high\_pow}}
+The length of the result of \texttt{coeff} is the highest power of \texttt{var}
+encountered plus 1.  In the above examples it is 7.  In addition, the
+variable \var{high\_pow}\ttindex{high\_pow} is set to the highest non-zero
+power found in \texttt{exprn} during the evaluation, and \var{low\_pow}
+\ttindex{low\_pow} to the lowest non-zero power, or zero if there is a
+constant term.  If \texttt{exprn} is a constant, then \var{high\_pow} and
+\var{low\_pow} are both set to zero.
+
+\subsection{COEFFN Operator}\ttindextype{coeffn}{operator}
+\hypertarget{operator:COEFFN}{}
+
+The \texttt{coeffn} operator is designed to give the user a particular
+coefficient of a variable in a polynomial, as opposed to \texttt{coeff} that
+returns all coefficients. \texttt{coeffn} is used with the syntax
+\begin{verbatim}
+        coeffn(exprn:polynomial,var:kernel,n:integer)
+\end{verbatim}
+It returns the $n^{th}$ coefficient of \texttt{var} in the polynomial
+\texttt{exprn}.
+
+\subsection{PART Operator}\ttindextype{part}{operator}
+\hypertarget{operator:PART}{}
+Syntax:
+\begin{verbatim}
+        part(exprn:algebraic[,intexp:integer])
+\end{verbatim}
+
+This operator works on the form of the expression as printed \emph{or as it
+would have been printed at that point in the calculation} bearing in mind
+all the relevant switch settings at that point.  The reader therefore
+needs some familiarity with the way that expressions are represented in
+prefix form in {\REDUCE} to use these operators effectively.  Furthermore,
+it is assumed that \sw{pri} is on at that point in the calculation.
+The reason for this is that with \sw{pri} off, an expression is printed
+by walking the tree representing the expression internally.  To save
+space, it is never actually transformed into the equivalent prefix
+expression as occurs when \sw{pri} is on.  However, the operations on
+polynomials described elsewhere can be equally well used in this case to
+obtain the relevant parts.
+
+The evaluation proceeds recursively down the integer expression list. In
+other words,
+\begin{syntaxtable}
+  \texttt{part(}\meta{expression}\texttt{,}\,\meta{integer1}\texttt{,}\,\meta{integer2}\texttt{)} \\
+  \qquad $\longrightarrow$\ \texttt{part(part(}\meta{expression}\texttt{,}\,\meta{integer1}\texttt{),}\,\meta{integer2}\texttt{)}
+\end{syntaxtable}
+ and so on, and
+\begin{syntax}
+  \texttt{part(}\meta{expression}\texttt{)}\ $\longrightarrow$\ \meta{expression}.
+\end{syntax}
+\texttt{intexp} can be any expression that evaluates to an integer.  If the
+integer is positive, then that term of the expression is found.  If the
+integer is 0, the operator is returned.  Finally, if the integer is
+negative, the counting is from the tail of the expression rather than the
+head.
+
+For example, if the expression \texttt{a+b} is printed as \texttt{a+b} (i.e.,
+the ordering of the variables is alphabetical), then
+\begin{verbatim}
+        part(a+b,2)  ->   b
+        part(a+b,-1) ->   b
+and
+        part(a+b,0)  ->  plus
+\end{verbatim}
+\hypertarget{operator:ARGLENGTH}{}
+An operator \texttt{arglength}\ttindextype{arglength}{operator} is available to determine
+the number of arguments of the top level operator in an expression.  If
+the expression does not contain a top level operator, then $-1$ is returned.
+For example,
+\begin{verbatim}
+        arglength(a+b+c) ->  3
+        arglength(f())   ->  0
+        arglength(a)     ->  -1
+\end{verbatim}
+
+\subsection{Substituting for Parts of Expressions}
+
+\texttt{part} may also be used to substitute for a given part of an
+expression.  In this case, the \texttt{part} construct appears on the
+left-hand side of an assignment statement, and the expression to replace
+the given part on the right-hand side.
+
+For example, with the normal settings of the {\REDUCE} switches:
+\begin{verbatim}
+        xx := a+b;
+        part(xx,2) := c;   ->  a+c
+        part(c+d,0) := -;   -> c-d
+\end{verbatim}
+
+Note that \texttt{xx} in the above is not changed by this substitution.  In
+addition, unlike expressions such as array and matrix elements that have
+an \emph{instant evaluation\/}\index{Instant evaluation} property, the values
+of \texttt{part(xx,2)} and \texttt{part(c+d,0)} are also not changed.
+
+
+\section{COMPACT operator}
+\label{sec:COMPACT}
+\indexpackage{Compact}
+
+\ttindextype{compact}{operator}
+\f{compact} is an operator for the reduction of a polynomial in the
+presence of side relations.  It applies the side relations to the
+polynomial so that an equivalent expression results with as few terms as
+possible.  For example, the evaluation of
+\begin{verbatim}
+     compact(s*(1-sin x^2)+c*(1-cos x^2)+sin x^2+cos x^2,
+             {cos x^2+sin x^2=1});
+\end{verbatim}
+yields the result
+\begin{verbatim}
+         2           2
+   cos(x) *s + sin(x) *c + 1
+\end{verbatim}
+\ttindexswitch{trcompact}
+\hypertarget{switch:TRCOMPACT}{}
+The switch \sw{trcompact} can be used to trace the operation.
+
+\input{trigsimp}

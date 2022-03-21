@@ -1,0 +1,404 @@
+# $HOME/.snapshots
+
+# A C Norman, 2020
+#
+#
+# --------------------------------------------------------------------------
+# --------------------------------------------------------------------------
+# This is a prototype and demonstration ".snapshots" file. The machine
+# names and addresses used here are relevant to me, but not to anybody else,
+# so you will need to adapt it to your own needs before using it.
+# The machine names shown are in general the ones reported by "uname -n".
+#
+# This looks dauntingly long, but is in fact rather simple. It is a table
+# indicating that if you are at present on a machine called X and you want to
+# build a snapshot for a platform Y how you should go about it. Its structure
+# is then
+#
+# case `uname -n`
+# X1)
+#   hosts_Y1() {
+#     *OPTIONS*
+#   }
+#   hosts_Y2() {
+#     *OPTIONS*
+#   }
+#   ...
+#   ;;
+# X2)
+#   hosts_Y1() {
+#     ...
+#   ;;
+# *)
+#   <case of unknown current machine, so fail here>
+#   ;;
+# esac
+#
+# The OPTIONS will be one of the following very short recipes
+#
+# (1)   MODE=LOCAL
+# The target is the same architecture as the current machine, so just use
+# it in a simple direct manner.
+#
+# (2)   MODE=ssh; HOST=remote.machine.name
+# Use ssh (which must have been set up with passwordless public key
+# authentication) so that the build is done on the specified remote machine,
+# which is liable to be one that has as its architecture the one toi be built
+# for.
+#
+# (3)  MODE=ssh+ssh; HOST1=gateway.machine.name; HOST2=remote.machine.name
+# Much like just "ssh" but uses the first machine as a gatway through which
+# the one you will use can be reached.
+#
+# (4)   MODE=virtual; VM=machine-name
+# Oracle VirtualBox must be installed on the current machine, and it must have
+# a development-ready VM called machine-name installed. This machine must
+# support passwordless ssh access from the current world.
+#
+# (5)   MODE=ssh+virtual; HOST=remote.machine; VM=virtual.on.remote
+# Access a remote machine using SSH and then run virtualbox on it!
+#
+# (6)   MODE=altlocal, ssh+altlocal, ssh+ssh+altlocal
+# There may be cases where it is possible run run commands using an
+# alternative operating system in a container or somewhat equivalent
+# scheme. For instance with Linux this may involve booting an alternative
+# system using systemd/nspawn. It is also possible that it could cover
+# emulation. If things can be set such that there is a special command
+# "altlocal" such that issuing the command "altlocal C" obeys the command
+# C in the alternate world than this option make it possible to take
+# advantage of it. At the time of writing this I do not have a concrete
+# useful instance of this (!), but a few months ago I could use it to
+# have one Raspberry Pi computer supporting both 32 and 64-bit builds.
+#
+#
+# The file here is the one that I am using as of June 2020 and
+# shows something of the range of computers I have tried to support and the
+# ways in which they link together - in the process including instances of
+# each of the above. A minimal script that just ran on a single host and
+# that only supported a few targets would of course be a lot shorter.
+#
+# When you install this as $HOME/.spapshots you may wish to delete all the
+# comments down to here!
+# --------------------------------------------------------------------------
+# --------------------------------------------------------------------------
+
+# This file customises the Reduce snapshot builder by indicating private
+# or local machines that can be used for building snapshots. For each
+# system for which a snapshot may be generated there is a function here
+# called "hosts_<architecture>". This can test the identify of the machine
+# it is running on (so that a user can put exactly the same .snapshots files
+# on multiple computers - I expect that this will generally simplify
+# maintenance). It then sets a variable MODE together with some further
+# variables.
+
+# It can use this to override the snapshot building regime for macintosh,
+# windows, linux64 (ie x86_64), rpi (ie a Raspberry Pi running 32-bit
+# Raspberry Pi OS) and rpi64.
+#
+# It does not need to override all of these.
+#
+# So a very simple file content would be if a Windows machine was available
+# as a server, but otherwise default behaviour was wanted. In that case this
+# file might contain just
+#     hosts_windows() {
+#       MODE=ssh
+#       HOST=windows.machine.some.network
+#     }
+# where the HOST setting gives the network identity of the Windows server -
+# which will be accessed using ssh.
+#
+# It is possible to set PORT here to indicate a port to be used in redirection
+# when accessing a virtual machine. However doing so is not especially
+# recommended because the main script takes steps to choose a port that
+# it has just detected as not being in use.
+#
+# When remote systems are accessed using ssh it is required that public key
+# authentication without the need for further manual intervention is set up so
+# that commends such as
+#     ssh remote.host.machine some-command
+# are executed without any need to quote further passwords. This may be
+# achieved using the .ssh/authorized_keys scheme and possibly using the
+# ssh-agent. 
+#
+# More elaborate options are illustrated in what follows:
+
+case `uname -n` in
+
+#######################################################################
+panamint)
+
+# "panamint" is my home machine, running Windows 10.
+
+  hosts_win64() {
+# panamint is a Windows computer, and so when I want to build a Windows
+# snapshot I can use it directly.
+# A windows host must have (64-bit versions) of cygwin installed,
+# and the necessary set of cygwin build tools can be sorted out using
+# scripts/cygwin-sanity-check.sh. In addition to that the inno setup
+# tool must be installed.
+    MODE=local
+  }
+
+  hosts_altwin64() {
+# Here I force use of a Windows VM... This optiond can be useful for testing
+# because the VM can be a Windows image set up without any of the
+# customisation I have for my main computer. The VM must be called
+# "REDUCE-pkg-factory-Windows and must accept ssh access without need
+# for passwords.
+    MODE=virtual
+    VM="REDUCE-pkg-factory-Windows"
+  }
+
+  hosts_macintosh() {
+    MODE=ssh
+# At home when my macbook is in range of the wifi it gets the address
+# 192.168.1.8
+    HOST=192.168.1.8
+  }
+
+  hosts_linux64() {
+# The virtual machine here needs a new enough g++ and the things that
+# scripts/ubuntu-sanity-check.sh arranges to install. As a matter of caution
+# I use a distinctly ancient release of Ubuntu but with a few of the
+# development packages custom-upgraded to reasonably recent versions. That
+# avoids building in reliance on features of very recent release files.
+    MODE=virtual
+    VM="REDUCE-pkg-factory-Ubuntu"
+  }
+
+  hosts_rpi32() {
+# As before, use a remote machine. If I had DNS set up in a more
+# elaborate way it would become more obvious that this host is "acn1-rpi4".
+# or "rpi3-32" or some such name. This is a Raspberry Pi running in 32-bit
+# mode.
+    MODE=ssh
+    HOST=192.168.1.20
+  }
+
+  hosts_rpi64() {
+# A Raspberry pi 4 running the 64-bit of Raspberry Pi OS. At home I move
+# Raspberry Pis around and re-work just which operating system they run
+# rather often so I tend to refer to them by their ip addresses on my
+# private local network...
+    MODE=ssh
+    HOST=192.168.1.26
+  }
+  ;;
+
+#######################################################################
+gauguin)
+
+# "gauguin" is a Linux box (running the most recent release of Ubuntu)
+
+  hosts_macintosh() {
+# gauguin does not have a macintosh directly available, but by tunneling
+# via codemist.dynu.com it can gain access to the private macintosh on the
+# local network used above. Note that the external name codemist.dynu.com
+# gives dynamic-IP-address access to panamint, the Windows machine
+# used in the previous section. I have things set up so that that is the
+# only destination for ssh access, and so to get to other computers on
+# my private network I use it as a gateway.
+    MODE=ssh+ssh
+    HOST1=codemist.dynu.com
+    HOST2=192.168.1.8
+  }
+
+  hosts_win64() {
+# On this machine I have virtualbox set up so that a VM called
+# REDUCE-pkg-factory-windows runs Windows 10 and has the cygwin environment
+# set up so that I can build on it. The VM runs an ssh server and this script
+# sets up port forwarding in virtualbox so that it can be accessed.
+    MODE=virtual
+    VM="REDUCE-pkg-factory-Windows"
+  }
+
+# altwin64 not supported here!
+
+  hosts_linux64() {
+# gauguin is a computer running 64-bit Linux, so you might imagine that
+# I would use MODE=local here. However that would use whichever Linux release
+# the system is running, and for a snapshot that has the best chance of
+# working on older sytems I want to build on a somewjat old release of
+# Linux. So I install that in a VM and use it here.
+    MODE=virtual
+    VM="REDUCE-pkg-factory-Ubuntu"
+  }
+
+  hosts_rpi32() {
+# Access using ssh via a gateway system. HOST1 is
+# the gateway and HOST2 the system used for the build.
+    MODE=ssh+ssh
+    HOST1=codemist.dynu.com
+    HOST2=192.168.1.20
+  }
+
+  hosts_rpi64() {
+    MODE=ssh+ssh
+    HOST1=codemist.dynu.com
+    HOST2=192.168.1.26
+  }
+  ;;
+
+#######################################################################
+math-smreduce.mat.brocku.ca)
+
+# A remote Macintosh which is the "official" build host for Reduce snapshots.
+
+
+# math-smreduce is a Macintosh, but it needs the file-space used during
+# snapshot builds to be put on a separate volume rather than within the
+# main Reduce tree.
+  REDUCE_DISTRIBUTION="/Volumes/DATA/reduce-distribution"
+  REDUCE_BUILD="/Volumes/DATA/reduce-build"
+  SNAPSHOTS="/Volumes/DATA/snapshots"
+
+
+  hosts_macintosh() {
+    MODE=local
+  }
+
+  hosts_win64() {
+    MODE=virtual
+    VM="REDUCE-pkg-factory-Windows"
+  }
+
+hosts_linux64() {
+    MODE=virtual
+    VM="REDUCE-pkg-factory-Ubuntu"
+  }
+
+  hosts_rpi32() {
+# Not supported here. It seems tidy to put in a function definition that
+# does nothing just to document that fact. Note that an empty function body
+# is not acceptable to bash, so I put in a return statement.
+    return 0
+  }
+
+  hosts_rpi64() {
+    return 0
+  }
+  ;;
+
+#######################################################################
+# Various of the Raspberry pi systems at home! The hostnames detected here
+# are the ones that they self-identify as and may not be anything at all
+# to do with DNS names!
+
+acn1-rpi4 | rpi3-32)
+  hosts_macintosh() {
+    MODE=ssh
+    HOST=192.168.1.8
+  }
+
+  hosts_win64() {
+# From the private network I can access panamint using its private address.
+    MODE=ssh
+    HOST=192.168.1.10
+  }
+
+hosts_linux64() {
+# A virtual machine running on a remote system (panamint).
+    MODE=ssh+virtual
+    HOST=192.168.1.10
+    VM="REDUCE-pkg-factory-Ubuntu"
+  }
+
+hosts_rpi32() {
+# Use the machine directly.
+    MODE=local
+  }
+
+hosts_rpi64() {
+    MODE=ssh
+    HOST=192.168.1.26
+  }
+  ;;
+
+#######################################################################
+# A 64-bit Raspberry Pi
+rpi4-8g)
+  hosts_macintosh() {
+    MODE=ssh
+    HOST=192.168.1.5
+  }
+
+  hosts_win64() {
+    MODE=ssh
+    HOST=192.168.1.10
+  }
+
+  hosts_linux64() {
+    MODE=ssh+virtual
+    HOST=192.168.1.10
+    VM="REDUCE-pkg-factory-Ubuntu"
+  }
+
+  hosts_rpi() {
+    MODE=ssh
+    HOST=192.168.1.20
+  }
+
+  hosts_rpi64() {
+# Use the machine directly.
+    MODE=local
+  }
+  ;;
+
+#######################################################################
+OlderMacBook | acn1macbook)
+
+  hosts_macintosh() {
+# All these hosts are macintoshes and so the build of a macintosh snapshot
+# can be performed on them directly.
+    MODE=local
+  }
+
+  hosts_win64() {
+    MODE=ssh
+    HOST=192.168.1.10
+  }
+
+  hosts_linux64() {
+    MODE=ssh+virtual
+    HOST=192.168.1.10
+    VM="REDUCE-pkg-factory-Ubuntu"
+  }
+
+  hosts_rpi32() {
+    MODE=ssh
+    HOST=192.168.1.20
+  }
+
+  hosts_rpi64() {
+    MODE=ssh
+    HOST=192.168.1.26
+  }
+  ;;
+
+#######################################################################
+*)
+  printf "Current host (`uname -n`) not recognized here\n"
+  ;;
+
+esac
+
+# have some aliases...
+
+hosts_windows() {
+# I can ask for either "windows" or "win64" and both behave the same way.
+  hosts_win64
+}
+
+hosts_altwindows() {
+  hosts_altwin64
+}
+
+hosts_linux() {
+  hosts_linux64
+}
+
+hosts_rpi() {
+  hosts_rpi32
+}
+
+# end of .snapshots

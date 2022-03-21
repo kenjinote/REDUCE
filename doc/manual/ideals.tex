@@ -1,0 +1,145 @@
+
+\index{Melenk, Herbert}\index{People!Melenk, Herbert}
+
+\subsection{Introduction}
+
+This package implements the basic arithmetic for polynomial ideals
+by exploiting the Gr\"obner bases package of \REDUCE.
+In order to save computing time all intermediate Gr\"obner bases
+are stored internally such that time consuming repetitions
+are inhibited. A uniform setting facilitates the access.
+
+\subsection{Initialization}
+
+\ttindextype[IDEALS]{I\_setting}{operator}
+\hypertarget{operator:I_SETTING}{}
+Prior to any computation the set of variables has to be declared
+by calling the operator \f{I\_setting} . E.g. in order to initiate
+computations in the polynomial ring $Q[x,y,z]$ call
+\begin{verbatim}
+    I_setting(x,y,z);
+\end{verbatim}
+A subsequent call to \f{I\_setting} allows one to select another set
+of variables; at the same time the internal data structures
+are cleared in order to free memory resources.
+
+\subsection{Bases}
+
+\ttindextype[IDEALS]{I}{reserved symbol}
+\hypertarget{reserved:IDEALS_I}{}
+\ttindextype[IDEALS]{ideal2list}{operator}
+\hypertarget{operator:IDEAL2LIST}{}
+An ideal is represented by a basis (set of polynomials) tagged
+with the symbol \texttt{I}, e.g.,
+\begin{verbatim}
+   u := I(x*z-y**2, x**3-y*z);
+\end{verbatim}
+Alternatively a list of polynomials can be used as input basis; however,
+all arithmetic results will be presented in the above form. The
+operator \f{ideal2list} allows one to convert an ideal basis into a
+conventional \REDUCE list.
+
+\subsubsection{Operators}
+
+Because of syntactical restrictions in \REDUCE, special operators
+have to be used for ideal arithmetic: 
+\ttindextype[IDEALS]{.+ (ideal sum)}{infix operator}
+\ttindextype[IDEALS]{.* (ideal product)}{infix operator}
+\ttindextype[IDEALS]{.: (ideal quotient)}{infix operator}
+\ttindextype[IDEALS]{./ (ideal quotient)}{infix operator}
+\ttindextype[IDEALS]{.= (ideal equality)}{infix operator}
+\ttindextype[IDEALS]{subset}{(ideal inclusion test) infix operator}
+\ttindextype[IDEALS]{intersection}{(ideal intersection) operator}
+\ttindextype[IDEALS]{member}{(ideal membership test) infix operator}
+\ttindextype[IDEALS]{gb}{operator}
+\hypertarget{operator:IDEALSUM}{}
+\hypertarget{operator:IDEALPRODUCT}{}
+\hypertarget{operator:IDEALQUOTIENT}{}
+\hypertarget{operator:IDEALQUOTIENTALT}{}
+\hypertarget{operator:IDEALEQUALITY}{}
+\hypertarget{operator:IDEALSUBSET}{}
+\hypertarget{operator:IDEALINTERSECTION}{}
+\hypertarget{operator:IDEALMEMBER}{}
+\hypertarget{operator:IDEALGB}{}
+\begin{verbatim}
+         .+            ideal sum (infix)
+         .*            ideal product (infix)
+         .:            ideal quotient (infix)
+         ./            ideal quotient (infix)
+         .=            ideal equality test (infix)
+         subset        ideal inclusion test (infix)
+         intersection  ideal intersection (prefix,binary)
+         member        test for membership in an ideal
+                         (infix: polynomial and ideal)
+         gb            Groebner basis of an ideal (prefix, unary)
+         ideal2list    convert ideal basis to polynomial list 
+                         (prefix,unary)
+\end{verbatim}
+
+Example:
+
+\begin{verbatim}
+    I(x+y,x^2) .* I(x-z);
+
+      2                      2    2
+   i(x  + x*y - x*z - y*z,x*y  - y *z)
+\end{verbatim}
+
+The test operators return the values 1 (=true) or 0 (=false)
+such that they can be used in \REDUCE \texttt{if}-\texttt{then}-\texttt{else} statements
+directly.
+
+The results of \texttt{.+}, \texttt{.*}, \texttt{.:}/\texttt{./}, and \f{intersection} are ideals
+represented by their Gr\"obner basis in the current setting and
+term order. The term order can be modified using the operator
+\f{torder}\ttindextype{torder}{opreator} from the Gr\"obner package. Note that ideal equality 
+cannot be tested with the \REDUCE equal sign:
+
+\begin{verbatim}
+
+   I(x,y)  = I(y,x)       is false
+   I(x,y) .= I(y,x)       is true
+
+\end{verbatim}
+
+\subsection{Algorithms}
+
+The operators \f{groebner}, \f{preduce}, and \f{idealquotient} of the
+\ttindextype{groebner}{operator}%
+\ttindextype{preduce}{operator}%
+\ttindextype{idealquotient}{operator}%
+\REDUCE Gr\"obner package support the basic algorithms:
+
+$\mathtt{gb}(Iu_1,u_2...) \rightarrow \mathtt{groebner}(\{u_1,u_2...\},\{x,...\})$
+
+$p \in I_1 \rightarrow p=0 \ mod \ I_1$
+
+$I_1 : I(p) \rightarrow (I_1 \bigcap I(p)) / p \ elementwise$
+
+\noindent
+On top of these the \textsc{Ideals} package implements the following 
+operations:
+
+
+$I(u_1,u_2...)+I(v_1,v_2...) \rightarrow GB(I(u_1,u_2...,v_1,v_2...))$
+
+
+$I(u_1,u_2...)*I(v_1,v_2...)\rightarrow 
+ GB(I(u_1*v_1,u_1*v2,...,u_2*v_1,u_2*v_2...))$
+
+
+$I_1 \bigcap I_2 \rightarrow
+  Q[x,...] \bigcap GB_{lex}(t*I_1 + (1-t)*I_2,\{t,x,..\}) $
+
+
+$I_1 : I(p_1,p_2,...) \rightarrow I_1 : I(p_1) \bigcap I_1 : I(p_2)
+\bigcap ...$
+
+$I_1 = I_2 \rightarrow GB(I_1)=GB(I_2)$
+
+$I_1 \subseteq I_2
+   \rightarrow \ u_i \in I_2 \ \forall \ u_i \in I_1=I(u_1,u_2...)$
+
+\subsection{Examples}
+
+Please consult the file \texttt{ideals.tst}.

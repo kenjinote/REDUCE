@@ -1,0 +1,100 @@
+                     Configuring in the CSL directory
+                     ================================
+
+
+One of the most common causes of failure when trying to build CSL and Reduce
+seems to be not having all the necessary development tools and libraries
+installed and available. When things go wrong because of this there will
+probably be a message somewhere in a configure or build log that can in
+fact point at what has happened, but it is often tedious and non-obvious
+to even experienced developers to find that.
+
+So the .../trunk/csl directory contains a mini-project called "testprogram"
+such that configuring and building it should be a reasonable sanity check
+on your build environment. On Windows it creates a trivial dialog box that
+can be closed by clicking the button in it, while on systems that use X it
+puts a medium sized window in the middle of your screen and you can close
+that using the close button that a window manager will attach to it.
+
+These programs are crude and minimal - so they do not test everything - and
+also the configure script that goes with them may report fatal errors in
+cases where manual adjustment of resulting Makefiles could coax a full
+version of Reduce to build. So please view this as an attempt to be helpful
+and check for a collection of things that are expected and not as a carefully
+engineered and precise qualification test for your platform!
+
+From the trunk directory you can go
+       scripts/csl-sanity-check.sh
+which carries out the steps described below.
+
+
+The explanation here is for the benefit of peopel who wish to run through
+the checks manually - presumably because there is some problem for them.
+
+[optionally]    autoreconf -f -i -v    [in trunk/csl]
+        This will re-make the various autoconf-related files. You may not
+        need to do this, but if you get complaints about automake
+        version compatibility this is what you should try. Note that
+        the script .../trunk/autogen.sh performs this process in all relevant
+        parts of your local tree, so can be useful if autoreconf proves
+        necessary here. Indeed I would tend to view the use of the
+        autogen.sh script in the trunk directory as preferable since it
+        recreates configure-related scripts throughout the REDUCE tree.
+
+./configure [in trunk/csl]
+        Some people will quite properly prefer
+          cd /tmp; .../reduce-algebra/trunk/csl/configure
+        so that the test performed here does not leave any files within the
+        main source tree. The top-level mechanisms to run the tests build
+        the test stuff in the ...trunk/cslbuild directory. Again this indicates
+        that useing scripts/csl-sanity-check is generally a good plan.
+        The configure script will take of the order of 30 second to (say)
+        ten minutes depending on how fast your computer and which operating
+        system it is running. If all goes well the final few lines of output
+        should be along the lines of
+                configure: creating ./config.status
+                config.status: creating Makefile
+                config.status: executing depfiles commands
+                configure: Build environment seems OK
+        If this is not the case and you get a diagnostic I hope it will be
+        a clean one asking you to install some particular tool or library.
+        Note that for the package management systems that come with many
+        operating systems you will need to install the "development" variant
+        of support for a package. Eg "ncurses-dev" rather than only "ncurses".
+
+        If the configure script fails but without a clear message asking you
+        to install some particular package then you can look at the log
+        file "config.log" to try to understand what went wrong, and when you
+        have found out please consider updating the configure script (in the
+        file "configure.ac") and reporting your proposed updates back to the
+        package maintainers. 
+
+make
+        Whether you configured in the source tree or in /tmp (or indeed
+        anywhere else) a call to "make" should compile a small test
+        program called "testprogram". If the compilation fails then you
+        will need to debug, update configure.ac to detect that cause of the
+        problem cleanly and report back to the Reduce developers.
+
+        Note that if you are not using either cygwin or Linux then it
+        might be prudent to check that you use the GNU version of "make"
+        rather than any other version, since for the main Reduce build
+        you will need that. You can verify that you have GNU make by
+        giving the command
+                make --version
+        and if "make" does not give a brief response identifying itself
+        as GNU Make then try "gmake" instead in case the version you need is
+        available under that name.
+
+./testprogram
+        Finally you can try the program. Under X windows it will fail in a
+        messy way if you do not have any 24-point fonts installed, and the
+        font it uses to display a message is the first font of that size
+        that it comes across (and so will often be ugly). The test program
+        is not intended to be clever or pretty - it is just a chance to
+        verify that a library can be created and then linked to and that
+        the fundamental Windows or X libraries can be used.
+
+
+
+===============================
